@@ -44,4 +44,8 @@
 
     By default the prefab will flicker turn your entities on for a moment each time a flicker occurs, meaning your light will be off most of the time or when disabled. Set this property to `Yes` if you want your entities to start on and flicker off.
 
+---
+
+## Images
+
 ![Example image](.images/example_image.png)
