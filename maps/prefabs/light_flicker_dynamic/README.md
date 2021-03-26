@@ -46,6 +46,26 @@
 
 ---
 
+## Input / Output
+
+- outputFlicker
+
+    Outputs when the prefab is randomly triggering the entities to flicker.
+
+- inputKill
+
+    Kills all entities in the prefab.
+
+- inputDisable
+
+    Disables the prefab from flickering the entities.
+
+- inputEnable
+
+    Enables the prefab to flicker the entities.
+
+---
+
 ## Images
 
 ![Example image](.images/example_image.png)
