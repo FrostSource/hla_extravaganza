@@ -1,0 +1,85 @@
+{
+	"Hook: Activate":{
+		"scope": "lua",
+		"prefix": ["hook", "Activate"],
+		"body": [
+			"---@param activateType \"0\"|\"1\"|\"2\"",
+			"function Activate(activateType)",
+			"\t$0",
+			"end"
+		],
+		"description": "Called on Activate(), after the entity has spawned. If the entity is spawned on map load, Activate() is called after all entities have spawned."
+	},
+
+	"Hook: OnBreak":{
+		"scope": "lua",
+		"prefix": ["hook", "OnBreak"],
+		"body": [
+			"---@param inflictor EntityHandle",
+			"function OnBreak(inflictor)",
+			"\t$0",
+			"end"
+		],
+		"description": "Called when a breakable entity is broken. Works for these classes: ???"
+	},
+
+	"Hook: OnEntText":{
+		"scope": "lua",
+		"prefix": ["hook", "OnEntText"],
+		"body": [
+			"function OnEntText()",
+			"\t$0",
+			"\t-- Return the string to display on entity",
+			"\treturn \"\"",
+			"end"
+		],
+		"description": "Called every frame when ent_text is enabled on the entity. Return a string to be added to the ent_text printout."
+	},
+
+	"Hook: OnTakeDamage":{
+		"scope": "lua",
+		"prefix": ["hook", "OnTakeDamage"],
+		"body": [
+			"---@param damageTable T01",
+			"function OnTakeDamage(damageTable)",
+			"\t$0",
+			"end"
+		],
+		"description": "Called when the entity takes damage. Table format: {inflictor = handle, damage_direction = Vector, damage_position = Vector, damage_force = Vector, damage = int, attacker = handle} To do: Check which entity classes can take damage. Prop_physics and prop_dynamic confirmed, but the function doesn't get called in every case."
+	},
+
+	"Hook: Precache":{
+		"scope": "lua",
+		"prefix": ["hook", "Precache"],
+		"body": [
+			"---@param context CScriptPrecacheContext",
+			"function Precache(context)",
+			"\t$0",
+			"end"
+		],
+		"description": "Called when the entity is precached. Used to precache any additional resources needed by the script using the global Precache family of script functions."
+	},
+
+	"Hook: Spawn":{
+		"scope": "lua",
+		"prefix": ["hook", "Spawn"],
+		"body": [
+			"---@param spawnkeys CScriptKeyValues",
+			"function Spawn(spawnkeys)",
+			"\t$0",
+			"end"
+		],
+		"description": "Called on Spawn(), just after the entity has been created, but before it has been initialized. Passes a CScriptKeyValues handle that can be used to query the entity spawn keyvalues."
+	},
+
+	"Hook: UpdateOnRemove":{
+		"scope": "lua",
+		"prefix": ["hook", "UpdateOnRemove"],
+		"body": [
+			"function UpdateOnRemove()",
+			"\t$0",
+			"end"
+		],
+		"description": "Called before the entity is killed."
+	}
+}
