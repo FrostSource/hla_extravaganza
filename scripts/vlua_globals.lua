@@ -31,7 +31,7 @@
     box:DisableMotion()
 
 
-    Hook snippets are included to help speed up the process.
+    Hook snippets are included in the .vscode folder to help speed up the process.
     Start typing "hook" or the name of the function for the options to appear.
 
 
