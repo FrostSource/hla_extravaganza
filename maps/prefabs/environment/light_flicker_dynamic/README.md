@@ -33,18 +33,18 @@ by FrostSource
 
 || Name | Description |
 | -: | - | - |
-| **Outputs**
-|| outputFlicker | Outputs when the prefab is randomly triggering the entities to flicker.
 | **Inputs**
 || inputKill | Kills all entities in the prefab.
 || inputDisable | Disables the prefab from flickering the entities.
 || inputEnable | Enables the prefab to flicker the entities.
+| **Outputs**
+|| outputFlicker | Outputs when the prefab is randomly triggering the entities to flicker.
 
 ---
 
 ## Images
 
-![Example image](example_image.png))
+![Example image](example_image.png)
 
 
 ---

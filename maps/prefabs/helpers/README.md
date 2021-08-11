@@ -1,4 +1,4 @@
-# editor_helpers
+# Editor Helpers
 by FrostSource
 
 > ### Combines all standard helper prefabs into one prefab.
@@ -19,18 +19,17 @@ by FrostSource
 
 | Property | Description |
 | - | - |
-| Example name | Example description.
+| God | Player starts invincible.
+| No Clip | In nonvr this is a standard `noclip` command. In vr `hlvr_toggle_dev_teleport` is called.
+| View Manhack Nav | Turns on `ai_show_connect_fly` and activates the `tiny_centered` hull.
+| Give Weapons | In nonvr the smg1 is given. In vr an equip gives all vr weapons/items.
+| Restart On Death | Restarts the map when the player dies.
 
 ---
 
 ## Input / Output
 
-|| Name | Description |
-| -: | - | - |
-| **Outputs**
-|| Example name | Example description.
-| **Inputs**
-|| Example name | Example description.
+See !player inputs.
 
 ---
 
