@@ -26,9 +26,9 @@ by Author Name ([any social links](https://example.com) | [you wish to plug](htt
 
 || Name | Description |
 | -: | - | - |
-| **Outputs**
-|| Example name | Example description.
 | **Inputs**
+|| Example name | Example description.
+| **Outputs**
 || Example name | Example description.
 
 ---
