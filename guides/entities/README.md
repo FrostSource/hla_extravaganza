@@ -4,7 +4,7 @@
 
 ---
 
-### [Common properties](common_properties.md)
+### [Common properties](common_properties_and_io.md)
 
 ### [Undocumented !player inputs](undocumented_player_inputs.md)
 
