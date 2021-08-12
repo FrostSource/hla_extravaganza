@@ -34,5 +34,5 @@ Open the Half-Life: Alyx workshop tools through Steam and launch the `hla_extrav
 
 Add/create your files within the relevant folders/subfolder.
 
-Test/proof-read your contribution to make sure there are no bugs or missing text. If your contribution is a prefab or other non-markdown asset, make sure you also include a README.md file to explain how it works. You can grab a copy of a template README.md for your asset type from [the templates directory](./templates/)
+Test/proof-read your contribution to make sure there are no bugs or missing text. If your contribution is a prefab or other non-markdown asset, make sure you also include a README.md file to explain how it works. You can grab a copy of a template README.md for your asset type from [the templates directory](./././templates/)
 
