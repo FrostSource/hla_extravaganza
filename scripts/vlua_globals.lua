@@ -720,7 +720,7 @@ function cvar_setf(convar, value) end
 function DebugBreak() end
 ---Internal native function for IncludeScript().
 ---@param scriptFileName string
----@param scope ScriptScope
+---@param scope ScriptScope|"thisEntity:GetPrivateScriptScope()"
 ---@return boolean
 function DoIncludeScript(scriptFileName, scope) end
 ---Internal native function for ScriptAssert().
@@ -2875,16 +2875,19 @@ GlobalSys = {}
 function GlobalSys:CommandLineCheck(name) end
 ---Returns the command line param as a float.
 ---@param name string
+---@param default float
 ---@return float
-function GlobalSys:CommandLineFloat(name) end
+function GlobalSys:CommandLineFloat(name, default) end
 ---Returns the command line param as an int.
 ---@param name string
+---@param default integer
 ---@return integer
-function GlobalSys:CommandLineInt(name) end
+function GlobalSys:CommandLineInt(name, default) end
 ---Returns the command line param as a string.
 ---@param name string
+---@param default string
 ---@return string
-function GlobalSys:CommandLineString(name) end
+function GlobalSys:CommandLineStr(name, default) end
 --#endregion
 
 --#region Uint64
