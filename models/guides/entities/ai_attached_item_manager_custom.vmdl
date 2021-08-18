@@ -1,0 +1,194 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:modeldoc28:version{fb63b6ca-f435-4aa0-a2c7-c66ddc651dca} -->
+{
+	rootNode = 
+	{
+		_class = "RootNode"
+		children = 
+		[
+			{
+				_class = "RenderMeshList"
+				children = 
+				[
+					{
+						_class = "RenderMeshFile"
+						filename = "models\\guides\\entities\\ai_attached_item_manager_custom.dmx"
+						import_scale = 1.0
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
+						}
+					},
+				]
+			},
+			{
+				_class = "GameDataList"
+				children = 
+				[
+					{
+						_class = "GenericGameData"
+						disabled = true
+						game_class = "prop_data"
+						game_keys = 
+						{
+							base = ""
+							allowstatic = false
+							bakelighting = true
+							damage_table = ""
+							"dmg.bullets" = -1.0
+							"dmg.club" = -1.0
+							"dmg.explosive" = -1.0
+							"dmg.fire" = -1.0
+							health = -1.0
+							spawn_motion_disabled = false
+						}
+					},
+				]
+			},
+			{
+				_class = "Skeleton"
+				children = 
+				[
+					{
+						_class = "Bone"
+						name = "item_0"
+						origin = [ -48.0, 0.0, 8.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+					},
+				]
+			},
+			{
+				_class = "PhysicsShapeList"
+				children = 
+				[
+					{
+						_class = "PhysicsShapeBox"
+						parent_bone = ""
+						surface_prop = "prop.cardboard"
+						collision_prop = "default"
+						origin = [ 0.0, 0.0, -4.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						dimensions = [ 128.0, 32.0, 16.0 ]
+					},
+					{
+						_class = "PhysicsShapeBox"
+						parent_bone = ""
+						surface_prop = "prop.cardboard"
+						collision_prop = "default"
+						origin = [ 48.0, 0.0, 8.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						dimensions = [ 16.0, 16.0, 8.0 ]
+					},
+					{
+						_class = "PhysicsShapeBox"
+						parent_bone = ""
+						surface_prop = "prop.cardboard"
+						collision_prop = "default"
+						origin = [ 24.0, 0.0, 8.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						dimensions = [ 16.0, 16.0, 8.0 ]
+					},
+					{
+						_class = "PhysicsShapeBox"
+						parent_bone = ""
+						surface_prop = "prop.cardboard"
+						collision_prop = "default"
+						origin = [ 0.0, 0.0, 8.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						dimensions = [ 16.0, 16.0, 8.0 ]
+					},
+					{
+						_class = "PhysicsShapeBox"
+						parent_bone = ""
+						surface_prop = "prop.cardboard"
+						collision_prop = "default"
+						origin = [ -24.0, 0.0, 8.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						dimensions = [ 16.0, 16.0, 8.0 ]
+					},
+					{
+						_class = "PhysicsShapeBox"
+						parent_bone = ""
+						surface_prop = "prop.cardboard"
+						collision_prop = "default"
+						origin = [ -48.0, 0.0, 8.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						dimensions = [ 16.0, 16.0, 8.0 ]
+					},
+				]
+			},
+			{
+				_class = "AttachmentList"
+				children = 
+				[
+					{
+						_class = "Attachment"
+						name = "item_0_any"
+						parent_bone = ""
+						relative_origin = [ -48.0, 0.0, 12.7 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+					{
+						_class = "Attachment"
+						name = "item_1_any"
+						parent_bone = ""
+						relative_origin = [ -24.0, 0.0, 12.7 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+					{
+						_class = "Attachment"
+						name = "item_2_any"
+						parent_bone = ""
+						relative_origin = [ 0.0, 0.0, 12.7 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+					{
+						_class = "Attachment"
+						name = "item_3_any"
+						parent_bone = ""
+						relative_origin = [ 24.0, 0.0, 12.7 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+					{
+						_class = "Attachment"
+						name = "item_4_any"
+						parent_bone = ""
+						relative_origin = [ 48.0, 0.0, 12.7 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+					{
+						_class = "Attachment"
+						name = "item_0_item_healthvial"
+						parent_bone = ""
+						relative_origin = [ 0.0, 0.0, 12.7 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+					{
+						_class = "Attachment"
+						name = "item_0_item_hlvr_grenade_frag"
+						parent_bone = ""
+						relative_origin = [ 24.0, 0.0, 16.321201 ]
+						relative_angles = [ 0.0, 0.0, -90.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+				]
+			},
+		]
+		model_archetype = ""
+		primary_associated_entity = ""
+		anim_graph_name = ""
+	}
+}

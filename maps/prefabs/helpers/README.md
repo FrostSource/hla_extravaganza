@@ -29,7 +29,7 @@ by FrostSource
 
 ## Input / Output
 
-See !player inputs.
+See [undocumented !player inputs](../../../guides/entities/undocumented_player_inputs.md).
 
 ---
 
