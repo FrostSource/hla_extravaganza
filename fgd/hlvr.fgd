@@ -475,7 +475,7 @@
 	[
 		"0" : "No"
 		"1" : "Yes"
-	]
+	] : "The item will be removed by the resource balancing system when it enters the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg"
 
 	input ArmGrenade(float) : "Set to arm the grenade for the specified amount of seconds"
 	output OnExplode(void) : "Fired when the grenade explodes"
@@ -510,7 +510,7 @@
 		"0" : "No"
 		"1" : "Yes"
 	]
-]
+] : "The item will be removed by the resource balancing system when it enters the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg"
 
 @PointClass base(BaseItemPhysics,HLVRAmmo) model("models/weapons/vr_alyxgun/vr_alyxgun_clip.vmdl") 
 	metadata
@@ -614,7 +614,7 @@
 	[
 		"0" : "No"
 		"1" : "Yes"
-	]
+	] : "The item will be removed by the resource balancing system when it enters the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg"
 
 	spawnflags(flags) [ group="Physics Properties" ] = 
 	[
@@ -946,7 +946,7 @@
 	[
 		"0" : "No"
 		"1" : "Yes"
-	]
+	] : "The item(s) will be removed by the resource balancing system when entering the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg"
 
 	// Inputs
 	input Kill(void) : "Remove the item crate"
@@ -1029,6 +1029,11 @@
 		"item_hlvr_grenade_frag" : "Frag Grenade"
 		"item_hlvr_crafting_currency_small" : "Small Crafting Currency"
 	]
+	mark_as_removable(choices) : "Item Removal Allowed for Ammo Balancing" : "0" =
+	[
+		"0" : "No"
+		"1" : "Yes"
+	] : "Each item will be removed by the resource balancing system when it enters the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg"
 ]
 
 @PointClass base( BasePropPhysics ) model("models/items/crafting_metal/crafting_resin_lrg5.vmdl") 
@@ -2762,10 +2767,10 @@
 {
 	entity_tool_name = "Player Input Helper"
 	entity_tool_group = "Player"
+	entity_tool_tip = "Editor entity which helps with !player input descriptions."
 }
 = player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
 [
-	EmbeddedProperty.editor_only(boolean) : "Editor Only" : "1" : "Entity is only displayed"
 	targetname(target_source) : "Name" : "!player" : "This should be !player to help with inputs."
 
 	input ApplyContinuousHapticPulse(void) : "Could not get this to work."
@@ -2785,18 +2790,4 @@
 	input StopVortEnergyResidual(void) : "Stops the residual energy effect on player hands."
 	input StopVortEnergyOverload(string) : "Stops the overload energy effect on player hands. Can choose individual hands by passing 'left' or 'right'."
 	input SuppressCough(integer) : "Stops the player from coughing. Enable with 1, disable with 0."
-]
-
-@PointClass base(Item, VRHandAttachment) model("models/weapons/vr_grenade/grenade_unarmed.vmdl")
-= testing_phys_thing
-[
-	ammobalancing_removable(choices) : "Removal Allowed for Ammo Balancing" : "0" =
-	[
-		"0" : "No"
-		"1" : "Yes"
-	]
-
-	input ArmGrenade(float) : "Set to arm the grenade for the specified amount of seconds"
-	output OnExplode(void) : "Fired when the grenade explodes"
-	interactAs(string) [ group="Physics Properties" ] : "interactAs" : "" : "comma-separated list of interaction layers"
 ]
