@@ -8,6 +8,8 @@
 * New `player_input_helper` editor entity to provide !player input descriptions.
 * New `Weapons` category containing the 4 common weapon item entities.
 * Certain entities that couldn't be simulated (like item_hlvr_weapon_energygun) can now be simulated.
+* prop_physics `CanPhysPull`/`ForceDropOnTeleport` properties and `Use` input.
+* Light cookies as drop down.
 
 ---
 
