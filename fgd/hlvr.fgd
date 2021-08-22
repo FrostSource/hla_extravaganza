@@ -2820,3 +2820,14 @@ metadata
 	input StopVortEnergyOverload(string) : "Stops the overload energy effect on player hands. Can choose individual hands by passing 'left' or 'right'."
 	input SuppressCough(integer) : "Stops the player from coughing. Enable with 1, disable with 0."
 ]
+
+@OverrideClass = BaseHeadcrab
+[
+	startburrowed(boolean) : "Start burrowed" : 0 : "Headcrab starts underground and will emerge when told with an input or when an enemy walks nearby."
+
+	input StartHangingFromCeiling(void) : "Start hanging from ceiling (this is non-functional in HL: Alyx)."
+	input DropFromCeiling(void) : "Drop if hanging from ceiling (this is non-functional in HL: Alyx)."
+	input Burrow(void) : "Burrow into the ground (this doesn't appear to be functional)."
+	input BurrowImmediate(void) : "Forces the headcrab to burrow underground."
+	input Unburrow(void) : "Causes the headcrab to emerge from underground if burrowed. NOTE: Will bug the headcrab if called when not underground!"
+]
