@@ -2831,3 +2831,11 @@ metadata
 	input BurrowImmediate(void) : "Forces the headcrab to burrow underground."
 	input Unburrow(void) : "Causes the headcrab to emerge from underground if burrowed. NOTE: Will bug the headcrab if called when not underground!"
 ]
+
+@OverrideClass = logic_branch :
+	"Tests a boolean value and fires an output based on whether the value is true or false. " +
+	"Any value besides 0 is considered true." +
+	"<br>Use this entity to branch between two potential sets of events."
+[
+	InitialValue(boolean) : "Initial value" : "0" : "Initial state of the branch."
+]
