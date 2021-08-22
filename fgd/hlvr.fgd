@@ -2758,8 +2758,14 @@
 [
 ]
 
-@PointClass size(16 16 16) = player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
+@PointClass size(16 16 16) metadata
+{
+	entity_tool_name = "Player Input Helper"
+	entity_tool_group = "Player"
+}
+= player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
 [
+	EmbeddedProperty.editor_only(boolean) : "Editor Only" : "1" : "Entity is only displayed"
 	targetname(target_source) : "Name" : "!player" : "This should be !player to help with inputs."
 
 	input ApplyContinuousHapticPulse(void) : "Could not get this to work."
@@ -2779,4 +2785,18 @@
 	input StopVortEnergyResidual(void) : "Stops the residual energy effect on player hands."
 	input StopVortEnergyOverload(string) : "Stops the overload energy effect on player hands. Can choose individual hands by passing 'left' or 'right'."
 	input SuppressCough(integer) : "Stops the player from coughing. Enable with 1, disable with 0."
+]
+
+@PointClass base(Item, VRHandAttachment) model("models/weapons/vr_grenade/grenade_unarmed.vmdl")
+= testing_phys_thing
+[
+	ammobalancing_removable(choices) : "Removal Allowed for Ammo Balancing" : "0" =
+	[
+		"0" : "No"
+		"1" : "Yes"
+	]
+
+	input ArmGrenade(float) : "Set to arm the grenade for the specified amount of seconds"
+	output OnExplode(void) : "Fired when the grenade explodes"
+	interactAs(string) [ group="Physics Properties" ] : "interactAs" : "" : "comma-separated list of interaction layers"
 ]
