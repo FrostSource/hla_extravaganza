@@ -2839,3 +2839,12 @@ metadata
 [
 	InitialValue(boolean) : "Initial value" : "0" : "Initial state of the branch."
 ]
+
+@OverrideClass = VScript
+[
+	vscripts(scriptlist) [ group="Misc" ] : "Entity Scripts" : "" :
+		"Name(s) of script files that are executed after all entities have spawned." +
+		"<br><br>Name must include any folders relative to the <b>vscripts<b> folder, e.g." +
+		"<br>myfolder1/myfolder2/myscript.lua" +
+		"<br><br>Separate each script with a space. Script names do not need to include the .lua file extension."
+]
