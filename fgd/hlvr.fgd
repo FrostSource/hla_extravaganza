@@ -500,7 +500,7 @@ metadata
 	}
 = item_hlvr_grenade_frag
 [
-	ammobalancing_removable(choices) : "Removal Allowed for Ammo Balancing" : "0" : "The item will be removed by the resource balancing system when it enters the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg" =
+	ammobalancing_removable(choices) : "Removal Allowed for Ammo Balancing" : "0" : "The item will be removed by the resource balancing system when it enters the PVS if the player already has one in hand or wrist pocket." =
 	[
 		"0" : "No"
 		"1" : "Yes"
@@ -639,7 +639,7 @@ metadata
 	}
 = item_healthvial
 [
-	ammobalancing_removable(choices) : "Removal Allowed for Ammo Balancing" : "0" : "The item will be removed by the resource balancing system when it enters the PVS if the player has more than defined in hlvr/cfg/skill_hlvr.cfg" =
+	ammobalancing_removable(choices) : "Removal Allowed for Ammo Balancing" : "0" : "The item will be removed by the resource balancing system when it enters the PVS if the player already has one in hand or wrist pocket." =
 	[
 		"0" : "No"
 		"1" : "Yes"
@@ -665,12 +665,15 @@ metadata
 	output OnGrabbitySlingshotEquipped(void) : "Fired when the item is first picked up from the world"
 ]
 
-@PointClass base(BaseItemPhysics) model("models/weapons/vr_tripmine/tripmine.vmdl") = item_hlvr_weapon_tripmine
+@PointClass base(BaseItemPhysics) model("models/weapons/vr_tripmine/tripmine.vmdl") = item_hlvr_weapon_tripmine : "A hackable tripmine."
 [
-	StartActivated(boolean) : "Armed on Spawn" : "0"
-	StartAttached(boolean) : "Attach on Spawn" : "0"
-	PreventTripping(boolean) : "Prevent Tripping" : "0" : "The mine not trip or explode but the laser will be on."
-	HackDifficultyName( string ) : "Hack Difficulty Name" : "Medium" : "The name for this tripmine hack that matches the difficulty values specified in holo_hacking_difficulty.txt."
+	StartActivated(boolean) : "Armed on Spawn" : "0" : "Tripmine will start attached to wall and activated."
+	StartAttached(boolean) : "Attach on Spawn" : "0" : "Tripmine will start attached to wall but deactivated. Don't select 'Armed on Spawn' at the same time as this."
+	PreventTripping(boolean) : "Prevent Tripping" : "0" : "The mine's laser will react to player hands but will not trip or explode by anything touching it."
+	HackDifficultyName( string ) : "Hack Difficulty Name" : "Medium" :
+		"The name for this tripmine hack that matches the difficulty values specified in scripts/holo_hacking_difficulty.txt." +
+		"<br><br>" +
+		"Common names: First, Easy, Medium, Hard, VeryHard."
 
 	input AllowTripping(void) : "Allows the mine to be tripped."
 	input ActivateMine(void) : "Activates mine."
@@ -935,8 +938,8 @@ metadata
 	DissolveItemsDelay(float) : "Dissolve Items Delay" : "3" : "Delay before the stripped items are dissolved."
 	ItemVelocity(float) : "Item Velocity" : "20" : "The velocity of the items as the exit the player."
 
-	input StripPlayer(void)
-	input StripPlayerQuiet(void)
+	input StripPlayer(void) : "Strips the player of all weapons and plays Inventory.StripWeapons"
+	input StripPlayerQuiet(void) : "Strips the player of all weapons, without any sound."
 ]
 
 @PointClass base(BasePropPhysics, Targetname, DamageFilter) model("models/props/supplycrate/supplycrate_01.vmdl") 
@@ -1110,8 +1113,8 @@ metadata
 	}
 = prop_hlvr_crafting_station : "Crafting Station"
 [
-	hacking_plug( target_destination ) : "Hacking Plug" : ""
-	is_powered( boolean ) : "Starts Powered" : "Sets whether the crafting station and the associated hacking plug start powered."
+	hacking_plug( target_destination ) : "Hacking Plug" : "" : "Name of the info_hlvr_holo_hacking_plug to use for this crafting station."
+	is_powered( boolean ) : "Starts Powered" : 0 : "Sets whether the crafting station and the associated hacking plug start powered."
 
 	lightmapstatic(choices) [ group="Render Properties" ] : "Lightmap Static" : 0 : "How this geometry influences baked lighting." =
 	[
@@ -1123,6 +1126,7 @@ metadata
 	input Enable(void) : "Enable the crafting station and the associated hacking plug if they did not start powered."
 	input OpenStation(void) : "Open the station. Skips the hacking plug puzzle and opens the station immediately."
 	input ReturnWeapon(void) : "Return the weapon to the player immediately."
+	input HackingPlugSuccess(void) : "Tells the crafting station that hacking has been completed. Normally sent by the hacking plug entity but can be sent manually to appear already hacked. Should be sent when already awake (e.g. OnPlayerNear) or will stay locked. Hacking plug should also be disabled at the same time."
 	output OnPlayerNear(void) : "Fired when the player is near the station before it has been hacked and opened."
 ]
 
@@ -1206,6 +1210,11 @@ metadata
 		"1" : "1"
 		"2" : "2"
 	]
+
+	StartSound(sound)  : "Start Sound" : "Anim_Combine_Locker.Grab" : "Sound to make when motion begins."
+	MoveSound(sound)   : "Movement Sound" : "Anim_Combine_Locker.MoveLp" : "Sound to make while moving."
+	StopSound(sound)   : "Stop Sound" : "Anim_Combine_Locker.End" : "Player stops interacting with the prop"
+	LockedSound(sound) : "Locked Sound" : "Anim_Int_Shared.Locked" : "Sound to make when the player interacts with the handle while it is locked."
 ]
 
 @PointClass base(Targetname) size(-4 -4 48, 4 4 56) = hlvr_vault_tractor_beam_console : "HLVR Vault Tractor Beam Console"
@@ -1603,7 +1612,7 @@ metadata
 @PointClass base(BasePropPhysics, Targetname, Parentname ) model("models/props_combine/combine_battery/combine_battery.vmdl") = item_hlvr_prop_battery : "Battery"
 [
 	battery_level(float) : "Battery Level (0-1)" : "1"
-	show_battery_level(choices) : "Show Battery Level" : "0" =
+	show_battery_level(choices) : "Show Battery Level" : "0" : "Displays percentage of battery level as text on top of the entity." =
 	[
 		"0" : "No"
 		"1" : "Yes"
@@ -1793,7 +1802,7 @@ metadata
 [
 	StartDisabled(boolean) : "Start Disabled" : 0
 
-	filtername(filterclass) : "Filter Name" : "Filter to use to see if activator triggers me. See filter_activator_name for more explanation."
+	//filtername(filterclass) : "Filter Name" : "Filter to use to see if activator triggers me. See filter_activator_name for more explanation."
 	
 	SetGravityScale(float) : "Scale gravity of objects in the field." : "1.0"
 	input SetGravityScale(float) : "Scale gravity of objects in the field."
@@ -1837,14 +1846,14 @@ metadata
 ]
 
 //@PointClass base(Targetname, Parentname) tags( Info ) iconsprite("editor/info_teleport_magnet.vmat") = info_teleport_magnet : "Teleport Magnet"
-@PointClass base(Targetname, Parentname) tags( Info ) sphere(10) color(255 0 0) = info_teleport_magnet : "Teleport Magnet"
+@PointClass base(Targetname, Parentname) tags( Info ) sphere(magnet_radius) color(255 0 0) = info_teleport_magnet : "Snaps the player's teleport target to this entity when it enters the chosen radius."
 [																				  
-	magnet_radius(float) : "Teleport Margnet Radius" : "0.0"
+	magnet_radius(float) : "Teleport Margnet Radius" : "0.0" : "Radius to 'capture' the player's teleport. 0 is a small default radius."
 	start_enabled(boolean) : "Start Enabled" : "1"
 
 	// Inputs
 	input Enable(void) : "Enable the trigger."
-	input Disable(void): "Disable the trigger."
+	input Disable(void) : "Disable the trigger."
 ]
 
 @SolidClass base(func_brush) = func_combine_barrier :
@@ -2166,7 +2175,7 @@ metadata
 	postfiredelay(float) : "Post Burst refire delay" : "4" : "Each time the turret fires a burst, it'll delay this amount of time before firing again. This delay will also be increased 0.75s for each projectile fired in the burst."
 ]
 
-@PointClass base(Targetname, Parentname) editormodel("models/props/xen_infestation_v2/xen_v2_floater_jellybobber.vmdl") = xen_flora_animatedmover
+@PointClass base(Targetname, Parentname) editormodel("models/props/xen_infestation_v2/xen_v2_floater_jellybobber.vmdl") = xen_flora_animatedmover : "An animated model that follows a set path."
 [
 	model(studio) : "Model" : "models/props/xen_infestation_v2/xen_v2_floater_jellybobber.vmdl"
 
@@ -2358,9 +2367,9 @@ metadata
 @PointClass base(Targetname, shared_enable_disable ) tags( Logic ) iconsprite("editor/game_event_listener.vmat") = logic_gameevent_listener:
 	"An entity that listens to game events and fires off an output when the named event it fired"
 [
-	gameeventname(string) : "Game Event Name"
-	gameeventitem(string) :	"Item Name"
-	output OnEventFired(void) : "Fire an output when the named event fires"	
+	gameeventname(string) : "Game Event Name" : "Event name as found in resource/game.gameevents"
+	gameeventitem(string) :	"Item Name" : "Used with specific game events that contain an item_name key. Will only fire if the specified entity name matches."
+	output OnEventFired(void) : "Fire an output when the named event fires."
 ]
 
 
@@ -2535,9 +2544,9 @@ metadata
 	base( Targetname, shared_enable_disable )
 	iconsprite("materials/editor/point_hlvr_player_input_modifier.vmat")
 = point_hlvr_player_input_modifier:
-	"An entity that can suppres player teleport and/or input"
+	"An entity that can suppres player teleport and/or input."
 [
-	disable_teleport(boolean) : "Disable teleportation" : "1" : "Disables player teleport mechanics, head-fading, and falling/mantling mechanics"
+	disable_teleport(boolean) : "Disable teleportation" : "1" : "Disables player teleport mechanics, head-fading, and falling/mantling mechanics. Does <b>not</b> disable continuous movement, use !player input EnableTeleport with override of 0 to disable all movement."
 	hide_hands(boolean) : "Hide hands" : "1" : "Hides hands (and weapons, items, etc.) and disables hand inputs (Also disabled telportation!)"
 ]
 
@@ -2617,7 +2626,7 @@ metadata
 	input Start( void ) : "Activate the render attribute."
 ]
 
-@PointClass base( Targetname ) = point_entity_fader
+@PointClass base( Targetname ) = point_entity_fader : "Fades an entity or entities render alpha based on a defined curve."
 [
 	target( target_destination ) : "Target" : "" : "Target entity to fade"
 
@@ -2712,7 +2721,7 @@ metadata
 	input AddContext(string) : "Adds context (context1:value1,context2:value2)."
 	input RemoveContext(string) : "Remove context (contextname)."
 	input ClearContext(void) : "Clear all context."
-	input SilencePlayer(bool): "Silence the player"
+	input SilencePlayer(bool) : "Silence the player with 0 or allow the player to speak with 1. Will also silence Russell speaking through headset."
 ]
 
 @PointClass base(Targetname) = point_training_gravity_gloves : "An entity that helps with the gravity glove training"
@@ -2747,6 +2756,8 @@ metadata
 @OverrideClass = prop_door_rotating_physics
 [
 	door_fixup_lighting_origin(boolean) [ group = "Render Properties" ] : "Door Lighting Origin Fixup" : "1" : "Ensure that the lighting origin of the door are appropriate for player position."
+	
+	ForceFullyOpen(boolean) : "Always Move to Fully Open" : "0" : "Door will always move to the nearest fully open or fully closed position taking away control from the player hand."
 ]
 
 @PointClass base(Targetname) = hl_vr_accessibility :
@@ -2792,12 +2803,13 @@ metadata
 [
 ]
 
-@PointClass size(16 16 16) metadata
-{
-	entity_tool_name = "Player Input Helper"
-	entity_tool_tip = "Editor entity which helps with !player input descriptions."
-	entity_tool_group = "Player"
-}
+@PointClass size(16 16 16)
+	metadata
+	{
+		entity_tool_name = "Player Input Helper"
+		entity_tool_tip = "Editor entity which helps with !player input descriptions."
+		entity_tool_group = "Player"
+	}
 = player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
 [
 	targetname(target_source) : "Name" : "!player" : "This should be !player to help with inputs."
@@ -2911,3 +2923,149 @@ metadata
 [
 	targets(node_id_List) : "Target Objects" : "" : "Limit the box to culling triangles from the specified target objects. Shift+Click with the eye-dropper active to append objects."
 ]
+
+@OverrideClass = logic_navigation
+[
+	target(target_destination) : "Navigation Entity" : "" : "Name of the entity to set navigation properties on."
+	navprop(choices) : "Nav Property" : "Ignore" : "The nav property to assign to the entity:<br><br>Ignore: NPCs Ignore this when navigating (they'll bump into it)." =
+	[
+		"Ignore" : "Ignore"
+	]
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Black Headcrab"
+		entity_tool_tip = "Black Headcrab"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_black
+[
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Antlion"
+		entity_tool_tip = "Antlion"
+		entity_tool_group = "NPCs"
+	}
+= npc_antlion : "Antlions will run away from ai_sound, type: Thumper.<br><br>Use <b>Worker Type</b> for a spitter type."
+[
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Armored Headcrab"
+		entity_tool_tip = "Armored Headcrab"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_armored
+[
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Lightning Dog"
+		entity_tool_tip = "Lightning Dog"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_runner
+[
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Pigeon"
+		entity_tool_tip = "Pigeon"
+		entity_tool_group = "NPCs"
+	}
+= npc_pigeon
+[
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Strider"
+		entity_tool_tip = "Strider"
+		entity_tool_group = "NPCs"
+	}
+= npc_strider
+[
+]
+@OverrideClass
+	metadata
+	{
+		entity_tool_name = "Jeff"
+		entity_tool_tip = "Jeff"
+		entity_tool_group = "NPCs"
+	}
+= npc_zombie_blind
+[
+]
+
+@OverrideClass = point_worldtext :
+[
+	message(text_block) : "Message" : "The text drawn in the world."
+	enabled(boolean) : "Start Enabled" : "1" : "If the text starts visible."
+	fullbright(boolean) : "Draw Fullbright" : "0" : "The text will ignore lighting."
+	color(color255) : "Color" : "0 0 0 255" : "Color of the text."
+	world_units_per_pixel(float) : "World Units Per Pixel" : "0.25" : "Defines how many world units it takes to represent a pixel. Smaller numbers give a higher resolution."
+	font_size(float) : "Font Size" : "20" : "Size of the font (0-255)"
+	font_name(string) : "Font Name" : "Arial Black" : "Name of the font to use.<br><br>NOTE: While installed fonts will display, the font will revert to default when playing on another machine."
+
+	justify_horizontal(choices) : "Horizontal Justify" : 0 =
+	[
+		0: "Left"
+		1: "Center"
+		2: "Right"
+	]
+
+	justify_vertical(choices) : "Vertical Justify" : 0 =
+	[
+		0: "Bottom"
+		1: "Center"
+		2: "Top"
+	]
+
+	reorient_mode(choices) : "Reorient Mode" : 0 =
+	[
+		0: "None"
+		1: "Rotate Around Up"
+	]
+
+	depth_render_offset(float) : "Depth Offset" : "0.125" : "Position offset from base position. Defaults at a small amount to avoid z-fighting against walls."
+	
+	// Inputs
+	input Enable(void) : "Enable rendering."
+	input Disable(void) : "Disable rendering."
+	input Toggle(void) : "Toggle rendering."
+	input SetMessage(string) : "Change the text."
+	input SetIntMessage(integer) : "Set the text to an integer value."
+]
+
+// Is filterclass important? Doesn't allow eye-dropper selection.
+@OverrideClass = TriggerOnce
+[
+	filtername(target_destination) : "Filter Name" : : "Filter to use to see if activator triggers me. See filter_activator_name for more explanation."
+]
+@OverrideClass = filter_multi
+[
+	Filter01(target_destination) : "Filter 1" : : "Activator filter to test."
+	Filter02(target_destination) : "Filter 2" : : "Activator filter to test."
+	Filter03(target_destination) : "Filter 3" : : "Activator filter to test."
+	Filter04(target_destination) : "Filter 4" : : "Activator filter to test."
+	Filter05(target_destination) : "Filter 5" : : "Activator filter to test."
+	Filter06(target_destination) : "Filter 6" : : "Activator filter to test."
+	Filter07(target_destination) : "Filter 7" : : "Activator filter to test."
+	Filter08(target_destination) : "Filter 8" : : "Activator filter to test."
+	Filter09(target_destination) : "Filter 9" : : "Activator filter to test."
+	Filter10(target_destination) : "Filter 10" : : "Activator filter to test."
+]
+@OverrideClass = filter_activator_name
+[
+	filtername(target_destination) : "Entity Name" : : "The name to filter by. If the filter mode is Allow, only entities whose "+
+		"name matches the given string will pass the filter. If the filter mode is Disallow, "+
+		"all entities EXCEPT those whose name matches the string will pass the filter."
+]
+
+
