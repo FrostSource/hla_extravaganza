@@ -1263,7 +1263,7 @@ metadata
 
 @PointClass base(Targetname) tags( Info ) toner_path_node() = info_hlvr_toner_path_node : "Node for the toner path"
 [
-	target(target_destination) : "Next toner node"
+	target(target_destination) : "Next toner node" : "The next info_hlvr_toner_path_node in this chain."
 	is_spline_node(boolean) : "Spline node" : "1" : "Is the path for this node a spline instead of a straight line to the next node."
 	inset_distance(float) : "Inset Distance" : "-1" : "How far the path is inset from this node's position. Default (-1) is 8 units."
 ]
@@ -2383,12 +2383,12 @@ metadata
 	input SetFlashlightEnable(void) : "Enable the flashlight"
 	input SetFlashlightDisable(float) : "Turn off the flashlight over specified duration"
 	input SetFlashlightFlicker(float) : "Make the flashlight flicker for the specified amount of time (max 10 seconds)"
-	input SetFlashglihtBrightness(float) : "Set the brightness level of the flashlight to the specified level (value should be between 0..1). It will adjust itself to the new brightness over time."
+	input SetFlashlightBrightness(float) : "Set the brightness level of the flashlight to the specified level (value should be between 0..1). It will adjust itself to the new brightness over time."
 	input HapticPulseLeftHand(float) : "Pulse the left hand, value is number of seconds. We use this for 'job to do' emphasis."
 	input HapticPulseHands(float) : "Pulse the hands, value is number of seconds."
-	input SetGlovesGordon(void): "Switch to the Gordon glove models"	
-	input SetGlovesAlyx(void): "Switch to the Alyx glove models"
-	input SetMuzzleFlashEmitLightEnable(boolean): "Enable or disable muzzle flashes emitting light when the player doesn't have the flashlight"
+	input SetGlovesGordon(void) : "Switch to the Gordon glove models"	
+	input SetGlovesAlyx(void) : "Switch to the Alyx glove models"
+	input SetMuzzleFlashEmitLightEnable(boolean) : "Enable or disable muzzle flashes emitting light when the player doesn't have the flashlight"
 	input TestWeaponActive(void) : "Fires the OnWeaponActive output if the player currently has a weapon drawn, otherwise fires the OnWeaponNotActive output."
 	input SetFullPlayerHealthOverTime(float) : "Set the player health to max value over time, value is number of seconds."
 	input SetTeleportFlipped(boolean) : "Invert the player teleport arc."
@@ -2396,8 +2396,8 @@ metadata
 	input SetCanAttackDisable(void) : "Prevent the player from attacking"
 	input CheckWearingHat(void) : "Test to see if the player is wearing a hat. Will fire either of the OutPlayerIsWearingHat/OutPlayerIsNotWearingHat outputs."
 	input SetReceivedDamageScale(float) : "Scale the damage taken by the player by the specified amount. Set it back to 1 to clear it."
-	input SetPreventSaving(void) : "Set to prevent the player from bringing up the Game Menu"
-	input SetEnableSaving(void) : "Restore the Ability for Players to bring up the Game Menu"
+	input SetPreventSaving(void) : "Set to prevent the player from saving the game."
+	input SetEnableSaving(void) : "Restore the ability for players to save the game."
 	input SetHUDEnable(void) : "Enable 2D HUD"
 	input SetHUDDisable(void) : "Disable 2D HUD"
 	input CheckPlayerHasVodkaBottleInWristPocket(void) : "Test to see if the player has a vodka bottle in either of their wrist pockets. Will fire OnPlayerHasOneVodkaBottleInWristPocket or OnPlayerHasTwoVodkaBottlesInWristPockets if true."
@@ -2849,9 +2849,23 @@ metadata
 		"<br><br>Separate each script with a space. Script names do not need to include the .lua file extension."
 ]
 
-@OverrideClass = BasePropPhysics
+@OverrideClass = prop_physics
 [
-	CanPhysPull(boolean) [ group="Physics Properties" ] : "Can Phys-Pull" : "0" : "If disabled, player will not be able to use the grabbity gloves with this object."
+	CanPhysPull(boolean) [ group="Physics Properties" ] : "Can Phys-Pull" : "1" : "If disabled, player will not be able to use the grabbity gloves with this object."
+	ForceDropOnTeleport(boolean) [ group="Physics Properties" ] : "Force Drop On Teleport" : "0" : "If set, player will drop this object when moving with either teleport or continuous movement."
+
+	input Use(integer) : "Forces player hand to grab the prop regardless of gripping or distance. The hand will warp to the prop and stay attached until the player grips and ungrips.<br>Pass hand ID using parameter override (0 = left, 1 = right)."
+]
+@OverrideClass = prop_physics_override
+[
+	CanPhysPull(boolean) [ group="Physics Properties" ] : "Can Phys-Pull" : "1" : "If disabled, player will not be able to use the grabbity gloves with this object."
+	ForceDropOnTeleport(boolean) [ group="Physics Properties" ] : "Force Drop On Teleport" : "0" : "If set, player will drop this object when moving with either teleport or continuous movement."
+
+	input Use(integer) : "Forces player hand to grab the prop regardless of gripping or distance. The hand will warp to the prop and stay attached until the player grips and ungrips.<br>Pass hand ID using parameter override (0 = left, 1 = right)."
+]
+@OverrideClass = func_physbox
+[
+	CanPhysPull(boolean) [ group="Physics Properties" ] : "Can Phys-Pull" : "1" : "If disabled, player will not be able to use the grabbity gloves with this object."
 	ForceDropOnTeleport(boolean) [ group="Physics Properties" ] : "Force Drop On Teleport" : "0" : "If set, player will drop this object when moving with either teleport or continuous movement."
 
 	input Use(integer) : "Forces player hand to grab the prop regardless of gripping or distance. The hand will warp to the prop and stay attached until the player grips and ungrips.<br>Pass hand ID using parameter override (0 = left, 1 = right)."
@@ -2891,4 +2905,9 @@ metadata
 		"combinecleanup" : "combinecleanup"
 		"electrical" : "electrical"
 	]
+]
+
+@OverrideClass = info_cull_triangles : "A static (compile-time) volume that will delete geometry inside it as part of map compile. Does not work with Fast Compile."
+[
+	targets(node_id_List) : "Target Objects" : "" : "Limit the box to culling triangles from the specified target objects. Shift+Click with the eye-dropper active to append objects."
 ]
