@@ -2848,3 +2848,47 @@ metadata
 		"<br>myfolder1/myfolder2/myscript.lua" +
 		"<br><br>Separate each script with a space. Script names do not need to include the .lua file extension."
 ]
+
+@OverrideClass = BasePropPhysics
+[
+	CanPhysPull(boolean) [ group="Physics Properties" ] : "Can Phys-Pull" : "0" : "If disabled, player will not be able to use the grabbity gloves with this object."
+	ForceDropOnTeleport(boolean) [ group="Physics Properties" ] : "Force Drop On Teleport" : "0" : "If set, player will drop this object when moving with either teleport or continuous movement."
+
+	input Use(integer) : "Forces player hand to grab the prop regardless of gripping or distance. The hand will warp to the prop and stay attached until the player grips and ungrips.<br>Pass hand ID using parameter override (0 = left, 1 = right)."
+]
+
+@OverrideClass = light_spot
+[
+	lightcookie(choices) : "Light Cookie" : "" : "Light cookie name in materials/effects/lightcookies.txt" =
+	[
+		"" : "<NONE>"
+		"flashlight" : "flashlight"
+		"dirt1" : "dirt1"
+		"dirt2" : "dirt2"
+		"blank" : "blank"
+		"muzzleflash" : "muzzleflash"
+		"ring" : "ring"
+		"box" : "box"
+		"box_soft" : "box_soft"
+		"combinecleanup" : "combinecleanup"
+		"electrical" : "electrical"
+	]
+]
+
+@OverrideClass = light_ortho
+[
+	lightcookie(choices) : "Light Cookie" : "" : "Light cookie name in materials/effects/lightcookies.txt" =
+	[
+		"" : "<NONE>"
+		"flashlight" : "flashlight"
+		"dirt1" : "dirt1"
+		"dirt2" : "dirt2"
+		"blank" : "blank"
+		"muzzleflash" : "muzzleflash"
+		"ring" : "ring"
+		"box" : "box"
+		"box_soft" : "box_soft"
+		"combinecleanup" : "combinecleanup"
+		"electrical" : "electrical"
+	]
+]
