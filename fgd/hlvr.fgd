@@ -2367,8 +2367,8 @@ metadata
 @PointClass base(Targetname, shared_enable_disable ) tags( Logic ) iconsprite("editor/game_event_listener.vmat") = logic_gameevent_listener:
 	"An entity that listens to game events and fires off an output when the named event it fired"
 [
-	gameeventname(string) : "Game Event Name" : "Event name as found in resource/game.gameevents"
-	gameeventitem(string) :	"Item Name" : "Used with specific game events that contain an item_name key. Will only fire if the specified entity name matches."
+	gameeventname(string) : "Game Event Name" : : "Event name as found in resource/game.gameevents"
+	gameeventitem(string) :	"Item Name" : : "Used with specific game events that contain an item_name key. Will only fire if the specified entity name matches."
 	output OnEventFired(void) : "Fire an output when the named event fires."
 ]
 
