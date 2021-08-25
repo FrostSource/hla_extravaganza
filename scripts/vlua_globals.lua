@@ -79,232 +79,232 @@ T01 = {
 
 -- A case can be made more removing many of these events that have no use in Alyx.
 ---@alias GAME_EVENTS_HLVR
----| "item_pickup" # Player grabs an object with hand.
----| "item_released" # Player drops an object from hand.
----| "item_attachments" # Unknown.
----| "weapon_switch" # Player switches weapon.
----| "grabbity_glove_pull" # Player pulls object with glove.
----| "grabbity_glove_catch" # Player grabs an object after pulling it with glove.
----| "grabbity_glove_highlight_start" # Grabbity glove starts highlighting an object.
----| "grabbity_glove_highlight_stop" # Grabbity glove stops highlighting an object.
----| "grabbity_glove_locked_on_start" # Player locks onto object with glove.
----| "grabbity_glove_locked_on_stop" # Player stops locking onto object with glove.
----| "player_gestured" # Player gestures with hand.
----| "player_shoot_weapon" # Player shot any weapon.
----| "player_teleport_start" # Player starts the teleporting process (when button is held or released?).
----| "player_teleport_finish" # Player finishes the teleporting process.
----| "player_picked_up_weapon_off_hand" # Player grabs usable weapon with non-dominant hand.
----| "player_picked_up_weapon_off_hand_crafting" # Player grabs weapon with non-dominant hand from crafting cradle.
----| "player_eject_clip" # Player ejects the magazine from the pistol.
----| "player_armed_grenade" # Player arms any(?) grenade.
----| "player_health_pen_prepare" # Player reveals a health pen needle.
----| "player_health_pen_retract" # Player retracts a health pen needle.
----| "player_health_pen_used" # Player injects a health pen.
----| "player_pistol_empty_clip" #
----| "player_pistol_clip_inserted" #
----| "player_pistol_empty_chamber" #
----| "player_pistol_chambered_round" #
----| "player_pistol_slide_lock" #
----| "player_pistol_bought_lasersight" #
----| "player_pistol_toggle_lasersight" #
----| "player_pistol_bought_burstfire" #
----| "player_pistol_toggle_burstfire" #
----| "player_pistol_pickedup_charged_clip" #
----| "player_pistol_armed_charged_clip" #
----| "player_pistol_clip_charge_ended" #
----| "player_retrieved_backpack_clip" # Player grabs pistol magazine from backpack.
----| "player_drop_ammo_in_backpack" # Player stores any ammo type in backpack.
----| "player_drop_resin_in_backpack" # Player stores resin in backpack.
----| "player_using_healthstation" #
----| "health_station_open" #
----| "player_looking_at_wristhud" #
----| "player_shotgun_shell_loaded" #
----| "player_shotgun_state_changed" #
----| "player_shotgun_upgrade_grenade_launcher_state" #
----| "player_shotung_autoloader_state" #
----| "player_shotgun_autoloader_shells_added" #
----| "player_shotgun_upgrade_quickfire" #
----| "player_shotgun_is_ready" #
----| "player_shotgun_open" #
----| "player_shotgun_loaded_shells" #
----| "player_shotgun_upgrade_grenade_long" #
----| "player_rapidfire_capsule_chamber_empty" #
----| "player_rapidfire_cycled_capsule" #
----| "player_rapidfire_magazine_empty" #
----| "player_rapidfire_opened_casing" #
----| "player_rapidfire_closed_casing" #
----| "player_rapidfire_inserted_capsule_in_chamber" #
----| "player_rapidfire_inserted_capsule_in_magazine" #
----| "player_rapidfire_upgrade_selector_can_use" #
----| "player_rapidfire_upgrade_selector_used" #
----| "player_rapidfire_upgrade_can_charge" #
----| "player_rapidfire_upgrade_can_not_charge" #
----| "player_rapidfire_upgrade_fully_charged" #
----| "player_rapidfire_upgrade_not_fully_charged" #
----| "player_rapidfire_upgrade_fired" #
----| "player_rapidfire_energy_ball_can_charge" #
----| "player_rapidfire_energy_ball_fully_charged" #
----| "player_rapidfire_energy_ball_not_fully_charged" #
----| "player_rapidfire_energy_ball_can_pick_up" #
----| "player_rapidfire_energy_balls_picked_up" #
----| "player_rapidfire_stun_grenade_ready" #
----| "player_rapidfire_stun_grenade_not_ready" #
----| "player_rapidfire_stun_grenade_picked_up" #
----| "player_rapidfire_explode_button_ready" #
----| "player_rapidfire_explode_button_not_ready" #
----| "player_rapidfire_explode_button_pressed" #
----| "game_saved" # Game saves (does this trigger on autosaves?)
----| "player_attempted_invalid_storage" # Player tried to store arbitrary prop in backpack (does this fire for clips too?)
----| "player_attempted_invalid_pistol_clip_storage" # Player tried to store pistol magazine in backpack.
----| "opened_weapon_switch" # Player opened the weapon switch menu.
----| "player_started_2h_levitate" # is this ladders?
----| "player_stored_item_in_itemholder" # Player put item in wrist pocket. Fires after item_released.
----| "player_removed_item_from_itemholder" # Player took item from wrist pocket. (does fire after item_pickup?)
----| "player_picked_up_flashlight" #
----| "player_picked_up_flashlight_single_controller" #
----| "player_attached_flashlight" #
----| "two_hand_pistol_grab_start" #
----| "two_hand_pistol_grab_end" #
----| "two_hand_rapidfire_grab_start" #
----| "two_hand_rapidfire_grab_end" #
----| "two_hand_shotgun_grab_start" #
----| "two_hand_shotgun_grab_end" #
----| "health_pen_teach_storage" # what happens if you trigger these?
----| "health_vial_teach_storage" #
----| "player_opened_game_menu" # does this fire for client or server?
----| "player_closed_game_menu" #
----| "player_pickedup_storable_clip" #
----| "player_pickedup_insertable_clip" #
----| "player_covered_mouth" #
----| "player_upgrade_weapon" #
----| "soldier_killed_by_gastank_explosion" #
----| "charger_killed_while_shield_up" #
----| "steal_xen_grenade" #
----| "tripmine_hack_started" #
----| "tripmine_hacked" #
----| "primary_hand_changed" #
----| "close_to_blindzombie" #
----| "player_grabbed_by_barnacle" #
----| "player_released_by_barnacle" #
----| "single_controller_mode_changed" #
----| "movement_hand_changed" #
----| "npc_ragdoll_created" # Fired when an npc is killed and transitioning to ragdoll.
----| "friendly_npc_spawned" #
----| "combine_tank_moved_by_player" #
----| "change_level_activated" #
----| "save_game_loaded" #
----| "player_quick_turned" #
----| "game_option_changed" #
----| "barnacle_grabbed_zombie" # test headcrab and combine
----| "barnacle_grabbed_grenade" #
----| "barnacle_killed_by_grenade" #
----| "zombie_killed_by_grenade" #
----| "player_continuous_jump_finish" #
----| "player_continuous_mantle_finish" #
----| "player_crouch_toggle_finish" #
----| "player_stand_toggle_finish" #
----| "player_grabbed_ladder" #
----| "commentary_started" #
----| "commentary_stopped" #
----| "vr_controller_hint_create" # can create hints?
+---| "\"item_pickup\"" # Player grabs an object with hand.
+---| "\"item_released\"" # Player drops an object from hand.
+---| "\"item_attachments\"" # Unknown.
+---| "\"weapon_switch\"" # Player switches weapon.
+---| "\"grabbity_glove_pull\"" # Player pulls object with glove.
+---| "\"grabbity_glove_catch\"" # Player grabs an object after pulling it with glove.
+---| "\"grabbity_glove_highlight_start\"" # Grabbity glove starts highlighting an object.
+---| "\"grabbity_glove_highlight_stop\"" # Grabbity glove stops highlighting an object.
+---| "\"grabbity_glove_locked_on_start\"" # Player locks onto object with glove.
+---| "\"grabbity_glove_locked_on_stop\"" # Player stops locking onto object with glove.
+---| "\"player_gestured\"" # Player gestures with hand.
+---| "\"player_shoot_weapon\"" # Player shot any weapon.
+---| "\"player_teleport_start\"" # Player starts the teleporting process (when button is held or released?).
+---| "\"player_teleport_finish\"" # Player finishes the teleporting process.
+---| "\"player_picked_up_weapon_off_hand\"" # Player grabs usable weapon with non-dominant hand.
+---| "\"player_picked_up_weapon_off_hand_crafting\"" # Player grabs weapon with non-dominant hand from crafting cradle.
+---| "\"player_eject_clip\"" # Player ejects the magazine from the pistol.
+---| "\"player_armed_grenade\"" # Player arms any(?) grenade.
+---| "\"player_health_pen_prepare\"" # Player reveals a health pen needle.
+---| "\"player_health_pen_retract\"" # Player retracts a health pen needle.
+---| "\"player_health_pen_used\"" # Player injects a health pen.
+---| "\"player_pistol_empty_clip\"" #
+---| "\"player_pistol_clip_inserted\"" #
+---| "\"player_pistol_empty_chamber\"" #
+---| "\"player_pistol_chambered_round\"" #
+---| "\"player_pistol_slide_lock\"" #
+---| "\"player_pistol_bought_lasersight\"" #
+---| "\"player_pistol_toggle_lasersight\"" #
+---| "\"player_pistol_bought_burstfire\"" #
+---| "\"player_pistol_toggle_burstfire\"" #
+---| "\"player_pistol_pickedup_charged_clip\"" #
+---| "\"player_pistol_armed_charged_clip\"" #
+---| "\"player_pistol_clip_charge_ended\"" #
+---| "\"player_retrieved_backpack_clip\"" # Player grabs pistol magazine from backpack.
+---| "\"player_drop_ammo_in_backpack\"" # Player stores any ammo type in backpack.
+---| "\"player_drop_resin_in_backpack\"" # Player stores resin in backpack.
+---| "\"player_using_healthstation\"" #
+---| "\"health_station_open\"" #
+---| "\"player_looking_at_wristhud\"" #
+---| "\"player_shotgun_shell_loaded\"" #
+---| "\"player_shotgun_state_changed\"" #
+---| "\"player_shotgun_upgrade_grenade_launcher_state\"" #
+---| "\"player_shotung_autoloader_state\"" #
+---| "\"player_shotgun_autoloader_shells_added\"" #
+---| "\"player_shotgun_upgrade_quickfire\"" #
+---| "\"player_shotgun_is_ready\"" #
+---| "\"player_shotgun_open\"" #
+---| "\"player_shotgun_loaded_shells\"" #
+---| "\"player_shotgun_upgrade_grenade_long\"" #
+---| "\"player_rapidfire_capsule_chamber_empty\"" #
+---| "\"player_rapidfire_cycled_capsule\"" #
+---| "\"player_rapidfire_magazine_empty\"" #
+---| "\"player_rapidfire_opened_casing\"" #
+---| "\"player_rapidfire_closed_casing\"" #
+---| "\"player_rapidfire_inserted_capsule_in_chamber\"" #
+---| "\"player_rapidfire_inserted_capsule_in_magazine\"" #
+---| "\"player_rapidfire_upgrade_selector_can_use\"" #
+---| "\"player_rapidfire_upgrade_selector_used\"" #
+---| "\"player_rapidfire_upgrade_can_charge\"" #
+---| "\"player_rapidfire_upgrade_can_not_charge\"" #
+---| "\"player_rapidfire_upgrade_fully_charged\"" #
+---| "\"player_rapidfire_upgrade_not_fully_charged\"" #
+---| "\"player_rapidfire_upgrade_fired\"" #
+---| "\"player_rapidfire_energy_ball_can_charge\"" #
+---| "\"player_rapidfire_energy_ball_fully_charged\"" #
+---| "\"player_rapidfire_energy_ball_not_fully_charged\"" #
+---| "\"player_rapidfire_energy_ball_can_pick_up\"" #
+---| "\"player_rapidfire_energy_balls_picked_up\"" #
+---| "\"player_rapidfire_stun_grenade_ready\"" #
+---| "\"player_rapidfire_stun_grenade_not_ready\"" #
+---| "\"player_rapidfire_stun_grenade_picked_up\"" #
+---| "\"player_rapidfire_explode_button_ready\"" #
+---| "\"player_rapidfire_explode_button_not_ready\"" #
+---| "\"player_rapidfire_explode_button_pressed\"" #
+---| "\"game_saved\"" # Game saves (does this trigger on autosaves?)
+---| "\"player_attempted_invalid_storage\"" # Player tried to store arbitrary prop in backpack (does this fire for clips too?)
+---| "\"player_attempted_invalid_pistol_clip_storage\"" # Player tried to store pistol magazine in backpack.
+---| "\"opened_weapon_switch\"" # Player opened the weapon switch menu.
+---| "\"player_started_2h_levitate\"" # is this ladders?
+---| "\"player_stored_item_in_itemholder\"" # Player put item in wrist pocket. Fires after item_released.
+---| "\"player_removed_item_from_itemholder\"" # Player took item from wrist pocket. (does fire after item_pickup?)
+---| "\"player_picked_up_flashlight\"" #
+---| "\"player_picked_up_flashlight_single_controller\"" #
+---| "\"player_attached_flashlight\"" #
+---| "\"two_hand_pistol_grab_start\"" #
+---| "\"two_hand_pistol_grab_end\"" #
+---| "\"two_hand_rapidfire_grab_start\"" #
+---| "\"two_hand_rapidfire_grab_end\"" #
+---| "\"two_hand_shotgun_grab_start\"" #
+---| "\"two_hand_shotgun_grab_end\"" #
+---| "\"health_pen_teach_storage\"" # what happens if you trigger these?
+---| "\"health_vial_teach_storage\"" #
+---| "\"player_opened_game_menu\"" # does this fire for client or server?
+---| "\"player_closed_game_menu\"" #
+---| "\"player_pickedup_storable_clip\"" #
+---| "\"player_pickedup_insertable_clip\"" #
+---| "\"player_covered_mouth\"" #
+---| "\"player_upgrade_weapon\"" #
+---| "\"soldier_killed_by_gastank_explosion\"" #
+---| "\"charger_killed_while_shield_up\"" #
+---| "\"steal_xen_grenade\"" #
+---| "\"tripmine_hack_started\"" #
+---| "\"tripmine_hacked\"" #
+---| "\"primary_hand_changed\"" #
+---| "\"close_to_blindzombie\"" #
+---| "\"player_grabbed_by_barnacle\"" #
+---| "\"player_released_by_barnacle\"" #
+---| "\"single_controller_mode_changed\"" #
+---| "\"movement_hand_changed\"" #
+---| "\"npc_ragdoll_created\"" # Fired when an npc is killed and transitioning to ragdoll.
+---| "\"friendly_npc_spawned\"" #
+---| "\"combine_tank_moved_by_player\"" #
+---| "\"change_level_activated\"" #
+---| "\"save_game_loaded\"" #
+---| "\"player_quick_turned\"" #
+---| "\"game_option_changed\"" #
+---| "\"barnacle_grabbed_zombie\"" # test headcrab and combine
+---| "\"barnacle_grabbed_grenade\"" #
+---| "\"barnacle_killed_by_grenade\"" #
+---| "\"zombie_killed_by_grenade\"" #
+---| "\"player_continuous_jump_finish\"" #
+---| "\"player_continuous_mantle_finish\"" #
+---| "\"player_crouch_toggle_finish\"" #
+---| "\"player_stand_toggle_finish\"" #
+---| "\"player_grabbed_ladder\"" #
+---| "\"commentary_started\"" #
+---| "\"commentary_stopped\"" #
+---| "\"vr_controller_hint_create\"" # can create hints?
 
 ---@alias GAME_EVENTS_CORE
----| "server_spawn" # As soon as a server starts.
----| "server_pre_shutdown" # Server is about to be shut down.
----| "server_shutdown" # Server shut down.
----| "server_message" # A generic server message.
----| "server_cvar" # A server console var has changed.
----| "server_addban" #
----| "server_removeban" #
----| "player_activate" #
----| "player_connect_full" # Player has sent final message in the connection sequence.
----| "player_say" #
----| "player_full_update" #
----| "player_connect" # A new client connected.
----| "player_disconnect" # A client was disconnected.
----| "player_info" # A player changed his name.
----| "player_spawn" # Player spawned in game.
----| "player_team" # Player change his team.
----| "local_player_team" # Sent only on the clientfor the local player - happens only after the local players team variable has been updated.
----| "player_changename" #
----| "player_class" # A player changed his class.
----| "player_score" # Players score changed.
----| "player_hurt" #
----| "player_shoot" # Player shoot his weapon.
----| "player_chat" # A public player chat.
----| "teamplay_broadcast_audio" # Emits a sound to everyone on a team.
----| "finale_start" #
----| "player_stats_updated" #
----| "user_data_downloaded" # Fired when achievements/stats are downloaded from Steam or XBox Live.
----| "ragdoll_dissolved" #
----| "team_info" # Info about team.
----| "team_score" # Team score changed.
----| "hltv_cameraman" # A spectator/player is a cameraman.
----| "hltv_chase" # Shot of a single entity.
----| "hltv_rank_camera" # A camera ranking.
----| "hltv_rank_entity" # An entity ranking.
----| "hltv_fixed" # Show from fixed view.
----| "hltv_message" # A HLTV message send by moderators.
----| "hltv_statis" # General HLTV status.
----| "hltv_title" #
----| "hltv_chat" # A HLTV chat msg sent by spectators.
----| "hltv_versioninfo" #
----| "demo_start" #
----| "demo_stop" #
----| "demo_skip" #
----| "map_shutdown" #
----| "map_transition" #
----| "hostname_changed" #
----| "difficulty_changed" #
----| "game_message" # A message send by game logic to everyone.
----| "game_newmap" # Send when new map is completely loaded.
----| "round_start" #
----| "round_end" #
----| "round_start_pre_entity" #
----| "round_start_post_nav" #
----| "round_freeze_end" #
----| "teamplay_round_start" # Round restart.
----| "player_death" #
----| "player_footstep" #
----| "player_hintmessage" #
----| "beak_breakable" #
----| "break_prop" #
----| "entity_killed" #
----| "door_open" #
----| "door_close" #
----| "door_unlocked" #
----| "vote_started" #
----| "vote_failed" #
----| "vote_passed" #
----| "vote_changed" #
----| "vote_cast_yes" #
----| "vote_cast_no" #
----| "achievement_event" #
----| "achievement_earned" #
----| "achievement_write_failed" # Used for a notification message when an achievement fails to write.
----| "bonus_updated" #
----| "spec_target_updated" #
----| "entity_visible" #
----| "player_use_miss" # The player pressed use but a use entity wasn't found.
----| "gameinstructor_draw" #
----| "gameinstructor_nodraw" #
----| "flare_ignite_npc" #
----| "helicopter_grenade_punt_miss" #
----| "physgun_pickup" #
----| "inventory_updated" #
----| "cart_updated" #
----| "store_pricesheet_updated" #
----| "item_schema_initialized" #
----| "drop_rate_modified" #
----| "event_ticket_modified" #
----| "gc_connected" #
----| "instructor_start_lesson" # see if this can create better entity hints
----| "instructor_close_lesson" #
----| "instructor_server_hint_create" # Create a hint using data supplied by the server/map. Intended for hints to smooth playtests before content is ready to make the hint unneccessary. NOT INTENDED AS A SHIPPABLE CRUTCH.
----| "instructor_server_hint_stop" # Destroys a server/map created hint.
----| "set_instructor_group_enabled" #
----| "clientside_lesson_closed" #
----| "dynamic_shadow_light_changed" #
+---| "\"server_spawn\"" # As soon as a server starts.
+---| "\"server_pre_shutdown\"" # Server is about to be shut down.
+---| "\"server_shutdown\"" # Server shut down.
+---| "\"server_message\"" # A generic server message.
+---| "\"server_cvar\"" # A server console var has changed.
+---| "\"server_addban\"" #
+---| "\"server_removeban\"" #
+---| "\"player_activate\"" #
+---| "\"player_connect_full\"" # Player has sent final message in the connection sequence.
+---| "\"player_say\"" #
+---| "\"player_full_update\"" #
+---| "\"player_connect\"" # A new client connected.
+---| "\"player_disconnect\"" # A client was disconnected.
+---| "\"player_info\"" # A player changed his name.
+---| "\"player_spawn\"" # Player spawned in game.
+---| "\"player_team\"" # Player change his team.
+---| "\"local_player_team\"" # Sent only on the clientfor the local player - happens only after the local players team variable has been updated.
+---| "\"player_changename\"" #
+---| "\"player_class\"" # A player changed his class.
+---| "\"player_score\"" # Players score changed.
+---| "\"player_hurt\"" #
+---| "\"player_shoot\"" # Player shoot his weapon.
+---| "\"player_chat\"" # A public player chat.
+---| "\"teamplay_broadcast_audio\"" # Emits a sound to everyone on a team.
+---| "\"finale_start\"" #
+---| "\"player_stats_updated\"" #
+---| "\"user_data_downloaded\"" # Fired when achievements/stats are downloaded from Steam or XBox Live.
+---| "\"ragdoll_dissolved\"" #
+---| "\"team_info\"" # Info about team.
+---| "\"team_score\"" # Team score changed.
+---| "\"hltv_cameraman\"" # A spectator/player is a cameraman.
+---| "\"hltv_chase\"" # Shot of a single entity.
+---| "\"hltv_rank_camera\"" # A camera ranking.
+---| "\"hltv_rank_entity\"" # An entity ranking.
+---| "\"hltv_fixed\"" # Show from fixed view.
+---| "\"hltv_message\"" # A HLTV message send by moderators.
+---| "\"hltv_statis\"" # General HLTV status.
+---| "\"hltv_title\"" #
+---| "\"hltv_chat\"" # A HLTV chat msg sent by spectators.
+---| "\"hltv_versioninfo\"" #
+---| "\"demo_start\"" #
+---| "\"demo_stop\"" #
+---| "\"demo_skip\"" #
+---| "\"map_shutdown\"" #
+---| "\"map_transition\"" #
+---| "\"hostname_changed\"" #
+---| "\"difficulty_changed\"" #
+---| "\"game_message\"" # A message send by game logic to everyone.
+---| "\"game_newmap\"" # Send when new map is completely loaded.
+---| "\"round_start\"" #
+---| "\"round_end\"" #
+---| "\"round_start_pre_entity\"" #
+---| "\"round_start_post_nav\"" #
+---| "\"round_freeze_end\"" #
+---| "\"teamplay_round_start\"" # Round restart.
+---| "\"player_death\"" #
+---| "\"player_footstep\"" #
+---| "\"player_hintmessage\"" #
+---| "\"beak_breakable\"" #
+---| "\"break_prop\"" #
+---| "\"entity_killed\"" #
+---| "\"door_open\"" #
+---| "\"door_close\"" #
+---| "\"door_unlocked\"" #
+---| "\"vote_started\"" #
+---| "\"vote_failed\"" #
+---| "\"vote_passed\"" #
+---| "\"vote_changed\"" #
+---| "\"vote_cast_yes\"" #
+---| "\"vote_cast_no\"" #
+---| "\"achievement_event\"" #
+---| "\"achievement_earned\"" #
+---| "\"achievement_write_failed\"" # Used for a notification message when an achievement fails to write.
+---| "\"bonus_updated\"" #
+---| "\"spec_target_updated\"" #
+---| "\"entity_visible\"" #
+---| "\"player_use_miss\"" # The player pressed use but a use entity wasn't found.
+---| "\"gameinstructor_draw\"" #
+---| "\"gameinstructor_nodraw\"" #
+---| "\"flare_ignite_npc\"" #
+---| "\"helicopter_grenade_punt_miss\"" #
+---| "\"physgun_pickup\"" #
+---| "\"inventory_updated\"" #
+---| "\"cart_updated\"" #
+---| "\"store_pricesheet_updated\"" #
+---| "\"item_schema_initialized\"" #
+---| "\"drop_rate_modified\"" #
+---| "\"event_ticket_modified\"" #
+---| "\"gc_connected\"" #
+---| "\"instructor_start_lesson\"" # see if this can create better entity hints
+---| "\"instructor_close_lesson\"" #
+---| "\"instructor_server_hint_create\"" # Create a hint using data supplied by the server/map. Intended for hints to smooth playtests before content is ready to make the hint unneccessary. NOT INTENDED AS A SHIPPABLE CRUTCH.
+---| "\"instructor_server_hint_stop\"" # Destroys a server/map created hint.
+---| "\"set_instructor_group_enabled\"" #
+---| "\"clientside_lesson_closed\"" #
+---| "\"dynamic_shadow_light_changed\"" #
 
 ---@alias GAME_EVENTS_ALL GAME_EVENTS_HLVR | GAME_EVENTS_CORE
 
@@ -1256,7 +1256,7 @@ function CBaseEntity:AddEffects(flags) end
 function CBaseEntity:ApplyAbsVelocityImpulse(impulse) end
 ---Apply an Angular Velocity Impulse.
 ---@param angImpulse Vector
-function CBaseEntity:ApplyLocaAngularVelocityImpulse(angImpulse) end
+function CBaseEntity:ApplyLocalAngularVelocityImpulse(angImpulse) end
 ---Get float value for an entity attribute.
 ---@param name string
 ---@param default float
@@ -3493,23 +3493,23 @@ PATTACH_RENDERORIGIN_FOLLOW = 10
 --PATTACH_CUSTOM_GAME_STATE_1 = 14
 MAX_PATTACH_TYPES           = 15
 ---@alias ENUM_PATTACH
----| "-1" PATTACH_INVALID
----| "0" PATTACH_ABSORIGIN
----| "1" PATTACH_ABSORIGIN_FOLLOW
----| "2" PATTACH_CUSTOMORIGIN
----| "3" PATTACH_CUSTOMORIGIN_FOLLOW
----| "4" PATTACH_POINT
----| "5" PATTACH_POINT_FOLLOW
----| "6" PATTACH_EYES_FOLLOW
----| "7" PATTACH_OVERHEAD_FOLLOW
----| "8" PATTACH_WORLDORIGIN
----| "9" PATTACH_ROOTBONE_FOLLOW
----| "10" PATTACH_RENDERORIGIN_FOLLOW
----| "11" PATTACH_MAIN_VIEW
----| "12" PATTACH_WATERWAKE
----| "13" PATTACH_CENTER_FOLLOW
----| "14" PATTACH_CUSTOM_GAME_STATE_1
----| "15" MAX_PATTACH_TYPES
+---| "-1" # PATTACH_INVALID
+---| "0" # PATTACH_ABSORIGIN
+---| "1" # PATTACH_ABSORIGIN_FOLLOW
+---| "2" # PATTACH_CUSTOMORIGIN
+---| "3" # PATTACH_CUSTOMORIGIN_FOLLOW
+---| "4" # PATTACH_POINT
+---| "5" # PATTACH_POINT_FOLLOW
+---| "6" # PATTACH_EYES_FOLLOW
+---| "7" # PATTACH_OVERHEAD_FOLLOW
+---| "8" # PATTACH_WORLDORIGIN
+---| "9" # PATTACH_ROOTBONE_FOLLOW
+---| "10" # PATTACH_RENDERORIGIN_FOLLOW
+---| "11" # PATTACH_MAIN_VIEW
+---| "12" # PATTACH_WATERWAKE
+---| "13" # PATTACH_CENTER_FOLLOW
+---| "14" # PATTACH_CUSTOM_GAME_STATE_1
+---| "15" # MAX_PATTACH_TYPES
 --#endregion
 
 --#region Effect flags
