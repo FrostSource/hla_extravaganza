@@ -2979,16 +2979,6 @@ metadata
 @OverrideClass
 	metadata
 	{
-		entity_tool_name = "Pigeon"
-		entity_tool_tip = "Pigeon"
-		entity_tool_group = "NPCs"
-	}
-= npc_pigeon
-[
-]
-@OverrideClass
-	metadata
-	{
 		entity_tool_name = "Strider"
 		entity_tool_tip = "Strider"
 		entity_tool_group = "NPCs"
