@@ -2818,8 +2818,9 @@ metadata
 
 	input ApplyContinuousHapticPulse(void) : "Could not get this to work."
 	input Cough(void) : "Makes the player cough for a few seconds. Can be triggered periodically to keep the player coughing."
-	input EnableTeleport(integer) : "Enables teleport and continuous movement. Parameter override of 1 to enable and 0 to disable."
+	input EnableTeleport(integer) : "Enables teleport and continuous movement. Parameter override of 1 to enable or 0 to disable."
 	input ForceDropPhysObjects(void) : "Forces the player to drop any held objects."
+	input GenerateBlindZombieSound(void) : "Generates a sound at the player position for the blind zombie to react to."
 	input GiveVortEnergy(void) : "Gives player vort energy weapon immediately. Can remove with StopVortEnergyOverload."
 	input GiveVortEnergyHint(void) : "Vibrates both hands with vort energy particles for a few seconds. Will stack and glow brighter."
 	input GiveVortEnergyResidual(void) : "Gives player hands a small vort energy particle effect."
@@ -2827,12 +2828,13 @@ metadata
 	input PerformFakeExplosiveDeath(void) : "Destroys any of the 3 explosive prop_physics which are less than 512 units and kills the player. If no explosives exist in range the player will not die."
 	input SetAnchorParent(string) : "Sets the HMD anchor parent to the entity with the passed targetname."
 	input SetDamageFilter(string) : "Sets the player's damage filter to the filter with the passed targetname. Pass an empty value to reset it."
+	input SetForceBackpackToEmitResin(integer) : "Player will only pull resin out of backpack regardless of weapon equipped. Parameter override of 1 to enable or 0 to disable."
 	input SetGrabbityGlovePowerLevel(integer) : "Setting to 0 disables gravity glove pull. Setting greater than 1 will return a small amount of power. This seems to reset on map change."
 	input SetHealth(integer) : "Sets player health to passed value. Passing 0 or nothing will kill the player."
 	input ShockForTime(float) : "Applies a shock particle to hands for number of seconds, no sound or damage."
 	input StopVortEnergyResidual(void) : "Stops the residual energy effect on player hands."
 	input StopVortEnergyOverload(string) : "Stops the overload energy effect on player hands. Can choose individual hands by passing 'left' or 'right'."
-	input SuppressCough(integer) : "Stops the player from coughing. Enable with 1, disable with 0."
+	input SuppressCough(integer) : "Stops the player from coughing. Parameter override of 1 to enable or 0 to disable."
 ]
 
 @OverrideClass = BaseHeadcrab
