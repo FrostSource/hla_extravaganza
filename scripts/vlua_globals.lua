@@ -121,7 +121,7 @@ T01 = {
 ---| "\"player_shotgun_shell_loaded\"" #
 ---| "\"player_shotgun_state_changed\"" #
 ---| "\"player_shotgun_upgrade_grenade_launcher_state\"" #
----| "\"player_shotung_autoloader_state\"" #
+---| "\"player_shotgun_autoloader_state\"" #
 ---| "\"player_shotgun_autoloader_shells_added\"" #
 ---| "\"player_shotgun_upgrade_quickfire\"" #
 ---| "\"player_shotgun_is_ready\"" #
