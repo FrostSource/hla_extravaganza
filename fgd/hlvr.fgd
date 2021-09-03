@@ -2740,6 +2740,7 @@ metadata
 @OverrideClass = prop_dynamic
 [
 	fixup_lighting_origin_to_player_side(boolean) [ group = "Render Properties" ] : "Bias Lighting Origin Towards Player" : "0" : "For windows and doors and other dynamic things that straddle lighting volume boundaries - bias the lighting origin toward whichever side the local player is on"
+	model_state(modelstatechoices) : "Model State" : ""
 ]
 
 @OverrideClass = func_physbox
@@ -2751,6 +2752,7 @@ metadata
 [
 	force_transmit_to_client(boolean) [ group = "Networking" ] : "Force Transmit to Client - Slow!!!" : "0" : "Always transmit this entity to clients regardless of whether or not it is in PVS. Use sparingly."
 	fixup_lighting_origin_to_player_side(boolean) [ group = "Render Properties" ] : "Bias Lighting Origin Towards Player" : "0" : "For windows and doors and other dynamic things that straddle lighting volume boundaries - bias the lighting origin toward whichever side the local player is on"
+	model_state(modelstatechoices) : "Model State" : ""
 ]
 
 @OverrideClass = prop_door_rotating_physics
