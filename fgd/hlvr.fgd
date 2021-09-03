@@ -700,7 +700,14 @@ metadata
 	model(studio) : "Model" : "models/weapons/vr_alyxtool/alyx_tool.vmdl"
 ]
 
-@NPCClass base(BaseHeadcrab) model("models/creatures/headcrab_reviver/headcrab_reviver.vmdl") = npc_headcrab_runner : "Runner Headcrab"
+@NPCClass base(BaseHeadcrab) model("models/creatures/headcrab_reviver/headcrab_reviver.vmdl")
+	metadata
+	{
+		entity_tool_name = "Lightning Dog"
+		entity_tool_tip = "Lightning Dog"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_runner : "Runner Headcrab"
 [
 	reviver_group(string) : "Reviver Group" : "" : "If set, this Runner will only attempt to revive zombies with a matching reviver group."
 	input ForceRevive(target_destination) : "Immediately attach and revive a named zombie"
@@ -2551,7 +2558,14 @@ metadata
 ]
 
 
-@NPCClass base(BaseHeadcrab, Parentname) editormodel("models/creatures/headcrab_armored/headcrab_armored.vmdl") = npc_headcrab_armored : "Armored headcrab"
+@NPCClass base(BaseHeadcrab, Parentname) editormodel("models/creatures/headcrab_armored/headcrab_armored.vmdl")
+	metadata
+	{
+		entity_tool_name = "Armored Headcrab"
+		entity_tool_tip = "Armored Headcrab"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_armored : "Armored headcrab"
 [
 ]
 
@@ -2811,6 +2825,7 @@ metadata
 		entity_tool_name = "Player Input Helper"
 		entity_tool_tip = "Editor entity which helps with !player input descriptions."
 		entity_tool_group = "Player"
+		editor_only = true
 	}
 = player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
 [
@@ -2956,47 +2971,6 @@ metadata
 = npc_antlion : "Antlions will run away from ai_sound, type: Thumper.<br><br>Use <b>Worker Type</b> for a spitter type."
 [
 ]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Armored Headcrab"
-		entity_tool_tip = "Armored Headcrab"
-		entity_tool_group = "NPCs"
-	}
-= npc_headcrab_armored
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Lightning Dog"
-		entity_tool_tip = "Lightning Dog"
-		entity_tool_group = "NPCs"
-	}
-= npc_headcrab_runner
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Strider"
-		entity_tool_tip = "Strider"
-		entity_tool_group = "NPCs"
-	}
-= npc_strider
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Jeff"
-		entity_tool_tip = "Jeff"
-		entity_tool_group = "NPCs"
-	}
-= npc_zombie_blind
-[
-]
-
 @OverrideClass = point_worldtext :
 [
 	message(text_block) : "Message" : "The text drawn in the world."
