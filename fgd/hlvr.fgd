@@ -700,7 +700,14 @@ metadata
 	model(studio) : "Model" : "models/weapons/vr_alyxtool/alyx_tool.vmdl"
 ]
 
-@NPCClass base(BaseHeadcrab) model("models/creatures/headcrab_reviver/headcrab_reviver.vmdl") = npc_headcrab_runner : "Runner Headcrab"
+@NPCClass base(BaseHeadcrab) model("models/creatures/headcrab_reviver/headcrab_reviver.vmdl")
+	metadata
+	{
+		entity_tool_name = "Lightning Dog"
+		entity_tool_tip = "Lightning Dog"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_runner : "Runner Headcrab"
 [
 	reviver_group(string) : "Reviver Group" : "" : "If set, this Runner will only attempt to revive zombies with a matching reviver group."
 	input ForceRevive(target_destination) : "Immediately attach and revive a named zombie"
@@ -2551,7 +2558,14 @@ metadata
 ]
 
 
-@NPCClass base(BaseHeadcrab, Parentname) editormodel("models/creatures/headcrab_armored/headcrab_armored.vmdl") = npc_headcrab_armored : "Armored headcrab"
+@NPCClass base(BaseHeadcrab, Parentname) editormodel("models/creatures/headcrab_armored/headcrab_armored.vmdl")
+	metadata
+	{
+		entity_tool_name = "Armored Headcrab"
+		entity_tool_tip = "Armored Headcrab"
+		entity_tool_group = "NPCs"
+	}
+= npc_headcrab_armored : "Armored headcrab"
 [
 ]
 
@@ -2740,6 +2754,7 @@ metadata
 @OverrideClass = prop_dynamic
 [
 	fixup_lighting_origin_to_player_side(boolean) [ group = "Render Properties" ] : "Bias Lighting Origin Towards Player" : "0" : "For windows and doors and other dynamic things that straddle lighting volume boundaries - bias the lighting origin toward whichever side the local player is on"
+	model_state(modelstatechoices) : "Model State" : ""
 ]
 
 @OverrideClass = func_physbox
@@ -2751,6 +2766,7 @@ metadata
 [
 	force_transmit_to_client(boolean) [ group = "Networking" ] : "Force Transmit to Client - Slow!!!" : "0" : "Always transmit this entity to clients regardless of whether or not it is in PVS. Use sparingly."
 	fixup_lighting_origin_to_player_side(boolean) [ group = "Render Properties" ] : "Bias Lighting Origin Towards Player" : "0" : "For windows and doors and other dynamic things that straddle lighting volume boundaries - bias the lighting origin toward whichever side the local player is on"
+	model_state(modelstatechoices) : "Model State" : ""
 ]
 
 @OverrideClass = prop_door_rotating_physics
@@ -2809,6 +2825,7 @@ metadata
 		entity_tool_name = "Player Input Helper"
 		entity_tool_tip = "Editor entity which helps with !player input descriptions."
 		entity_tool_group = "Player"
+		editor_only = true
 	}
 = player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
 [
@@ -2816,8 +2833,9 @@ metadata
 
 	input ApplyContinuousHapticPulse(void) : "Could not get this to work."
 	input Cough(void) : "Makes the player cough for a few seconds. Can be triggered periodically to keep the player coughing."
-	input EnableTeleport(integer) : "Enables teleport and continuous movement. Parameter override of 1 to enable and 0 to disable."
+	input EnableTeleport(integer) : "Enables teleport and continuous movement. Parameter override of 1 to enable or 0 to disable."
 	input ForceDropPhysObjects(void) : "Forces the player to drop any held objects."
+	input GenerateBlindZombieSound(void) : "Generates a sound at the player position for the blind zombie to react to."
 	input GiveVortEnergy(void) : "Gives player vort energy weapon immediately. Can remove with StopVortEnergyOverload."
 	input GiveVortEnergyHint(void) : "Vibrates both hands with vort energy particles for a few seconds. Will stack and glow brighter."
 	input GiveVortEnergyResidual(void) : "Gives player hands a small vort energy particle effect."
@@ -2825,12 +2843,13 @@ metadata
 	input PerformFakeExplosiveDeath(void) : "Destroys any of the 3 explosive prop_physics which are less than 512 units and kills the player. If no explosives exist in range the player will not die."
 	input SetAnchorParent(string) : "Sets the HMD anchor parent to the entity with the passed targetname."
 	input SetDamageFilter(string) : "Sets the player's damage filter to the filter with the passed targetname. Pass an empty value to reset it."
+	input SetForceBackpackToEmitResin(integer) : "Player will only pull resin out of backpack regardless of weapon equipped. Parameter override of 1 to enable or 0 to disable."
 	input SetGrabbityGlovePowerLevel(integer) : "Setting to 0 disables gravity glove pull. Setting greater than 1 will return a small amount of power. This seems to reset on map change."
 	input SetHealth(integer) : "Sets player health to passed value. Passing 0 or nothing will kill the player."
 	input ShockForTime(float) : "Applies a shock particle to hands for number of seconds, no sound or damage."
 	input StopVortEnergyResidual(void) : "Stops the residual energy effect on player hands."
 	input StopVortEnergyOverload(string) : "Stops the overload energy effect on player hands. Can choose individual hands by passing 'left' or 'right'."
-	input SuppressCough(integer) : "Stops the player from coughing. Enable with 1, disable with 0."
+	input SuppressCough(integer) : "Stops the player from coughing. Parameter override of 1 to enable or 0 to disable."
 ]
 
 @OverrideClass = BaseHeadcrab
@@ -2952,57 +2971,6 @@ metadata
 = npc_antlion : "Antlions will run away from ai_sound, type: Thumper.<br><br>Use <b>Worker Type</b> for a spitter type."
 [
 ]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Armored Headcrab"
-		entity_tool_tip = "Armored Headcrab"
-		entity_tool_group = "NPCs"
-	}
-= npc_headcrab_armored
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Lightning Dog"
-		entity_tool_tip = "Lightning Dog"
-		entity_tool_group = "NPCs"
-	}
-= npc_headcrab_runner
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Pigeon"
-		entity_tool_tip = "Pigeon"
-		entity_tool_group = "NPCs"
-	}
-= npc_pigeon
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Strider"
-		entity_tool_tip = "Strider"
-		entity_tool_group = "NPCs"
-	}
-= npc_strider
-[
-]
-@OverrideClass
-	metadata
-	{
-		entity_tool_name = "Jeff"
-		entity_tool_tip = "Jeff"
-		entity_tool_group = "NPCs"
-	}
-= npc_zombie_blind
-[
-]
-
 @OverrideClass = point_worldtext :
 [
 	message(text_block) : "Message" : "The text drawn in the world."
