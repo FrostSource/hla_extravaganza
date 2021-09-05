@@ -27,12 +27,12 @@ by Author Name ([any social links](https://example.com) | [you wish to plug](htt
 || Name | Description |
 | -: | - | - |
 | **Inputs**
-|| Example name | Example description.
+|| ExampleInput | Example description.
 | **Outputs**
-|| Example name | Example description.
+|| ExampleOutput | Example description.
 
 ---
 
 ## Images
 
-![Example image](example_image.jpg)
+![Example image. Not required](example_image.jpg)
