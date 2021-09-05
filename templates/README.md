@@ -6,10 +6,10 @@
 
 ## Prefabs
 
-- `*` README_template.md
+- `*` README.md
         
     An overview of the prefab and all properties and I/O.
 
 - example_template.vmap
 
-    A map based on `basic_setup.vmap` with a smaller area and added light to illuminate all walls even when the preview lighting hasn't been compiled.
+    A map based on `basic_setup.vmap` with a smaller area and added light to illuminate all walls even when the preview lighting hasn't been compiled. Example maps are used to showcase the prefab in practice.

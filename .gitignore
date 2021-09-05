@@ -1,3 +1,5 @@
-_bakeresourcecache/
+
+/_bakeresourcecache/
 *bakeresourcecache.vpk
-maps/_test*
+__test*
+/.vscode/

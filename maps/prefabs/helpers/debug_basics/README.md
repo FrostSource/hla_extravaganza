@@ -1,4 +1,4 @@
-# debug_basics
+# Debug Basics
 by FrostSource
 
 > ### A set of automatically issued commands to make testing/debugging quicker and easier.
