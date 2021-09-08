@@ -820,7 +820,7 @@ function PrecacheEntityListFromTable(groupSpawnTables, context) end
 ---@param context CScriptPrecacheContext
 function PrecacheModel(modelName, context) end
 ---model_folder|sound|soundfile|particle|particle_folder"
----@param resourceType string|"model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
+---@param resourceType string|"\"model_folder\""|"\"sound\""|"\"soundfile\""|"\"particle\""|"\"particle_folder\""
 ---@param resourcePath string
 ---@param context CScriptPrecacheContext
 function PrecacheResource(resourceType, resourcePath, context) end
