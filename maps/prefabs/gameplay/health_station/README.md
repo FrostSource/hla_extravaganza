@@ -7,7 +7,7 @@ by FrostSource
 
 ## Assets required
 
-- maps/prefabs/gameplay/health_station/health_station.vmap
+- maps\prefabs\gameplay\health_station\health_station.vmap
 
 ---
 
