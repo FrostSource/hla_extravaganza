@@ -2,6 +2,8 @@
 
 > The player entity has undocumented inputs that are used throughout the base game. This is a list the currently known inputs and how they work.
 
+> The [updated FGD](https://github.com/FrostSource/hla_extravaganza/tree/main/fgd) has an entity called `input_helper_player` so you don't have to keep looking these up.
+
 ## I/O
 || Name | Description |
 | -: | - | - |
