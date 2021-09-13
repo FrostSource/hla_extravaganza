@@ -7,7 +7,7 @@ by FrostSource
 
 ## Assets required
 
-- maps\prefabs\gameplay\keycard_reader.vmap
+- maps\prefabs\gameplay\keycard_reader\keycard_reader.vmap
 
 ---
 

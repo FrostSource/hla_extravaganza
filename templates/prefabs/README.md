@@ -10,7 +10,6 @@ by Author Name ([any social links](https://example.com) | [you wish to plug](htt
 ## Assets required
 
 - Full path to asset from addon folder.
-- \[optional\] Path to optional asset not needed to use the prefab.
 
 ---
 
