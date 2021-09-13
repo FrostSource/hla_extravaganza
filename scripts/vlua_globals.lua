@@ -121,7 +121,7 @@ T01 = {
 ---| "\"player_shotgun_shell_loaded\"" #
 ---| "\"player_shotgun_state_changed\"" #
 ---| "\"player_shotgun_upgrade_grenade_launcher_state\"" #
----| "\"player_shotung_autoloader_state\"" #
+---| "\"player_shotgun_autoloader_state\"" #
 ---| "\"player_shotgun_autoloader_shells_added\"" #
 ---| "\"player_shotgun_upgrade_quickfire\"" #
 ---| "\"player_shotgun_is_ready\"" #
@@ -820,7 +820,7 @@ function PrecacheEntityListFromTable(groupSpawnTables, context) end
 ---@param context CScriptPrecacheContext
 function PrecacheModel(modelName, context) end
 ---model_folder|sound|soundfile|particle|particle_folder"
----@param resourceType string|"model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
+---@param resourceType string|"\"model_folder\""|"\"sound\""|"\"soundfile\""|"\"particle\""|"\"particle_folder\""
 ---@param resourcePath string
 ---@param context CScriptPrecacheContext
 function PrecacheResource(resourceType, resourcePath, context) end
@@ -907,14 +907,14 @@ function EmitSoundOn(sound, entity) end
 ---@param player CHL2_Player
 function EmitSoundOnClient(sound, player) end
 ---Sets an opvar value for all players.
----@param stackName string|"hlvr_global_opvars"
----@param operatorName string|"opvars"
+---@param stackName string|"\"hlvr_global_opvars\""
+---@param operatorName string|"\"opvars\""
 ---@param opvarName string|COMMON_OPVAR_NAMES
 ---@param opvarValue float
 function SetOpvarFloatAll(stackName, operatorName, opvarName, opvarValue) end
 ---Sets an opvar value for a single player ( szStackName, szOperatorName, szOpvarName, flOpvarValue, hEnt )
----@param stackName string|"hlvr_global_opvars"
----@param operatorName string|"opvars"
+---@param stackName string|"\"hlvr_global_opvars\""
+---@param operatorName string|"\"opvars\""
 ---@param opvarName string|COMMON_OPVAR_NAMES
 ---@param opvarValue float
 ---@param player CHL2_Player
@@ -1097,7 +1097,7 @@ function ScreenShake(center, amplitude, frequency, duration, radius, command, ai
 ---Asserts the passed in value. Prints out a message and brings up the assert dialog.
 ---Appears to do nothing.
 ---@param assertion boolean
----@param message string | ""
+---@param message string | "\"\""
 function ScriptAssert(assertion, message) end
 ---Send a string to the console as a client command.
 ---@param command string # Can send multiple commands with ;
@@ -1122,7 +1122,7 @@ function StopListeningToGameEvent(eventlistener) end
 ---@return float
 function Time() end
 ---Generate a string guaranteed to be unique across the life of the script VM, with an optional root string. Useful for adding data to table's when not sure what keys are already in use in that table.
----@param root string | "" # String that will be added to the end.
+---@param root string | "\"\"" # String that will be added to the end.
 ---@return string
 function UniqueString(root) end
 ---Unload a spawn group by name
@@ -1395,7 +1395,7 @@ function CBaseEntity:GetRootMoveParent() end
 ---Returns float duration of the sound.
 ---Returns 2 for all sounds.
 ---@param soundName string
----@param actormodelname string | ""
+---@param actormodelname string | "\"\""
 ---@return float
 ---@deprecated
 function CBaseEntity:GetSoundDuration(soundName, actormodelname) end
@@ -1525,7 +1525,7 @@ function CBaseEntity:SetOrigin(origin) end
 function CBaseEntity:SetOwner(owningEntity) end
 ---Set the parent for this entity. The attachment is optional, pass an empty string to not use it.
 ---@param parent CBaseEntity
----@param attachmentName string | ""
+---@param attachmentName string | "\"\""
 function CBaseEntity:SetParent(parent, attachmentName) end
 ---Set entity team.
 ---@param team integer
