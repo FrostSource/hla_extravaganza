@@ -1,7 +1,7 @@
 {
 	"Hook: Activate":{
 		"scope": "lua",
-		"prefix": ["hook", "Activate"],
+		"prefix": ["Hook", "Activate", "Snippet"],
 		"body": [
 			"---@param activateType \"0\"|\"1\"|\"2\"",
 			"function Activate(activateType)",
@@ -13,7 +13,7 @@
 
 	"Hook: OnBreak":{
 		"scope": "lua",
-		"prefix": ["hook", "OnBreak"],
+		"prefix": ["Hook", "OnBreak", "Snippet"],
 		"body": [
 			"---@param inflictor EntityHandle",
 			"function OnBreak(inflictor)",
@@ -25,7 +25,7 @@
 
 	"Hook: OnEntText":{
 		"scope": "lua",
-		"prefix": ["hook", "OnEntText"],
+		"prefix": ["Hook", "OnEntText", "Snippet"],
 		"body": [
 			"function OnEntText()",
 			"\t$0",
@@ -38,7 +38,7 @@
 
 	"Hook: OnTakeDamage":{
 		"scope": "lua",
-		"prefix": ["hook", "OnTakeDamage"],
+		"prefix": ["Hook", "OnTakeDamage", "Snippet"],
 		"body": [
 			"---@param damageTable T01",
 			"function OnTakeDamage(damageTable)",
@@ -50,7 +50,7 @@
 
 	"Hook: Precache":{
 		"scope": "lua",
-		"prefix": ["hook", "Precache"],
+		"prefix": ["Hook", "Precache", "Snippet"],
 		"body": [
 			"---@param context CScriptPrecacheContext",
 			"function Precache(context)",
@@ -62,7 +62,7 @@
 
 	"Hook: Spawn":{
 		"scope": "lua",
-		"prefix": ["hook", "Spawn"],
+		"prefix": ["Hook", "Spawn", "Snippet"],
 		"body": [
 			"---@param spawnkeys CScriptKeyValues",
 			"function Spawn(spawnkeys)",
@@ -74,12 +74,26 @@
 
 	"Hook: UpdateOnRemove":{
 		"scope": "lua",
-		"prefix": ["hook", "UpdateOnRemove"],
+		"prefix": ["Hook", "UpdateOnRemove", "Snippet"],
 		"body": [
 			"function UpdateOnRemove()",
 			"\t$0",
 			"end"
 		],
 		"description": "Called before the entity is killed."
+	},
+
+	"Trace Table Snippet":{
+		"scope": "lua",
+		"prefix": ["Trace Table", "Snippet"],
+		"body": [
+			"local traceTable = {",
+			"\tstartpos = $1,",
+			"\tendpos = $2,",
+			"\tignore = $3,",
+			"\t$0",
+			"}"
+		],
+		"description": "Create a trace table snippet for trace functions."
 	}
 }
