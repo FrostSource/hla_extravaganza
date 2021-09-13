@@ -1,4 +1,4 @@
-# Prefab name
+# Traced Laser
 by FrostSource
 
 > ### Allows you to place a laser particle in the world or attached to and entity. The laser traces a given distance in the direction it's facing until it hits something.
@@ -37,7 +37,7 @@ by FrostSource
 || Enable | Turns the laser on and starts tracing.
 || Disable | Turns the laser off and stops tracing.
 || Kill | Kills all entities in the prefab.
-|| RunScriptCode | Execute a fragment of script code. Can be used to execute useful functions, e.g.<br>SetColor(r,g,b)
+|| RunScriptCode | Execute a fragment of script code. Can be used to execute useful functions, e.g.<br>`SetColor(r,g,b)`
 | **Outputs**
 
 ---
