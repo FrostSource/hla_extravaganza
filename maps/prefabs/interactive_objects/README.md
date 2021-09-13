@@ -4,6 +4,22 @@ by FrostSource
 > ### A collection of prop_animinteractable entities with pre-defined sounds and properties. Each prefab has basic functionally to be used as-is or collapsed for easy extending without having to remember specific values.
 
 ---
+
+## Assets required
+
+- maps\prefabs\interactive_objects\citizen_switch_slide.vmap
+- maps\prefabs\interactive_objects\combine_switch_arclever.vmap
+- maps\prefabs\interactive_objects\combine_switch_pulltwist.vmap
+- maps\prefabs\interactive_objects\combine_switch_pulltwist_alt.vmap
+- maps\prefabs\interactive_objects\combine_switch_pulltwist_alt_lights.vmap
+- maps\prefabs\interactive_objects\combine_switch_slide.vmap
+- maps\prefabs\interactive_objects\frankenswitch.vmap
+- maps\prefabs\interactive_objects\radioset_customizable.vmap
+- maps\prefabs\interactive_objects\rollingdoor_large.vmap
+- maps\prefabs\interactive_objects\rollingdoor.vmap
+- maps\prefabs\interactive_objects\window_apartment.vmap
+
+---
 <br>
 
 ## **citizen_switch_slide**

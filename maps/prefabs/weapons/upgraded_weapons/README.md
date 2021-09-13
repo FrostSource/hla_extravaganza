@@ -9,9 +9,9 @@ by FrostSource
 
 ## Assets required
 
-- maps/prefabs/weapons/upgraded_weapons/energygun_with_upgrades.vmap
-- maps/prefabs/weapons/upgraded_weapons/shotgun_with_upgrades.vmap
-- maps/prefabs/weapons/upgraded_weapons/rapidfire_with_upgrades.vmap
+- maps\prefabs\weapons\upgraded_weapons\energygun_with_upgrades.vmap
+- maps\prefabs\weapons\upgraded_weapons\rapidfire_with_upgrades.vmap
+- maps\prefabs\weapons\upgraded_weapons\shotgun_with_upgrades.vmap
 
 ---
 

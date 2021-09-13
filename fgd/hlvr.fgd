@@ -2827,7 +2827,7 @@ metadata
 		entity_tool_group = "Player"
 		editor_only = true
 	}
-= player_input_helper : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
+= input_helper_player : "Adds description hints when sending input to !player. This should remain editor only or you will recieve a warning in the console on map load."
 [
 	targetname(target_source) : "Name" : "!player" : "This should be !player to help with inputs."
 
@@ -3034,6 +3034,72 @@ metadata
 	filtername(target_destination) : "Entity Name" : : "The name to filter by. If the filter mode is Allow, only entities whose "+
 		"name matches the given string will pass the filter. If the filter mode is Disallow, "+
 		"all entities EXCEPT those whose name matches the string will pass the filter."
+]
+
+@PointClass size(16 16 16)
+	metadata
+	{
+		editor_only = true
+	}
+= input_helper_npc_combine_s : "Adds description hints when sending input to npc_combine_s. This should remain editor only or you will recieve a warning in the console on map load."
+[
+	targetname(target_source) : "Name" : "npc_combine_s" : "This should be npc_combine_s to help with inputs."
+	
+	input OverrideHealth(integer) : "Overrides this entity's health, ignoring max health constraints. This is for prototyping only and all uses of this input should be audited before shipping! Values <=0 are ignored."
+	input SetRelationship(string) : "Changes this entity's relationship with another entity or class. Format: <entityname/classname> <D_HT/D_FR/D_LI/D_NU> <priority>"
+	input SetEnemyFilter(string) : "Changes this NPC's enemy filter to the named filter."
+	input SetHealth(integer) : "Set this NPC's health."
+	input SetBodyGroup(string) : "Sets NPC bodygroup. Format is <BodygroupName,index> "
+	input physdamagescale(float) : "Sets the value that scales damage energy when this character is hit by a physics object. NOTE: 0 means this feature is disabled for backwards compatibility."
+	input Ignite(void) : "Ignite, burst into flames"
+	input IgniteLifetime(float) : "Ignite, with a parameter lifetime."
+	input IgniteNumHitboxFires(integer) : "Ignite, with a parameter number of hitbox fires."
+	input IgniteHitboxFireScale(float) : "Ignite, with a parameter hitbox fire scale."
+	input Break(void) : "Break, smash into pieces"
+	input StartScripting(void) : "Enter scripting state. In this state, NPCs ignore a variety of stimulus that would make them break out of their scripts: They ignore danger sounds, ignore +USE, don't idle speak or respond to other NPC's idle speech, and so on."
+	input StopScripting(void) : "Exit scripting state."
+	input SetSquad(string) : "Set the name of this NPC's squad. It will be removed from any existing squad automatically. Leaving the parameter blank will remove the NPC from any existing squad."
+	input Wake(void) : "Wakes up the NPC if it is sleeping."
+	input ForgetEntity(string) : "Clears out the NPC's knowledge of a named entity."
+	input GagEnable(void) : "Turn on the NPC Gag flag. NPC won't speak outside of choreographed scenes."
+	input GagDisable(void) : "Turn off the NPC Gag flag."
+	input IgnoreDangerSounds(float) : "Ignore danger sounds for the specified number of seconds."
+	input HolsterWeapon(void) : "Force the NPC to holster their weapon. Ignored if the NPC is scripting, if the NPC's weapon is already holstered, or if the NPC doesn't use weapons."
+	input HolsterAndDestroyWeapon(void) : "Identical to HolsterWeapon, except the weapon is destroyed once it has been holstered and concealed."
+	input UnholsterWeapon(void) : "Force the NPC to draw their weapon. Ignored if the NPC is scripting, if the NPC's weapon is already drawn, or if the NPC doesn't use weapons."
+	input ForceInteractionWithNPC(string) : "Force the NPC to use a dynamic interaction with another NPC. Parameter format: <target NPC name> <dynamic interaction name>"
+	input UpdateEnemyMemory(string) : "Update (or Create) this NPC's memory of an enemy and its location"
+	input BecomeRagdoll(void) : "This NPC will instantly become a ragdoll with ZERO force (just go limp). OnDeath, OnHalfHealth, etc. Outputs will **NOT** BE FIRED."
+	input BecomeTemporaryRagdoll(float) : "Become a temporary ragdoll that then can be later unrgadolled."
+	input StopTemporaryRagdoll(void) : "Rise from your grave."
+	input StopTemporaryRagdollAndSetEnemy(string) : "Rise from your grave to attack an enemy. Animgraph NPCs will turn to face the enemy during their unragdoll. Parameter is the enemy, usually the !activator on the trigger that's firing this input."
+	input WalkTowardsTarget(target_destination) : "Walks towards a target."
+	input StartResilientPathFollow(string) : "Walks towards the specified path corner. Will resiliently restart the walk if it's interrupted for any reason."
+	input SetAnimGraphParameter(string) : "Set an animation graph parameter Format: <name=value>"
+	input SetEasingParameter(string) : "Set an easing parameter Format: <name=value>"
+	input EnableTeleportBuffer(void) : "Enable the teleport buffer around this NPC, if it's been disabled previously."
+	input DisableTeleportBuffer(void) : "Disable the teleport buffer around this NPC."
+	input EnableChoreoPhysProxy(void) : "Enable the phys proxy."
+	input DisableChoreoPhysProxy(void) : "Disable the phys proxy."
+	input BeginRappel(void) : "BeginRappel"
+	input LookOn(void) : "Look normally"	
+	input LookOff(void) : "Don't look for myself, use other squad member's eyes"
+	input StartPatrolling(void) : "Patrol whenever I'm idle or alert."
+	input StopPatrolling(void) : "Stop patrolling when I'm idle or alert."
+	input ThrowGrenadeAtTarget(target_destination) : "Throw a grenade at the specified target."
+	input ThrowSmokeGrenadeAtTarget(target_destination) : "Throw a smoke grenade at the specified target."
+	input ThrowSmokeGrenadeBetweenTarget(target_destination) : "Throw a smoke grenade partway to the specified target."
+	input SetMinAdvanceRange(float) : "Set the minimum range to the player the combine is allowed to be when advancing for a LOS. 0 sets to default."
+	input SetMaxWeaponRange(float) : "Set the maximum range for this soldier's weapon."
+	input SetForceWalkRun(integer) : "Force this combine to walk or run. Parameter: 0 - Return to AI, 1 - Force Walk, 2 - Force Run."
+	input SetForceAim(integer) : "Force this combine to aim or not aim. Parameter: 0 - Return to AI, 1 - Force Aiming, 2 - Force Not Aiming."
+	input SetForceShield(integer) : "Force this combine to deploy their shield, or not. Only works on Chargers. Parameter: 0 - Return to AI, 1 - Force Shield Up, 2 - Force Shield Down."
+	input Assault(string) : "Start an assault. Parameter passed in should be the name of the rally point."
+	input SetPatrolBlind(boolean) : "Set Blind Patrolling on/off. Blindly patrolling NPCs won't see the player, but they'll automatically stop blind patrolling if combat begins some other way."
+	input SetTacticalVariant(integer) : "Set Tactical Variant to the specified index. See the 'Tactical Variant' key for information on them."
+	input SetSentryPositionName(string) : "Set Sentry Position Name for suppressors."
+	input SetAllowedToDeployManhacks(boolean) : "Set whether or not an Officer is allowed to deploy manhacks. Deployment still requires a manhack to be attached to the Officer."
+	input SetAllowedToThrowGrenades(boolean) : "Set whether or not a soldier is allowed to throw grenades. Throwing grenades still requires a grenade to be attached to the soldier."
 ]
 
 
