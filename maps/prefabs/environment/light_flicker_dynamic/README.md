@@ -11,8 +11,7 @@ by FrostSource
 
 ## Assets required
 
-- maps\prefabs\light_flicker_dynamic\light_flicker_dynamic.vmap
-
+- maps\prefabs\environment\light_flicker_dynamic\light_flicker_dynamic.vmap
 ---
 
 ## Properties

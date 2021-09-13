@@ -7,7 +7,7 @@ by FrostSource
 
 ## Assets required
 
-- maps/prefabs/gameplay/closeable_crafting_station/closeable_crafting_station.vmap
+- maps\prefabs\gameplay\closeable_crafting_station\closeable_crafting_station.vmap
 
 ---
 
