@@ -46,7 +46,7 @@
 @exclude env_dof_controller
 @exclude env_dustpuff
 @exclude env_effectscript
-@exclude env_entity_dissolver
+//@exclude env_entity_dissolver
 @exclude env_firesensor
 @exclude env_firesource
 @exclude env_flare
