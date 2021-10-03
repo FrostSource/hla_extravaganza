@@ -83,17 +83,48 @@
 		"description": "Called before the entity is killed."
 	},
 
-	"Trace Table Snippet":{
+	"Trace Line Table Snippet":{
 		"scope": "lua",
-		"prefix": ["Trace Table", "Snippet"],
+		"prefix": ["Trace Line Table", "Snippet"],
 		"body": [
+			"---@type TypeTraceTableLine",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
-			"\tignore = $3,",
+			"\tignore = ${3:thisEntity},",
 			"\t$0",
 			"}"
 		],
-		"description": "Create a trace table snippet for trace functions."
+		"description": "Create a trace table snippet for the TraceLine function."
+	},
+	"Trace Hull Table Snippet":{
+		"scope": "lua",
+		"prefix": ["Trace Hull Table", "Snippet"],
+		"body": [
+			"---@type TypeTraceTableHull",
+			"local traceTable = {",
+			"\tstartpos = $1,",
+			"\tendpos = $2,",
+			"\tmin = ${3:Vector(0,0,0),}",
+			"\tmax = ${4:Vector(0,0,0),}",
+			"\tignore = ${5:thisEntity},",
+			"\t$0",
+			"}"
+		],
+		"description": "Create a trace table snippet for the TraceHull function."
+	},
+	"Trace Collideable Table Snippet":{
+		"scope": "lua",
+		"prefix": ["Trace Collideable Table", "Snippet"],
+		"body": [
+			"---@type TypeTraceTableCollideable",
+			"local traceTable = {",
+			"\tstartpos = $1,",
+			"\tendpos = $2,",
+			"\tent = ${3:thisEntity},",
+			"\t$0",
+			"}"
+		],
+		"description": "Create a trace table snippet for the TraceCollideable function."
 	}
 }
