@@ -145,7 +145,7 @@
 @exclude logic_achievement
 @exclude logic_active_autosave
 @exclude logic_lineto
-@exclude logic_measure_movement
+//@exclude logic_measure_movement
 @exclude logic_playmovie
 @exclude logic_scene_list_manager
 @exclude material_modify_control
