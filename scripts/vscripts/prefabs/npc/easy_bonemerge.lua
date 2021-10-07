@@ -6,19 +6,17 @@ function Activate(activateType)
 end
 
 function NpcRagdollCreated(_, data)
+    -- Check if the npc that died is THIS npc
     if thisEntity:entindex() == data.npc_entindex then
+        -- Resolve npc/ragdoll index to handles
         local npc = EntIndexToHScript(data.npc_entindex)
         local ragdoll = EntIndexToHScript(data.ragdoll_entindex)
-        -- first try to replace ragdoll
-        print("Looking for bonemerge")
+        -- Checking for a child with name "bonemerge" to know which model to use
         for _, child in ipairs(npc:GetChildren()) do
             if vlua.find(child:GetName(), "bonemerge", 1) then
-                print("Found bonemerge", child:GetModelName())
-                --ragdoll:SetModel(child:GetModelName())
+                --print("Found bonemerge", child:GetModelName())
+                -- Spawning the new prop to merge with the new ragdoll
                 local prop = SpawnEntityFromTableSynchronous("prop_dynamic", {
-                    --origin = thisEntity:GetOrigin(),
-                    --angles = thisEntity:GetAngles(),
-                    --scales = "4.05 4.05 4.05",
                     model = child:GetModelName(),
                     solid = "0"
                 })
@@ -26,15 +24,7 @@ function NpcRagdollCreated(_, data)
                 ragdoll:SetRenderAlpha(0)
             end
         end
+        -- Stop listening to this game event. Without this errors may occur.
         StopListeningToAllGameEvents(thisEntity)
-
-        
-        --[[ local vel = GetPhysVelocity(ragdoll)
-        local ang = GetPhysAngularVelocity(ragdoll)
-        SetPhysAngularVelocity(prop, ang*2)
-        prop:ApplyAbsVelocityImpulse(vel*2)
-        ragdoll:Kill()
-        StopListeningToAllGameEvents(thisEntity)
-        thisEntity:Kill() ]]
     end
 end
