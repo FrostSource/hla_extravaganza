@@ -100,7 +100,7 @@ def copy_unpacked_files(assets: 'list[Path]'):
     print(f"Copying {len(assets)} assets.")
     for asset in assets:
         p = root.joinpath(Path("release/unpacked/").joinpath(asset.relative_to(root)).parent)
-        print( p )
+        #print( p )
         p.mkdir(parents=True, exist_ok=True)
         shutil.copy(asset, p )
 
