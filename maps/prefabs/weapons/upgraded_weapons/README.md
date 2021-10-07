@@ -3,8 +3,6 @@ by FrostSource
 
 > ### A prefab for each of the 3 base weapons with options to start with upgrades so players can pick up an upgraded weapon without the visual jarring of upgrades appearing suddenly.
 
-> More details if needed.
-
 ---
 
 ## Assets required
