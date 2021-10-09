@@ -19,7 +19,7 @@ by FrostSource
 | Property | Description |
 | - | - |
 | Bonemerge Model | The model that should be merged with the invisible combine. This model must have the same skeletal structure as a combine in order to be merged (most characters have this).
-| NPC Name | The targetname of the combine NPC. Use this to directly reference the npc instead of the prefab.
+| NPC Name | The targetname of the combine NPC. This should be unique from all other entities for the bonemerge to work! Use this to directly reference the npc instead of the prefab.
 | NPC Name Again | Should be exactly the same as `NPC Name` in order for the merging to work.
 | Squad Name | NPCs that are in the same squad (i.e. have matching squad names) will share information about enemies, and will take turns attacking and covering each other.
 | Override Advance Range | Minimum range to the player the combine is allowed to be when advancing for a LOS. 0 sets to default.
@@ -37,5 +37,11 @@ by FrostSource
 || ForceSpawn | Spawns the NPC at its original position.
 | **Outputs**
 || OnDeath | Fired when this NPC is killed.
+
+---
+
+## Known Issues
+
+When the engine decide to remove the ragdoll body it will create a new entity with a visible combine model for a few seconds. This is more noticeable on lower settings.
 
 ---
