@@ -58,4 +58,4 @@ Links to Half-Life: Alyx addons that are free to download and learn from.
 | Tower: Agency Classic | FrostSource | https://github.com/FrostSource/toweragency | https://steamcommunity.com/sharedfiles/filedetails/?id=2521097886
 | Tower: Agency Revamp | FrostSource <br> ihonnyboy | https://github.com/FrostSource/toweragency/tree/redesign | https://steamcommunity.com/sharedfiles/filedetails/?id=2597719847
 | His Mercy | FrostSource | https://github.com/FrostSource/his_mercy | *Unreleased*
-| Virtual Barber Shop #VMMJ3 | https://drive.google.com/file/d/14LVbRV97HUI7ETyzFdLOQwgoSnVX_kE9/view?usp=sharing | https://steamcommunity.com/sharedfiles/filedetails/?id=2635728954
+| Virtual Barber Shop #VMMJ3 | Willhart | https://drive.google.com/file/d/14LVbRV97HUI7ETyzFdLOQwgoSnVX_kE9/view?usp=sharing | https://steamcommunity.com/sharedfiles/filedetails/?id=2635728954
