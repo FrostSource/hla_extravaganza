@@ -39,14 +39,23 @@ See the [contributing guide](guides/contributing/README.md) for a detailed expla
 
 If you can't follow the guide or have an aversion to git, you can [join the discord](https://discord.gg/yTQhGeKxSK) and show us the asset you would like to contribute, one of our contributors is likely to add it.
 
+# Other HLA Related Repositories
+
+| Title | Description | Link |
+| ----- | ----------- | ---- |
+| HLA Custom Wrist Pockets | Allows custom hologram models to display for any model placed into the wrist pocket instead of the default health syringe. | https://github.com/FrostSource/hla-custom-wrist-pockets
+| HLA Backpack System | A custom backpack system allowing any prop_physics to be stored in the backpack and retrieved at a later time. | https://github.com/FrostSource/HLA-Backpack-System
+| HLA Caption Parser | A small program to compile caption source files into useable .dat files. **Due to the way captions are loaded this is not suitable for addons uploaded to the workshop.** | https://github.com/FrostSource/HLACaptionReplacer/tree/caption-parser
+
 # Full Project Downloads
 
 Links to Half-Life: Alyx addons that are free to download and learn from.
 
-| Title | Author(s) | Link |
-| ----- | --------- | ---- |
-| Vinny Almost Misses Christmas | FrostSource | https://github.com/FrostSource/vinny_christmas |
-| Arena #VMLOOPED | FrostSource | https://github.com/FrostSource/hla-arena |
-| Tower: Agency Classic | FrostSource | https://github.com/FrostSource/toweragency |
-| Tower: Agency Revamp | FrostSource <br> ihonnyboy | https://github.com/FrostSource/toweragency/tree/redesign |
-| His Mercy | FrostSource | https://github.com/FrostSource/his_mercy
+| Title | Author(s) | Source Link | Workshop Link |
+| ----- | --------- | ----------- | ------------- |
+| Vinny Almost Misses Christmas | FrostSource | https://github.com/FrostSource/vinny_christmas | https://steamcommunity.com/sharedfiles/filedetails/?id=2373521563
+| Arena #VMLOOPED | FrostSource | https://github.com/FrostSource/hla-arena | https://steamcommunity.com/sharedfiles/filedetails/?id=2473972591
+| Tower: Agency Classic | FrostSource | https://github.com/FrostSource/toweragency | https://steamcommunity.com/sharedfiles/filedetails/?id=2521097886
+| Tower: Agency Revamp | FrostSource <br> ihonnyboy | https://github.com/FrostSource/toweragency/tree/redesign | https://steamcommunity.com/sharedfiles/filedetails/?id=2597719847
+| His Mercy | FrostSource | https://github.com/FrostSource/his_mercy | *Unreleased*
+| Virtual Barber Shop #VMMJ3 | https://drive.google.com/file/d/14LVbRV97HUI7ETyzFdLOQwgoSnVX_kE9/view?usp=sharing | https://steamcommunity.com/sharedfiles/filedetails/?id=2635728954
