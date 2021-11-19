@@ -4,6 +4,8 @@
 
 > `hlvr.fgd` is the main file with all the main improvements. `base.fgd` has some small extra changes that couldn't be easily changed in `hlvr.fgd` but are unlikely to be noticed.
 
+> Prefabs with filters assigned to variables will need to be re-assigned.
+
 ### Notable changes
 
 * Updated property/IO descriptions for all entities as I discover their uses.
