@@ -75,24 +75,60 @@ function Storage:SaveQAngle(name, qangle)
     Storage:SaveNumber(name .. ".z", qangle.z)
 end
 
+---Save an ordered array of numbers or strings.
+---@param name string
+---@param array any[]
+function Storage:SaveArray(name, array)
+    -- Save number of items first
+    Storage:SaveNumber(name, #array)
+    for index, value in ipairs(array) do
+        local t = type(value)
+        if t == "number" then
+            Storage:SaveNumber(name..index, value)
+        elseif t == "string" then
+            Storage:SaveString(name..index, value)
+        end
+    end
+end
+
+---Save a boolean.
+---@param name string
+---@param bool boolean
+function Storage:SaveBoolean(name, bool)
+    Storage:SaveNumber(name, bool and 1 or 0)
+end
+
+--== Loading
+
+---Loads a number or string by name, whichever was stored.
+---@param name string
+---@return number|string
+function Storage:LoadNumberOrString(name)
+    return thisEntity:GetContext(name)
+end
+
 ---Load a number from this entity.
 ---@param name string Name the number was saved as.
+---@param default? string # Optional default value
 ---@return number
-function Storage:LoadNumber(name)
+function Storage:LoadNumber(name, default)
     local value = thisEntity:GetContext(name)
     if not value or type(value) ~= "number" then
-        return print("Number " .. name .. " could not be loaded!")
+        print("Number " .. name .. " could not be loaded!", "("..type(value)..", "..tostring(value)..")")
+        return default
     end
     return value
 end
 
 ---Load a string from this entity.
----@param name string Name the string was saved as.
+---@param name string # Name the string was saved as.
+---@param default? string # Optional default value
 ---@return string
-function Storage:LoadString(name)
+function Storage:LoadString(name, default)
     local value = thisEntity:GetContext(name)
     if not value or type(value) ~= "string" then
-        return print("String " .. name .. " could not be loaded!")
+        print("String " .. name .. " could not be loaded!")
+        return default
     end
     return value
 end
@@ -121,5 +157,21 @@ function Storage:LoadQAngle(name)
     local y = Storage:LoadNumber(name .. ".y")
     local z = Storage:LoadNumber(name .. ".z")
     return QAngle(x, y, z)
+end
+
+---Load an array from this entity.
+---@param name string
+---@return any[]
+function Storage:LoadArray(name)
+    local arr = {}
+    local len = Storage:LoadNumber(name)
+    for i = 1, len do
+        arr[#arr+1] = Storage:LoadNumberOrString(name..i)
+    end
+    return arr
+end
+
+function Storage:LoadBoolean(name)
+    return Storage:LoadNumber(name) == 1
 end
 
