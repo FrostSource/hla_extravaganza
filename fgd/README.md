@@ -16,6 +16,7 @@
 * Light cookies as drop down.
 * Added more NPCs to the entity category.
 * Filters can be selected with the eye-dropper.
+* Game events drop down list.
 
 ---
 
