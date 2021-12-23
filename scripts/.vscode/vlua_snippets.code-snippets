@@ -1,4 +1,8 @@
 {
+	/*
+		Hooks.
+	*/
+
 	"Hook: Activate":{
 		"scope": "lua",
 		"prefix": ["Hook", "Activate", "Snippet"],
@@ -83,7 +87,11 @@
 		"description": "Called before the entity is killed."
 	},
 
-	"Trace Table Snippet":{
+	/*
+		Trace tables.
+	*/
+
+	"Trace Line Table Snippet":{
 		"scope": "lua",
 		"prefix": ["Trace Table", "Snippet"],
 		"body": [
@@ -94,6 +102,52 @@
 			"\t$0",
 			"}"
 		],
-		"description": "Create a trace table snippet for trace functions."
+		"description": "Create a trace table snippet for the TraceLine function."
+	},
+
+	"Trace Hull Table Snippet":{
+		"scope": "lua",
+		"prefix": ["Trace Hull Table", "Snippet"],
+		"body": [
+			"---@type TypeTraceTableHull",
+			"local traceTable = {",
+			"\tstartpos = $1,",
+			"\tendpos = $2,",
+			"\tmin = ${3:Vector(0,0,0),}",
+			"\tmax = ${4:Vector(0,0,0),}",
+			"\tignore = ${5:thisEntity},",
+			"\t$0",
+			"}"
+		],
+		"description": "Create a trace table snippet for the TraceHull function."
+	},
+
+	"Trace Collideable Table Snippet":{
+		"scope": "lua",
+		"prefix": ["Trace Collideable Table", "Snippet"],
+		"body": [
+			"---@type TypeTraceTableCollideable",
+			"local traceTable = {",
+			"\tstartpos = $1,",
+			"\tendpos = $2,",
+			"\tent = ${3:thisEntity},",
+			"\t$0",
+			"}"
+		],
+		"description": "Create a trace table snippet for the TraceCollideable function."
+	},
+
+	/*
+		Helper code
+	*/
+
+	"Add Locals To Script Scope":{
+		"scope": "lua",
+		"prefix": ["Add locals to script scope", "localfix"],
+		"body": [
+			"-- Add local functions to private script scope to avoid environment pollution.",
+			"local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end",
+		],
+		"description": "Adds local functions to private script scope to avoid environment pollution."
 	}
 }

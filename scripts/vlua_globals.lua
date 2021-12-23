@@ -1,6 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
+    Version 1.2.1
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -31,8 +32,8 @@
     box:DisableMotion()
 
 
-    Hook snippets are included in the .vscode folder to help speed up the process.
-    Start typing "hook" or the name of the function for the options to appear.
+    Hook snippets are included in the .vscode folder to help speed up code writing.
+    Start typing "hook" or the name of the function for the options to appear (e.g. Activate).
 
 
     If code completion isn't working you may need to increase the max file size
@@ -46,36 +47,26 @@
 ---@class EHANDLE
 ---@class ScriptScope
 ---@alias COMMON_OPVAR_NAMES "skylight_proximity_array"|"skylight_invert_scalar_array"|"hotel_sub_basement_proximity_array"|"large_room_addin_array"|"small_room_invert_scalar_array"|"hotel_small_room_proximity_array"|"xen_proximity_array"
----@class LocalTimeTable
+
 ---@type EntityHandle
 thisEntity = nil
-LocalTimeTable = {
-    ---@type number
-    Hours = nil,
-    ---@type number
-    Minutes = nil,
-    ---@type number
-    Seconds = nil,
-}
+
+---@class TypeLocalTimeTable
+---@field Hours number
+---@field Minutes number
+---@field Seconds number
+
 ---@alias SHAKE_COMMAND
 ---| "0" # SHAKE_START
 ---| "1" # SHAKE_STOP
 
----@class T01
-T01 = {
-    ---@type CBaseEntity
-    inflictor = nil,
-    ---@type CBaseEntity
-    attacker = nil,
-    ---@type Vector
-    damage_direction = nil,
-    ---@type Vector
-    damage_position = nil,
-    ---@type Vector
-    damage_force = nil,
-    ---@type integer
-    damage = nil,
-}
+---@class TypeDamageTable
+---@field inflictor EntityHandle
+---@field attacker EntityHandle
+---@field damage_direction Vector
+---@field damage_position Vector
+---@field damage_force Vector
+---@field damage integer
 
 -- A case can be made more removing many of these events that have no use in Alyx.
 ---@alias GAME_EVENTS_HLVR
@@ -1050,7 +1041,7 @@ function LoadKeyValues(path) end
 ---@return table
 function LoadKeyValuesFromString(keyvals) end
 ---Returns the local system time as a table with the format {Hours = int; Minutes = int; Seconds = int}
----@return LocalTimeTable
+---@return TypeLocalTimeTable
 function LocalTime() end
 ---Convert a string to a non-reversable (hashed?) integer.
 ---@param str string
@@ -1336,7 +1327,7 @@ function CBaseEntity:GetBounds() end
 ---@return Vector
 function CBaseEntity:GetCenter() end
 ---Get the entities parented to this entity.
----@return table
+---@return EntityHandle[]
 function CBaseEntity:GetChildren() end
 ---Looks up a context and returns it if available. May return string, float, or nil (if the context isn't found)
 ---@param name string
@@ -1481,10 +1472,10 @@ function CBaseEntity:SetContext(name, value, duration) end
 ---@param duration float
 function CBaseEntity:SetContextNum(name, value, duration) end
 ---Set a think function on this entity.
----@param name string
----@param thinkFunc function
----@param duration float
-function CBaseEntity:SetContextThink(name, thinkFunc, duration) end
+---@param thinkName string
+---@param thinkFunction function|string
+---@param initialDelay float
+function CBaseEntity:SetContextThink(thinkName, thinkFunction, initialDelay) end
 ---Set entity targetname
 ---@param name string
 function CBaseEntity:SetEntityName(name) end
@@ -1532,9 +1523,9 @@ function CBaseEntity:SetParent(parent, attachmentName) end
 function CBaseEntity:SetTeam(team) end
 ---Sets a thinker function to be called periodically.
 ---Uses SetContextThink under the hood.
----@param thinkFunction function Must be global function?
----@param thinkName string Used for stopping the think later.
----@param initialDelay float Seconds before the function is first called.
+---@param thinkFunction function|string
+---@param thinkName string
+---@param initialDelay float
 function CBaseEntity:SetThink(thinkFunction, thinkName, initialDelay) end
 ---Sets the world space velocity of the entity. Only functional on prop_dynamic entities with the Scripted Movement property set.
 ---@param velocity Vector
@@ -2918,6 +2909,7 @@ function ParticleManager:SetParticleControlOrientationFLU(particleID, controlInd
 -- Is this global??
 ---Is the script connected to the public Steam universe.
 
+---@deprecated
 ---@return boolean
 function IsPublicUniverse() end
 --#endregion
