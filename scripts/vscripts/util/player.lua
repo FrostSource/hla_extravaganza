@@ -72,6 +72,9 @@ CBasePlayer.PrimaryHand = nil
 ---**Player's secondary hand.**
 ---@type CPropVRHand
 CBasePlayer.SecondaryHand = nil
+---**If the player is left handed.**
+---@type boolean
+CBasePlayer.IsLeftHanded = false
 
 ---**The entity handle of the item held by this hand.**
 ---@type EntityHandle
@@ -172,12 +175,11 @@ local function listenEventPlayerActivate(_, data)
             Player.Hand[2] = Player.HMDAvatar:GetVRHand(1)
             Player.LeftHand = Player.Hand[1]
             Player.RightHand = Player.Hand[2]
-            if Convars:GetBool("hlvr_left_hand_primary") then
-                print("left handed")
+            Player.IsLeftHanded = Convars:GetBool("hlvr_left_hand_primary")
+            if Player.IsLeftHanded then
                 Player.PrimaryHand = Player.LeftHand
                 Player.SecondaryHand = Player.RightHand
             else
-                print("right handed")
                 Player.PrimaryHand = Player.RightHand
                 Player.SecondaryHand = Player.LeftHand
             end
@@ -203,13 +205,11 @@ local function listenEventItemPickup(_, data)
     if hand_opposite.ItemHeld == hand.ItemHeld then
         hand_opposite.ItemHeld = nil
     end
-    print("Now in hand", hand.ItemHeld, hand.ItemHeld:GetName(), hand.ItemHeld:GetClassname())
 end
 ListenToGameEvent("item_pickup", listenEventItemPickup, _G)
 
 local function listenEventItemReleased(_, data)
     if data.vr_tip_attachment == nil then return end
-    print("ITEM WAS RELEASED", data.item_name)
     -- 1=primary,2=secondary converted to 0=left,1=right
     local handId = util.GetHandIdFromTip(data.vr_tip_attachment)
     local hand = Player.Hand[handId + 1]
