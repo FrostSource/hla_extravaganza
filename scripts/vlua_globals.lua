@@ -104,6 +104,32 @@ thisEntity = nil
 
 --#region Game Events
 
+---@class TypeTraceTableBase
+---@field startpos Vector # Global vector where to start the trace.
+---@field endpos Vector # Global vector where to end the trace.
+---@field pos Vector # Global vector where the trace hit.
+---@field fraction float # Fraction from the start to end where the trace hit.
+---@field hit boolean # Whether the trace hit something. Always present.
+---@field startsolid boolean # Whether the trace started inside the entity. This parameter is set to nil if it is false.
+---@field normal Vector # Global normal vector of the surface hit.
+
+---@class TypeTraceTableCollideable : TypeTraceTableBase
+---@field ent CBaseEntity # Entity to trace against.
+---@field mins Vector # (Optional) Minimum coordinates of the bounding box. Local to the entity.
+---@field maxs Vector # (Optional) Maximum coordinates of the bounding box. Local to the entity.
+
+---@class TypeTraceTableHull : TypeTraceTableBase
+---@field min Vector # Minimum extents of the bounding box.
+---@field max Vector # Maximum extents of the bounding box.
+---@field mask integer # Collision type bitmask.
+---@field ignore CBaseEntity # Entity to ignore when tracing.
+---@field enthit CBaseEntity # Handle of the entity the trace hit.
+
+---@class TypeTraceTableLine : TypeTraceTableBase
+---@field mask integer # Collision type bitmask.
+---@field ignore CBaseEntity # Entity to ignore when tracing.
+---@field enthit CBaseEntity # Handle of the entity the trace hit.
+
 -- A case can be made more removing many of these events that have no use in Alyx.
 ---@alias GAME_EVENTS_HLVR
 ---**item (string)** *Item classname.*

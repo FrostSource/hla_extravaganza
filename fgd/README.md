@@ -4,6 +4,8 @@
 
 > `hlvr.fgd` is the main file with all the main improvements. `base.fgd` has some small extra changes that couldn't be easily changed in `hlvr.fgd` but are unlikely to be noticed.
 
+> Prefabs with filters assigned to variables will need to be re-assigned.
+
 ### Notable changes
 
 * Updated property/IO descriptions for all entities as I discover their uses.
@@ -14,6 +16,7 @@
 * Light cookies as drop down.
 * Added more NPCs to the entity category.
 * Filters can be selected with the eye-dropper.
+* Game events drop down list.
 
 ---
 

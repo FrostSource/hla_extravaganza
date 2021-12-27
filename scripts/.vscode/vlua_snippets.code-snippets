@@ -90,15 +90,16 @@
 	/*
 		Trace tables.
 	*/
-
+  
 	"Trace Line Table Snippet":{
 		"scope": "lua",
-		"prefix": ["Trace Table", "Snippet"],
+		"prefix": ["Trace Line Table", "Snippet"],
 		"body": [
+			"---@type TypeTraceTableLine",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
-			"\tignore = $3,",
+			"\tignore = ${3:thisEntity},",
 			"\t$0",
 			"}"
 		],

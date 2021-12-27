@@ -6,6 +6,8 @@ import tools_base
 import os
 from pathlib import Path
 import datetime
+import shutil
+import sys, getopt
 
 root = tools_base.addon_dir
 release = root.joinpath("release/")
@@ -94,19 +96,29 @@ def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
 
     return log
 
+def copy_unpacked_files(assets: 'list[Path]'):
+    print(f"Copying {len(assets)} assets.")
+    for asset in assets:
+        p = root.joinpath(Path("release/unpacked/").joinpath(asset.relative_to(root)).parent)
+        #print( p )
+        p.mkdir(parents=True, exist_ok=True)
+        shutil.copy(asset, p )
+
 # Packing
 
-def pack_prefabs():
+def pack_prefabs(no_pack = False):
     title = "prefabs"
+    print(f"Doing {title}")
     # Handle file creation and renaming
     output = release.joinpath(f"{title}.zip")
-    if not output.exists():
-        with ZipFile(output, "w"): pass
-    old = release.joinpath(f"{title}.zip.old")
-    print(f"Renaming old {title} release...")
-    if old.exists():
-        os.remove(old)
-    os.rename(output, old)
+    if not no_pack:
+        if not output.exists():
+            with ZipFile(output, "w"): pass
+        old = release.joinpath(f"{title}.zip.old")
+        print(f"Renaming old {title} release...")
+        if old.exists():
+            os.remove(old)
+        os.rename(output, old)
 
     # Find all assets from readmes
     print("Finding prefab assets...")
@@ -119,34 +131,42 @@ def pack_prefabs():
     assets = list(set(assets))
 
     # Writing all assets to zip
-    print("Packing prefabs...")
-    zip_files(assets, output)
+    if not no_pack:
+        print("Packing prefabs...")
+        zip_files(assets, output)
+
+    copy_unpacked_files(assets)
 
     # Compare changes
-    print("Comparing zips...")
-    log = compare_zips(output, old)
-    if len(log) > 0:
-        changelog.append("**Prefabs:**")
-        for message in log:
-            changelog.append("- " + message)
-        changelog.append("")
+    if not no_pack:
+        print("Comparing zips...")
+        log = compare_zips(output, old)
+        if len(log) > 0:
+            changelog.append("**Prefabs:**")
+            for message in log:
+                changelog.append("- " + message)
+            changelog.append("")
 
     # Clean up
-    print("Deleting old zip...")
-    os.remove(old)
+    if not no_pack:
+        print("Deleting old zip...")
+        os.remove(old)
+
     print("DONE")
 
-def pack_scripting_environment():
+def pack_scripting_environment(no_pack = False):
     title = "scripting_environment"
+    print(f"Doing {title}")
     # Handle file creation and renaming
     output = release.joinpath(f"{title}.zip")
-    if not output.exists():
-        with ZipFile(output, "w"): pass
-    old = release.joinpath(f"{title}.zip.old")
-    print(f"Renaming old {title} release...")
-    if old.exists():
-        os.remove(old)
-    os.rename(output, old)
+    if not no_pack:
+        if not output.exists():
+            with ZipFile(output, "w"): pass
+        old = release.joinpath(f"{title}.zip.old")
+        print(f"Renaming old {title} release...")
+        if old.exists():
+            os.remove(old)
+        os.rename(output, old)
 
     # Find all utility scripts
     print("Finding scripting_environment assets...")
@@ -165,34 +185,41 @@ def pack_scripting_environment():
     assets = list(set(assets))
 
     # Writing all assets to zip
-    print("Packing scripting_environment...")
-    zip_files(assets, output)
+    if not no_pack:
+        print("Packing scripting_environment...")
+        zip_files(assets, output)
+    
+    copy_unpacked_files(assets)
 
     # Compare changes
-    print("Comparing zips...")
-    log = compare_zips(output, old)
-    if len(log) > 0:
-        changelog.append("**Scripting Environment:**")
-        for message in log:
-            changelog.append("- " + message)
-        changelog.append("")
+    if not no_pack:
+        print("Comparing zips...")
+        log = compare_zips(output, old)
+        if len(log) > 0:
+            changelog.append("**Scripting Environment:**")
+            for message in log:
+                changelog.append("- " + message)
+            changelog.append("")
 
     # Clean up
-    print("Deleting old zip...")
-    os.remove(old)
+    if not no_pack:
+        print("Deleting old zip...")
+        os.remove(old)
     print("DONE")
 
-def pack_fgd():
+def pack_fgd(no_pack = False):
     title = "fgd"
+    print(f"Doing {title}")
     # Handle file creation and renaming
     output = release.joinpath(f"{title}.zip")
-    if not output.exists():
-        with ZipFile(output, "w"): pass
-    old = release.joinpath(f"{title}.zip.old")
-    print(f"Renaming old {title} release...")
-    if old.exists():
-        os.remove(old)
-    os.rename(output, old)
+    if not no_pack:
+        if not output.exists():
+            with ZipFile(output, "w"): pass
+        old = release.joinpath(f"{title}.zip.old")
+        print(f"Renaming old {title} release...")
+        if old.exists():
+            os.remove(old)
+        os.rename(output, old)
 
     # Find all utility scripts
     print("Finding fgd assets...")
@@ -204,32 +231,44 @@ def pack_fgd():
 
     # Writing all assets to zip
     # Files are not relative to addon so can't be packed normally
-    print("Packing scripting_environment...")
-    with ZipFile( output , "w" ) as zip_obj:
-        zip_obj.write( root.joinpath("fgd/hlvr.fgd"), "Half-Life Alyx\\game\\hlvr\\hlvr.fgd" )
-        zip_obj.write( root.joinpath("fgd/base.fgd"), "Half-Life Alyx\\game\\core\\base.fgd" )
+    if not no_pack:
+        print("Packing scripting_environment...")
+        with ZipFile( output , "w" ) as zip_obj:
+            zip_obj.write( root.joinpath("fgd/hlvr.fgd"), "Half-Life Alyx\\game\\hlvr\\hlvr.fgd" )
+            zip_obj.write( root.joinpath("fgd/base.fgd"), "Half-Life Alyx\\game\\core\\base.fgd" )
+    
+    copy_unpacked_files(assets)
 
     # Compare changes
-    print("Comparing zips...")
-    log = compare_zips(output, old)
-    if len(log) > 0:
-        changelog.append("**FGD:**")
-        for message in log:
-            changelog.append("- " + message)
-        changelog.append("")
+    if not no_pack:
+        print("Comparing zips...")
+        log = compare_zips(output, old)
+        if len(log) > 0:
+            changelog.append("**FGD:**")
+            for message in log:
+                changelog.append("- " + message)
+            changelog.append("")
 
     # Clean up
-    print("Deleting old zip...")
-    os.remove(old)
+    if not no_pack:
+        print("Deleting old zip...")
+        os.remove(old)
     print("DONE")
 
 if __name__ == '__main__':
-    changelog = []
-    pack_prefabs()
-    pack_scripting_environment()
-    pack_fgd()
+    no_pack = False
+    opts, args = getopt.getopt(sys.argv[1:], "", ["nopack"])
+    for opt, arg in opts:
+        if opt == "--nopack":
+            print("--No pack mode. Assets will not be packed.")
+            no_pack = True
 
-    if len(changelog) > 0:
+    changelog = []
+    pack_prefabs(no_pack)
+    pack_scripting_environment(no_pack)
+    pack_fgd(no_pack)
+
+    if not no_pack and len(changelog) > 0:
         with open(root.joinpath("release/changelog.txt"), "a") as file:
             file.write(datetime.datetime.now().date().strftime("%d/%m/%y") + ":\n\n")
             for message in changelog:
