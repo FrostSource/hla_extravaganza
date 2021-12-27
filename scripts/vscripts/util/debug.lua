@@ -1,4 +1,6 @@
 --[[
+    v1.0.1
+
     Debug utility functions.
 
     Load this file at game start using the following line:
@@ -6,18 +8,15 @@
         require "util.debug"
 
 ]]
-Debug = Debug or {}
+Debug = {}
 
----Prints the given table contents to the console.
----@param t table
-Debug.PrintTable = function(t)
-    local pair
-    if #t > 0 then
-        pair = ipairs(t)
-    else
-        pair = pairs(t)
+function Debug.PrintAllEntities()
+    local e = Entities:First()
+    print(string.format("\n%-40s %-40s %-40s","Classname:", "Name:", "Model Name:"))
+    print(string.format("%-40s %-40s %-40s","----------", "-----", "-----------"))
+    while e ~= nil do
+        print(string.format("%-40s %-40s %-40s", e:GetClassname(), e:GetName(), e:GetModelName()))
+        e = Entities:Next(e)
     end
-    for k,v in pair do
-        print(k, v)
-    end
+    print()
 end

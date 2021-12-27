@@ -2,7 +2,7 @@
 
 > This collection includes stand alone scripts and scripts used in conjunction with prefabs and other assets. See the individual README.md files for information on how the script is used. If no README is present it is likely used by another asset and shouldn't be used on its own unless you understand the contents.
 
-> If a script does not have an accompanying README but you think it *should*, please [open up a new issue](https://github.com/FrostSource/hla_extravaganza/issues/new) with a reference/link to the script file with a short explaination why it should.
+> If a script does not have an accompanying README but you think it *should*, please [open up a new issue](https://github.com/FrostSource/hla_extravaganza/issues/new) with a reference/link to the script file with a short explanation why it should.
 
 ---
 

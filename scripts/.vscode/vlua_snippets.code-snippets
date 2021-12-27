@@ -1,4 +1,8 @@
 {
+	/*
+		Hooks.
+	*/
+
 	"Hook: Activate":{
 		"scope": "lua",
 		"prefix": ["Hook", "Activate", "Snippet"],
@@ -83,6 +87,10 @@
 		"description": "Called before the entity is killed."
 	},
 
+	/*
+		Trace tables.
+	*/
+  
 	"Trace Line Table Snippet":{
 		"scope": "lua",
 		"prefix": ["Trace Line Table", "Snippet"],
@@ -97,6 +105,7 @@
 		],
 		"description": "Create a trace table snippet for the TraceLine function."
 	},
+
 	"Trace Hull Table Snippet":{
 		"scope": "lua",
 		"prefix": ["Trace Hull Table", "Snippet"],
@@ -113,6 +122,7 @@
 		],
 		"description": "Create a trace table snippet for the TraceHull function."
 	},
+
 	"Trace Collideable Table Snippet":{
 		"scope": "lua",
 		"prefix": ["Trace Collideable Table", "Snippet"],
@@ -126,5 +136,19 @@
 			"}"
 		],
 		"description": "Create a trace table snippet for the TraceCollideable function."
+	},
+
+	/*
+		Helper code
+	*/
+
+	"Add Locals To Script Scope":{
+		"scope": "lua",
+		"prefix": ["Add locals to script scope", "localfix"],
+		"body": [
+			"-- Add local functions to private script scope to avoid environment pollution.",
+			"local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end",
+		],
+		"description": "Adds local functions to private script scope to avoid environment pollution."
 	}
 }

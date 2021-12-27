@@ -1,12 +1,8 @@
-
 --[[
+    v1.1.0
     Weighted random allows you to assign chances to values.
 
-    Can be included on a per script basis with the following line:
-
-        DoIncludeScript("util/weighted_random", thisEntity:GetPrivateScriptScope())
-
-    Or loaded into global scope for all scripts using the following line:
+    Should be loaded into global scope for using the following line:
 
         require "util.weighted_random"
 
@@ -21,10 +17,11 @@
     Usage example:
 
     local wr = WeightedRandom({
-        { weight = 1, name = "one" },
-        { weight = 0.7, name = "two" },
-        { weight = 0.5, name = "three" },
-        { weight = 0.1, name = "four" },
+        { weight = 1, name = "Common" },
+        { weight = 0.75, name = "Semi-common" },
+        { weight = 0.5, name = "Uncommon" },
+        { weight = 0.25, name = "Rare" },
+        { weight = 0.1, name = "Extremely rare" },
     })
 
     for i = 1, 20 do
@@ -32,45 +29,37 @@
     end
 ]]
 
----@class WeightedRandomObject
----@field item_pool table[]
----@field TotalWeight fun(self: WeightedRandomObject): number
----@field Random fun(self: WeightedRandomObject): table
+---@class WeightedRandom
+---@field ItemPool table[]
+local WeightedRandomBaseClass = {}
+WeightedRandomBaseClass.__index = WeightedRandomBaseClass
+
+---Returns the total weight of this weighted random object.
+---@return number
+function WeightedRandomBaseClass:TotalWeight()
+    local weight_sum = 0
+    for _,item in ipairs(self.ItemPool) do
+        weight_sum = weight_sum + item.weight
+    end
+    return weight_sum
+end
+
+---Returns a random table from the list of weighted tables.
+---@return table
+function WeightedRandomBaseClass:Random()
+    local weight_sum = self:TotalWeight()
+    local weight_remaining = RandomFloat(0, weight_sum)
+    for _,item in ipairs(self.ItemPool) do
+        weight_remaining = weight_remaining - item.weight
+        if weight_remaining < 0 then
+            return item
+        end
+    end
+end
 
 ---Returns a WeightedRandom object with given weights.
 ---@param weights table[]|"{\n\t{ weight = 1 },\n}"
----@return WeightedRandomObject
-WeightedRandom = function(weights)
-    ---@type WeightedRandomObject
-    local instance = {
-        ---@type table[]
-        item_pool = weights or {},
-
-        ---Returns the total weight of this weighted random object.
-        ---@param self WeightedRandomObject
-        ---@return number
-        TotalWeight = function(self)
-            local weight_sum = 0
-            for _,item in ipairs(self.item_pool) do
-                weight_sum = weight_sum + item.weight
-            end
-            return weight_sum
-        end,
-
-        ---Returns a random table from the list of weighted tables.
-        ---@param self WeightedRandomObject
-        ---@return table
-        Random = function(self)
-            local weight_sum = self:TotalWeight()
-            local weight_remaining = RandomFloat(0, weight_sum)
-            for _,item in ipairs(self.item_pool) do
-                weight_remaining = weight_remaining - item.weight
-                if weight_remaining < 0 then
-                    return item
-                end
-            end
-        end
-    }
-
-    return instance
+---@return WeightedRandom
+function WeightedRandom(weights)
+    return setmetatable({ItemPool = weights or {}}, WeightedRandomBaseClass)
 end

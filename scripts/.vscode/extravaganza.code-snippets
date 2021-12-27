@@ -1,0 +1,14 @@
+{
+	/*
+		Util setups
+	*/
+
+	"Storage Include":{
+		"scope": "lua",
+		"prefix": ["storage", "util.storage", "saving/loading", "loading/saving", "save", "load"],
+		"body": [
+			"DoIncludeScript(\"util/storage\", thisEntity:GetPrivateScriptScope())"
+		],
+		"description": "Storage module allows for easy value saving and loading per entity."
+	}
+}
