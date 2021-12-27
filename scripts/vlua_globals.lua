@@ -41,9 +41,13 @@
 ]]
 
 --#region Aliases/Types
+
 -- Consider removing this and changing all float to number
 ---@alias float number
----@alias EntityHandle CEntityInstance|CBaseAnimating|CBaseModelEntity|CPhysicsProp|CBaseEntity|CLogicRelay|CPointWorldText|CEnvEntityMaker|CInfoWorldLayer|CMarkupVolumeTagged|CSceneEntity|CPointClientUIWorldPanel|CPointTemplate|CBaseFlex|CAI_BaseNPC|CBaseCombatCharacter|CBasePlayer|CHL2_Player|CPropHMDAvatar|CPropVRHand
+
+---Combined entity handle type.
+---@alias EntityHandle CBaseEntity|CEntityInstance|CBaseModelEntity|CBasePlayer|CHL2_Player|CBaseAnimating|CBaseFlex|CBaseCombatCharacter|CBodyComponent|CAI_BaseNPC|CBaseTrigger|CEnvEntityMaker|CInfoWorldLayer|CLogicRelay|CMarkupVolumeTagged|CEnvProjectedTexture|CPhysicsProp|CSceneEntity|CPointClientUIWorldPanel|CPointTemplate|CPointWorldText|CPropHMDAvatar|CPropVRHand
+
 ---@class EHANDLE
 ---@class ScriptScope
 ---@alias COMMON_OPVAR_NAMES "skylight_proximity_array"|"skylight_invert_scalar_array"|"hotel_sub_basement_proximity_array"|"large_room_addin_array"|"small_room_invert_scalar_array"|"hotel_small_room_proximity_array"|"xen_proximity_array"
@@ -60,6 +64,10 @@ thisEntity = nil
 ---| "0" # SHAKE_START
 ---| "1" # SHAKE_STOP
 
+---@class TypeIOInvoke
+---@field activator EntityHandle
+---@field caller EntityHandle
+
 ---@class TypeDamageTable
 ---@field inflictor EntityHandle
 ---@field attacker EntityHandle
@@ -68,9 +76,53 @@ thisEntity = nil
 ---@field damage_force Vector
 ---@field damage integer
 
+---@class TypeTraceTableBase
+---@field startpos Vector # Global vector where to start the trace.
+---@field endpos Vector # Global vector where to end the trace.
+---@field pos Vector # Global vector where the trace hit.
+---@field fraction float # Fraction from the start to end where the trace hit.
+---@field hit boolean # Whether the trace hit something. Always present.
+---@field startsolid boolean # Whether the trace started inside the entity. This parameter is set to nil if it is false.
+---@field normal Vector # Global normal vector of the surface hit.
+
+---@class TypeTraceTableCollideable : TypeTraceTableBase
+---@field ent CBaseEntity # Entity to trace against.
+---@field mins Vector # (Optional) Minimum coordinates of the bounding box. Local to the entity.
+---@field maxs Vector # (Optional) Maximum coordinates of the bounding box. Local to the entity.
+
+---@class TypeTraceTableHull : TypeTraceTableBase
+---@field min Vector # Minimum extents of the bounding box.
+---@field max Vector # Maximum extents of the bounding box.
+---@field mask integer # Collision type bitmask.
+---@field ignore CBaseEntity # Entity to ignore when tracing.
+---@field enthit CBaseEntity # Handle of the entity the trace hit.
+
+---@class TypeTraceTableLine : TypeTraceTableBase
+---@field mask integer # Collision type bitmask.
+---@field ignore CBaseEntity # Entity to ignore when tracing.
+---@field enthit CBaseEntity # Handle of the entity the trace hit.
+
+--#region Game Events
+
 -- A case can be made more removing many of these events that have no use in Alyx.
 ---@alias GAME_EVENTS_HLVR
+---**item (string)** *Item classname.*
+---
+---**item_name (string)** *Item targetname.*
+---
+---**wasparentedto (string)** *Unknown.*
+---
+---**vr_tip_attachment (number)** *Hand that grabbed, 1 = left, 2 = right (reversed if left handed).*
+---
+---**otherhand_vr_tip_attachment (number)** *Other hand that grabbed.*
+---
+---**controller_type (number)** *Type of controller used (see ENUM_CONTROLLER_TYPES).*
 ---| "\"item_pickup\"" # Player grabs an object with hand.
+---**item (string)** *Item classname.*
+---
+---**item_name (string)** *Item targetname.*
+---
+---**vr_tip_attachment (number)** *Hand that grabbed, 1 = left, 2 = right (reversed if left handed).*
 ---| "\"item_released\"" # Player drops an object from hand.
 ---| "\"item_attachments\"" # Unknown.
 ---| "\"weapon_switch\"" # Player switches weapon.
@@ -173,7 +225,8 @@ thisEntity = nil
 ---| "\"steal_xen_grenade\"" #
 ---| "\"tripmine_hack_started\"" #
 ---| "\"tripmine_hacked\"" #
----| "\"primary_hand_changed\"" #
+---is_primary_left (number)
+---| "\"primary_hand_changed\""
 ---| "\"close_to_blindzombie\"" #
 ---| "\"player_grabbed_by_barnacle\"" #
 ---| "\"player_released_by_barnacle\"" #
@@ -297,6 +350,10 @@ thisEntity = nil
 ---| "\"clientside_lesson_closed\"" #
 ---| "\"dynamic_shadow_light_changed\"" #
 
+--#endregion
+
+--#region Game event tables
+
 ---@alias GAME_EVENTS_ALL GAME_EVENTS_HLVR | GAME_EVENTS_CORE
 
 -- Consider adding table types to match each event, e.g.
@@ -318,10 +375,16 @@ end
 
 --#endregion
 
+--#endregion
+
 ----------
 --- Global
 --- Global functions. These can be called without any class.
 --#region
+
+---Prints any table keys/values with deep recursion.
+---@param tbl table
+function DeepPrintTable(tbl) end
 
 --#region Math
 
@@ -431,9 +494,11 @@ function SplineVectors(vector1, vector2, t) end
 ---@param input Vector The Vector to convert to QAngle.
 ---@return QAngle #Vector as QAngle.
 function VectorToAngles(input) end
+
 --#endregion
 
 --#region utilsinit.lua
+
 -- Functions automatically included from the utilsinit.lua core library.
 
 ---Return value as an absolute value, i.e. Non-negative.
@@ -520,6 +585,7 @@ function VectorLerp(t, vector1, vector2) end
 ---@param vector Vector
 ---@return boolean
 function VectorIsZero(vector) end
+
 --#endregion
 
 --#region Printing & Drawing
@@ -673,6 +739,7 @@ function UTIL_ResetMessageTextAll() end
 ---Print a yellow warning message in the console. Will show in 'General' channel.
 ---@param msg string
 function Warning(msg) end
+
 --#endregion
 
 --#region Entity Manipulation
@@ -864,6 +931,7 @@ function UTIL_Remove(entity) end
 ---Warning:	Incorrect usage may cause crashes
 ---@param entity CBaseEntity
 function UTIL_RemoveImmediate(entity) end
+
 --#endregion
 
 --#region Tracing
@@ -880,6 +948,7 @@ function TraceHull(parameters) end
 ---@param parameters table
 ---@return boolean
 function TraceLine(parameters) end
+
 --#endregion
 
 --#region Sound
@@ -942,6 +1011,7 @@ function StopSoundEvent(sound, entity) end
 ---@param sound string
 ---@param playingEntity CBaseEntity
 function StopSoundOn(sound, playingEntity) end
+
 --#endregion
 
 --#region Miscellaneous
@@ -1125,11 +1195,13 @@ function UnloadSpawnGroupByHandle(groupHandle) end
 ---No Description Set
 ---@param handle_1 unknown
 function UpdateEventPoints(handle_1) end
+
 --#endregion
 
 --#region VLua
--- Functions automatically included from the library.lua core library. Located in the vlua table rather than directly in the global scope.
--- Library functions to support Lua code generated by Sq2Lua.exe
+
+---Functions automatically included from the library.lua core library. Located in the vlua table rather than directly in the global scope.
+---Library functions to support Lua code generated by Sq2Lua.exe
 ---@class vlua
 vlua = {}
 ---Implements Squirrel clear table method.
@@ -1227,6 +1299,7 @@ function vlua.split(input, separator) end
 ---@param valueIfFalse any
 ---@return any
 function vlua.select(conditional, valueIfTrue, valueIfFalse) end
+
 --#endregion
 
 --#endregion
@@ -1236,7 +1309,8 @@ function vlua.select(conditional, valueIfTrue, valueIfFalse) end
 --#region
 
 --#region CBaseEntity
--- The base class for entities.
+
+---The base class for entities.
 ---@class CBaseEntity
 CBaseEntity = {}
 ---Adds the render effect flag.
@@ -1461,7 +1535,7 @@ function CBaseEntity:SetAngularVelocity(pitch, yaw, roll) end
 ---Set the position of the constraint.
 ---@param pos Vector
 function CBaseEntity:SetConstraint(pos) end
----	Store any key/value pair in this entity's dialog contexts. Value must be a string. Will last for duration (set 0 to mean 'forever').
+---Store any key/value pair in this entity's dialog contexts. Value must be a string. Will last for duration (set 0 to mean 'forever').
 ---@param name string
 ---@param value string
 ---@param duration float
@@ -1471,9 +1545,9 @@ function CBaseEntity:SetContext(name, value, duration) end
 ---@param value float|integer
 ---@param duration float
 function CBaseEntity:SetContextNum(name, value, duration) end
----Set a think function on this entity.
+---Set a context think function on this entity.
 ---@param thinkName string
----@param thinkFunction function|string
+---@param thinkFunction function
 ---@param initialDelay float
 function CBaseEntity:SetContextThink(thinkName, thinkFunction, initialDelay) end
 ---Set entity targetname
@@ -1523,10 +1597,13 @@ function CBaseEntity:SetParent(parent, attachmentName) end
 function CBaseEntity:SetTeam(team) end
 ---Sets a thinker function to be called periodically.
 ---Uses SetContextThink under the hood.
----@param thinkFunction function|string
----@param thinkName string
----@param initialDelay float
-function CBaseEntity:SetThink(thinkFunction, thinkName, initialDelay) end
+---
+---If using a string function name, function must exist in private script scope.
+---@param thinkFunction function|string # If string, will look up in the calling instance or given `context` to find the function. If binding a local function this must be a direct reference, not a string.
+---@param thinkName string # Name of the think, used for stopping.
+---@param initialDelay float # Initial delay before the function is first called.
+---@param context? EntityHandle # If `thinkFunction` is a string, use this context to find the function, otherwise ignored.
+function CBaseEntity:SetThink(thinkFunction, thinkName, initialDelay, context) end
 ---Sets the world space velocity of the entity. Only functional on prop_dynamic entities with the Scripted Movement property set.
 ---@param velocity Vector
 function CBaseEntity:SetVelocity(velocity) end
@@ -1559,10 +1636,12 @@ function CBaseEntity:ValidatePrivateScriptScope() end
 ---@param classOrClassName string|table
 ---@return boolean
 function CBaseEntity:IsInstance(classOrClassName) end
+
 --#endregion
 
 --#region CEntityInstance
--- All entities inherit from this.
+
+---All entities inherit from this.
 ---@class CEntityInstance : CBaseEntity
 CEntityInstance = {}
 ---Adds an I/O connection that will call the named function on this entity when the specified output fires.
@@ -1638,11 +1717,13 @@ function CEntityInstance:RemoveSelf() end
 ---@param key string
 ---@param value integer
 function CEntityInstance:SetIntAttr(key, value) end
+
 --#endregion
 
 --#region CBaseModelEntity
--- Entities with models inherit from this.
--- As far as I can tell CEntityInstance always exists with CBaseModelEntity.
+
+---Entities with models inherit from this.
+---As far as I can tell CEntityInstance always exists with CBaseModelEntity.
 ---@class CBaseModelEntity : CEntityInstance
 CBaseModelEntity = {}
 ---Get the material group hash of this entity.
@@ -1701,10 +1782,12 @@ function CBaseModelEntity:SetSize(mins, maxs) end
 ---	Set skin by number.
 ---@param skin integer
 function CBaseModelEntity:SetSkin(skin) end
+
 --#endregion
 
 --#region CBasePlayer
--- Entity class for players.
+
+---Entity class for players.
 ---@class CBasePlayer : CBaseCombatCharacter
 CBasePlayer = {}
 ---Returns whether this player's chaperone bounds are visible.
@@ -1752,10 +1835,12 @@ function CBasePlayer:IsVRControllerButtonPressed(nButton) end
 ---Returns true if the SteamVR dashboard is showing for this player.
 ---@return boolean
 function CBasePlayer:IsVRDashboardShowing() end
+
 --#endregion
 
 --#region CHL2_Player
--- Half-life player subclass SHOULD RETURN THIS INSTEAD OF CBasePlayer ??
+
+---Half-life player subclass SHOULD RETURN THIS INSTEAD OF CBasePlayer ??
 ---@class CHL2_Player : CBasePlayer
 CHL2_Player = {}
 ---
@@ -1793,11 +1878,13 @@ function CHL2_Player:PlayerCounter_SetValue(name, value) end
 ---@param name string
 ---@return integer
 function CHL2_Player:PlayerCounter_GetValue(name) end
+
 --#endregion
 
 --#region CBaseAnimating
--- A class containing methods involved in animations. Most model based entities inherit this.
--- As far as I can tell CBaseAnimating and CBaseModelEntity always exist together.
+
+---A class containing methods involved in animations. Most model based entities inherit this.
+---As far as I can tell CBaseAnimating and CBaseModelEntity always exist together.
 ---@class CBaseAnimating : CBaseModelEntity
 CBaseAnimating = {}
 ---Returns the duration in seconds of the active sequence.
@@ -1888,10 +1975,12 @@ function CBaseAnimating:StopAnimation() end
 ---Unregisters the current string AnimTag listener, if any
 ---@param hScript table
 function CBaseAnimating:UnregisterAnimTagListener(hScript) end
+
 --#endregion
 
 --#region CBaseFlex
--- Animated entities that have vertex flex capability.
+
+---Animated entities that have vertex flex capability.
 ---@class CBaseFlex : CBaseAnimating
 CBaseFlex = {}
 ---Finds a flex controller by name, returns the index, -1 if not found
@@ -1914,10 +2003,12 @@ function CBaseFlex:ScriptPlayScene(sceneFile, delay) end
 ---@param flexControllerIndex integer
 ---@param weight float
 function CBaseFlex:SetFlexWeight(flexControllerIndex, weight) end
+
 --#endregion
 
 --#region CBaseCombatCharacter
--- No Description Set (inherits from what? exists? is combine? is player?)
+
+---No Description Set (inherits from what? exists? is combine? is player?)
 ---@class CBaseCombatCharacter : CBaseFlex
 CBaseCombatCharacter = {}
 ---Returns an array of all the equipped weapons
@@ -1935,10 +2026,12 @@ function CBaseCombatCharacter:GetWeaponCount() end
 ---@param unknown unknown
 ---@return Vector
 function CBaseCombatCharacter:ShootPosition(hand, unknown) end
+
 --#endregion
 
 --#region CBodyComponent
--- No Description Set (inherits from what?)
+
+---No Description Set (inherits from what?)
 ---@class CBodyComponent
 CBodyComponent = {}
 ---Apply an impulse at a worldspace position to the physics
@@ -1992,11 +2085,13 @@ function CBodyComponent:SetMaterialGroup(utlstringtoken_1) end
 ---@param velocity Vector
 ---@deprecated
 function CBodyComponent:SetVelocity(velocity) end
+
 --#endregion
 
 --#region CEntities
--- Provides methods to enumerate all server-side entities.
--- Global accessor variable: Entities
+
+---Provides methods to enumerate all server-side entities.
+---Global accessor variable: Entities
 ---@class CEntities
 Entities = {}
 ---Creates an entity by class name.
@@ -2006,37 +2101,37 @@ Entities = {}
 function Entities:CreateByClassname(className) end
 ---Finds all entities by class name. Returns an array containing all the found entities.
 ---@param className string
----@return table
+---@return EntityHandle[]
 function Entities:FindAllByClassname(className) end
 ---Find entities by class name within a radius. Returns an array containing all the found entities.
 ---@param className string
 ---@param origin Vector
 ---@param maxRadius float
----@return table
+---@return EntityHandle[]
 function Entities:FindAllByClassnameWithin(className, origin, maxRadius) end
 ---Find entities by model name. Returns an array containing all the found entities.
 ---@param modelName string
----@return table
+---@return EntityHandle[]
 function Entities:FindAllByModel(modelName) end
 ---Find all entities by name. Returns an array containing all the found entities in it.
 ---@param name string
----@return table
+---@return EntityHandle[]
 function Entities:FindAllByName(name) end
 ---Find all entities by name within a radius. Returns an array containing all the found entities.
 ---@param name string
 ---@param origin Vector
 ---@param maxRadius float
----@return table
+---@return EntityHandle[]
 function Entities:FindAllByNameWithin(name, origin, maxRadius) end
 ---Find all entities with this target set. Returns an array containing all the found entities.
 -- How does this work?
 ---@param targetSet string
----@return table
+---@return EntityHandle[]
 function Entities:FindAllByTarget(targetSet) end
 ---Find all entities within a radius. Returns an array containing all the found entities.
 ---@param origin Vector
 ---@param maxRadius float
----@return table
+---@return EntityHandle[]
 function Entities:FindAllInSphere(origin, maxRadius) end
 ---Find entities by class name. Pass nil to start an iteration, or reference to a previously found entity to continue a search.
 ---@param startFrom CBaseEntity|nil
@@ -2108,10 +2203,12 @@ function Entities:GetLocalPlayer() end
 ---@param startFrom CBaseEntity What happens if starting from nil?
 ---@return EntityHandle
 function Entities:Next(startFrom) end
+
 --#endregion
 
 --#region CAI_BaseNPC
--- No Description Set
+
+---No Description Set
 ---@class CAI_BaseNPC : CBaseCombatCharacter
 CAI_BaseNPC = {}
 ---Get the squad to which this NPC belongs.
@@ -2131,10 +2228,12 @@ function CAI_BaseNPC:NpcNavGetGoalPosition() end
 ---Returns true if NPC has a goal and path
 ---@return boolean
 function CAI_BaseNPC:NpcNavGoalActive() end
+
 --#endregion
 
 --#region CBaseTrigger
--- Entity class for triggers.
+
+---Entity class for triggers.
 ---@class CBaseTrigger : CEntityInstance
 CBaseTrigger = {}
 ---Disable the trigger
@@ -2145,10 +2244,12 @@ function CBaseTrigger:Enable() end
 ---@param entity CBaseEntity
 ---@return boolean
 function CBaseTrigger:IsTouching(entity) end
+
 --#endregion
 
 --#region CEnvTimeOfDay2
--- No Description Set
+
+---No Description Set
 ---@class CEnvTimeOfDay2
 CEnvTimeOfDay2 = {}
 ---Lookup dynamic time-of-day float value.
@@ -2161,10 +2262,12 @@ function CEnvTimeOfDay2:GetFloat(unknown, unknown2) end
 ---@param unknown2 float
 ---@return Vector
 function CEnvTimeOfDay2:GetVector(unknown, unknown2) end
+
 --#endregion
 
 --#region CEnvEntityMaker
--- Entity class for env_entity_maker.
+
+---Entity class for env_entity_maker.
 ---@class CEnvEntityMaker : CEntityInstance
 CEnvEntityMaker = {}
 ---Create an entity at the location of the maker
@@ -2179,49 +2282,59 @@ function CEnvEntityMaker:SpawnEntityAtLocation(origin, angles) end
 ---Create an entity at the location of a named entity
 ---@param pszName string
 function CEnvEntityMaker:SpawnEntityAtNamedEntityOrigin(pszName) end
+
 --#endregion
 
 --#region CEntityScriptFramework
--- Interface to the C++-side of entity framework
--- Global accessor variable: EntityFramework
+
+---Interface to the C++-side of entity framework
+---Global accessor variable: EntityFramework
 ---@class CEntityScriptFramework
 -- No methods available.
 EntityFramework = {}
 --TEST HOOKS
+
 --#endregion
 
 --#region CInfoWorldLayer
--- Entity class for info_world_layer.
+
+---Entity class for info_world_layer.
 ---@class CInfoWorldLayer : CEntityInstance
 CInfoWorldLayer = {}
 ---Hides this layer.
 function CInfoWorldLayer:HideWorldLayer() end
 ---Shows this layer.
 function CInfoWorldLayer:ShowWorldLayer() end
+
 --#endregion
 
 --#region CLogicRelay
--- Entity class for logic_relay.
+
+---Entity class for logic_relay.
 ---@class CLogicRelay : CEntityInstance
 CLogicRelay = {}
 ---Trigger(hActivator, hCaller) : Triggers the logic_relay
 ---@param hActivator CBaseEntity
 ---@param hCaller CBaseEntity
 function CLogicRelay:Trigger(hActivator, hCaller) end
+
 --#endregion
 
 --#region CMarkupVolumeTagged
--- No Description Set
+
+---No Description Set
 ---@class CMarkupVolumeTagged : CEntityInstance
 CMarkupVolumeTagged = {}
 ---Does this volume have the given tag.
 ---@param tagName string
 ---@return boolean
 function CMarkupVolumeTagged:HasTag(tagName) end
+
 --#endregion
 
 --#region CScriptPrecacheContext
--- Container to hold context published to precache functions in script
+
+---Container to hold context published to precache functions in script
 ---@class CScriptPrecacheContext
 CScriptPrecacheContext = {}
 ---Precaches a specific resource
@@ -2231,21 +2344,25 @@ function CScriptPrecacheContext:AddResource(resource) end
 ---@param key string
 ---@return any
 function CScriptPrecacheContext:GetValue(key) end
+
 --#endregion
 
 --#region CScriptKeyValues
--- Container holding keyvalues published to the Spawn() hook function.
+
+---Container holding keyvalues published to the Spawn() hook function.
 ---@class CScriptKeyValues
 CScriptKeyValues = {}
 ---Reads a spawn key.
 ---@param key string
 ---@return any
 function CScriptKeyValues:GetValue(key) end
+
 --#endregion
 
 --#region CNativeOutputs
--- Container for holding outputs published by scripted entity classes to the game code.
--- Does this have functionality?
+
+---Container for holding outputs published by scripted entity classes to the game code.
+---Does this have functionality?
 ---@class CNativeOutputs
 CNativeOutputs = {}
 ---Creates a new CNativeOutputs object.
@@ -2258,10 +2375,12 @@ function CNativeOutputs:AddOutput(outputName, description) end
 ---Initialize with specified number of outputs.
 ---@param numOutputs integer
 function CNativeOutputs:Init(numOutputs) end
+
 --#endregion
 
 --#region CEnvProjectedTexture
--- Entity class for env_projectedtexture
+
+---Entity class for env_projectedtexture
 ---@class CEnvProjectedTexture : CBaseEntity
 CEnvProjectedTexture = {}
 ---Set light maximum range
@@ -2283,10 +2402,12 @@ function CEnvProjectedTexture:SetQuadraticAttenuation(atten) end
 ---@param planes integer
 ---@param planeOffset float
 function CEnvProjectedTexture:SetVolumetrics(on, intensity, noise, planes, planeOffset) end
+
 --#endregion
 
 --#region CInfoData
--- No Description Set what does this belong to?
+
+---No Description Set what does this belong to?
 ---@class CInfoData
 CInfoData = {}
 ---Query color data for this key
@@ -2319,10 +2440,12 @@ function CInfoData:QueryString(tok, default) end
 ---@param default Vector
 ---@return Vector
 function CInfoData:QueryColor(tok, default) end
+
 --#endregion
 
 --#region CPhysicsProp
--- Entity class for prop_physics and related classes.
+
+---Entity class for prop_physics and related classes.
 ---@class CPhysicsProp : CBaseAnimating
 CPhysicsProp = {}
 ---Enable/disable dynamic vs dynamic continuous collision traces.
@@ -2332,10 +2455,12 @@ function CPhysicsProp:SetDynamicVsDynamicContinuous(dynamicVsDynamicContinuousEn
 function CPhysicsProp:DisableMotion() end
 ---Enable motion for the prop.
 function CPhysicsProp:EnableMotion() end
+
 --#endregion
 
 --#region CDebugOverlayScriptHelper
--- No Description Set
+
+---No Description Set
 ---@class CDebugOverlayScriptHelper
 debugoverlay = {}
 ---Draws an axis. Specify origin + orientation in world space.
@@ -2657,10 +2782,12 @@ function debugoverlay:VertArrow(startPos, endPos, width, red, green, blue, alpha
 ---@param noDepthTest boolean
 ---@param seconds float
 function debugoverlay:YawArrow(startPos, yaw, length, width, red, green, blue, alpha, noDepthTest, seconds) end
+
 --#endregion
 
 --#region CSceneEntity
--- Choreographed scene which controls animation and/or dialog on one or more actors.
+
+---Choreographed scene which controls animation and/or dialog on one or more actors.
 ---@class CSceneEntity : CEntityInstance
 CSceneEntity = {}
 ---Adds a team (by index) to the broadcast list
@@ -2695,10 +2822,12 @@ function CSceneEntity:RemoveBroadcastTeamTarget(int_1) end
 ---Start scene playback, takes activatorEntity as param
 ---@param handle_1 handle
 function CSceneEntity:Start(handle_1) end
+
 --#endregion
 
 --#region CCustomGameEventManager
--- No Description Set
+
+---No Description Set
 ---@class CCustomGameEventManager
 CustomGameEventManager = {}
 ---( string EventName, func CallbackFunction ) - Register a callback to be called when a particular custom event arrives. Returns a listener ID that can be used to unregister later.
@@ -2723,15 +2852,19 @@ function CustomGameEventManager:Send_ServerToTeam(int_1, string_2, handle_3) end
 ---( int ListnerID ) - Unregister a specific listener
 ---@param int_1 integer
 function CustomGameEventManager:UnregisterListener(int_1) end
+
 --#endregion
 
 --#region CParticleSystem
--- Entity class for particle systems? No methods avaialable.
+
+---Entity class for particle systems? No methods avaialable.
+
 --#endregion
 
 --#region CPointClientUIWorldPanel
--- Entity class for point_clientui_world_panel
--- A 2D Panorama panel projected at a set position in the world.
+
+---Entity class for point_clientui_world_panel
+---A 2D Panorama panel projected at a set position in the world.
 ---@class CPointClientUIWorldPanel : CBaseModelEntity
 CPointClientUIWorldPanel = {}
 ---Tells the panel to accept user input.
@@ -2746,10 +2879,12 @@ function CPointClientUIWorldPanel:IsGrabbable() end
 ---Remove CSS class(es) from the panel.
 ---@param classes string
 function CPointClientUIWorldPanel:RemoveCSSClasses(classes) end
+
 --#endregion
 
 --#region CPointTemplate
--- Entity class for point_template
+
+---Entity class for point_template
 ---@class CPointTemplate : CEntityInstance
 CPointTemplate = {}
 ---DeleteCreatedSpawnGroups() : Deletes any spawn groups that this point_template has spawned. Note: The point_template will not be deleted by this.
@@ -2762,29 +2897,35 @@ function CPointTemplate:GetSpawnedEntities() end
 ---@param hCallbackFunc handle
 ---@param hCallbackScope handle
 function CPointTemplate:SetSpawnCallback(hCallbackFunc, hCallbackScope) end
+
 --#endregion
 
 --#region CPointWorldText
--- Entity class for point_worldtext
+
+---Entity class for point_worldtext
 ---@class CPointWorldText : CBaseModelEntity
 CPointWorldText = {}
 ---Set the message on this entity.
 ---@param pMessage string
 function CPointWorldText:SetMessage(pMessage) end
+
 --#endregion
 
 --#region CPropHMDAvatar
--- Entity class for prop_hmd_avatar
+
+---Entity class for prop_hmd_avatar
 ---@class CPropHMDAvatar : CBaseAnimating
 CPropHMDAvatar = {}
 ---Get VR hand by ID (0 and 1).
 ---@param nHandID "0"|"1"
 ---@return CPropVRHand
 function CPropHMDAvatar:GetVRHand(nHandID) end
+
 --#endregion
 
 --#region CPropVRHand
--- Entity class for prop_vr_hand. Represents a VR motion controller. The controllers can be enumerated for each player using the CPropHMDAvatar::GetVRHand() method.
+
+---Entity class for prop_vr_hand. Represents a VR motion controller. The controllers can be enumerated for each player using the CPropHMDAvatar::GetVRHand() method.
 ---@class CPropVRHand : CBaseAnimating
 CPropVRHand = {}
 ---Add the attachment to this hand.
@@ -2829,11 +2970,13 @@ function CPropVRHand:RemoveHandModelOverride(pModelName) end
 ---Set the attachment for this hand.
 ---@param hAttachment CBaseEntity
 function CPropVRHand:SetHandAttachment(hAttachment) end
+
 --#endregion
 
 --#region CScriptParticleManager
--- Allows the creation and manipulation of particle systems.
--- Global accessor variable: ParticleManager
+
+---Allows the creation and manipulation of particle systems.
+---Global accessor variable: ParticleManager
 ---@class ParticleManager
 ParticleManager = {}
 ---Creates a new particle effect. Returns the index of the created effect.
@@ -2903,19 +3046,23 @@ function ParticleManager:SetParticleControlOrientation(particleID, controlIndex,
 ---@param left Vector
 ---@param up Vector
 function ParticleManager:SetParticleControlOrientationFLU(particleID, controlIndex, forward, left, up) end
+
 --#endregion
 
 --#region SteamInfo
+
 -- Is this global??
 ---Is the script connected to the public Steam universe.
 
 ---@deprecated
 ---@return boolean
 function IsPublicUniverse() end
+
 --#endregion
 
 --#region CTakeDamageInfo
--- DamageInfo handle returned by CreateDamageInfo()
+
+---DamageInfo handle returned by CreateDamageInfo()
 ---@class CTakeDamageInfo
 CTakeDamageInfo = {}
 ---Adds to the damage value.
@@ -3030,11 +3177,13 @@ function CTakeDamageInfo:SetReportedPosition(reportedPosition) end
 ---
 ---@param stabilityDamage float
 function CTakeDamageInfo:SetStabilityDamage(stabilityDamage) end
+
 --#endregion
 
 --#region Convars
--- Allows access to read and modify console variables.
--- Global accessor variable: Convars
+
+---Allows access to read and modify console variables.
+---Global accessor variable: Convars
 ---@class Convars
 Convars = {}
 ---GetBool(name) : returns the convar as a boolean flag.
@@ -3084,10 +3233,12 @@ function Convars:SetInt(name, value) end
 ---@param name string
 ---@param value string
 function Convars:SetStr(name, value) end
+
 --#endregion
 
 --#region Decider
--- No Description Set
+
+---No Description Set
 ---@class Decider
 Decider = {}
 ---Add a CRule object (defined in rulescript_base.nut)
@@ -3103,11 +3254,13 @@ function Decider:FindAllMatches(query, leeway) end
 ---@param query handle
 ---@return handle
 function Decider:FindBestMatch(query) end
+
 --#endregion
 
 --#region GlobalSys
--- Used to read the command line parameters the game was started with.
--- Global accessor variable: GlobalSys
+
+---Used to read the command line parameters the game was started with.
+---Global accessor variable: GlobalSys
 ---@class GlobalSys
 GlobalSys = {}
 ---Returns true if the command line param was used, otherwise false.
@@ -3129,12 +3282,14 @@ function GlobalSys:CommandLineInt(name, default) end
 ---@param default string
 ---@return string
 function GlobalSys:CommandLineStr(name, default) end
+
 --#endregion
 
 --#region Uint64
--- Integer with binary operations. Used for motion controller button masks.
--- DOES LUA HAVE SUPPORT FOR THESE OPERATORS?
--- How do you initialize this int?
+
+---Integer with binary operations. Used for motion controller button masks.
+---DOES LUA HAVE SUPPORT FOR THESE OPERATORS?
+---How do you initialize this int?
 ---@class Uint64
 Uint64 = {}
 ---Performs bitwise AND between two integers.
@@ -3172,10 +3327,12 @@ function Uint64:ToggleBit(bitValue) end
 ---Returns a hexadecimal string representation of the integer.
 ---@return string
 function Uint64:ToHexString() end
+
 --#endregion
 
 --#region QAngle
--- Class for angles.
+
+---Class for angles.
 ---@class QAngle
 ---@field x number Pitch angle.
 ---@field y number Yaw angle.
@@ -3209,54 +3366,23 @@ function QAngle:Left() end
 ---@return Vector
 function QAngle:Up() end
 
---[[QAngle = {
-    x = 0,
-    y = 0,
-    z = 0,
-
-    ---Creates a new QAngle.
-    ---@param pitch float
-    ---@param yaw float
-    ---@param roll float
-    constructor = function(pitch, yaw, roll)end,
-    ---Overloaded +. Adds angles together.
-    ---Note: Use RotateOrientation() instead to properly rotate angles.
-    ---@param a QAngle
-    ---@param b QAngle
-    ---@return QAngle
-    __add = function(a, b)end,
-    ---Overloaded ==. Tests for Equality
-    ---@param a QAngle
-    ---@param b QAngle
-    ---@return QAngle
-    __eq = function(a, b)end,
-    ---Overloaded .. Converts the QAngle to a human readable string.
-    ---@return string
-    __tostring = function()end,
-    ---Returns the forward vector.
-    ---@return Vector
-    Forward = function()end,
-    ---Returns the left vector.
-    ---@return Vector
-    Left = function()end,
-    ---Returns the up vector.
-    ---@return Vector
-    Up = function()end,
-}]]--
 --#endregion
 
 --#region Quarternion (misspelled on wiki)
 
---- Class for quaterinions.
---- Global accessor variable: None available
---- Bug: This class is broken and cannot be instantiated.
+---Class for quaterinions.
+---Global accessor variable: None available
+---
+---**Bug: This class is broken and cannot be instantiated.**
 ---@class Quaternion
+---@deprecated
 Quaternion = {}
+
 --#endregion
 
 --#region Vector
 
---- 3D vector class.
+---3D vector class.
 ---@class Vector
 ---@field x number X-axis
 ---@field y number Y-axis
@@ -3319,6 +3445,7 @@ function Vector:Lerp(target, t) end
 ---Returns the vector normalized.
 ---@return Vector
 function Vector:Normalized() end
+
 --#endregion
 
 --#endregion
@@ -3328,6 +3455,7 @@ function Vector:Normalized() end
 --#region
 
 --#region Analog Input Actions
+
 -- Actions for CBasePlayer:GetAnalogActionPositionForHand. These map to the actions in the SteamVR binding menu.
 ---@alias ENUM_ANALOG_INPUT_ACTIONS
 ---| "0" # Hand | Hand Curl | X Axis
@@ -3335,9 +3463,11 @@ function Vector:Normalized() end
 ---| "2" # Interact | Squeeze Xen Grenade | X Axis
 ---| "3" # Move | Teleport Turn | Required X, Y Axis
 ---| "4" # Move | Continuous Turn | X, Y Axis
+
 --#endregion
 
 --#region Controller types
+
 -- Player VR controller types returned by CBasePlayer::GetVRControllerType()
 -- Warning: The enumerations are missing from the scripting environment.
 ---@alias ENUM_CONTROLLER_TYPES
@@ -3352,9 +3482,11 @@ function Vector:Normalized() end
 ---| "8" # VR_CONTROLLER_TYPE_WINDOWSMR_SAMSUNG
 ---| "9" # VR_CONTROLLER_TYPE_GENERIC_TRACKED
 ---| "10" # VR_CONTROLLER_TYPE_COSMOS
+
 --#endregion
 
 --#region Digital Input Actions
+
 -- Actions for CBasePlayer:IsDigitalActionOnForHand. These map to the actions in the SteamVR binding menu.
 -- Note: No enumerations exist in the game for these yet.
 ---@alias ENUM_DIGITAL_INPUT_ACTIONS
@@ -3386,9 +3518,11 @@ function Vector:Normalized() end
 ---| "25" # Move > Crouch Toggle
 ---| "26" # Move > Stand toggle
 ---| "27" # Move > Adjust Height
+
 --#endregion
 
 --#region Activation types
+
 -- Passed to the Activate() hook function.
 ACTIVATE_TYPE_INITIAL_CREATION    = 0
 ACTIVATE_TYPE_DATAUPDATE_CREATION = 1
@@ -3397,9 +3531,11 @@ ACTIVATE_TYPE_ONRESTORE           = 2
 ---| "0" # When the function is called after entity creation.
 ---| "1" # Unknown.
 ---| "2" # When the function is called after the entity has been restored from a saved game.
+
 --#endregion
 
 --#region Damage types
+
 DMG_GENERIC                 =	0
 DMG_CRUSH                   =	1
 DMG_BULLET                  =	2
@@ -3463,9 +3599,11 @@ DMG_BUCKSHOT                =   536870912 -- Shotgun damage. Gibs headcrabs.
 ---| "134217728" # DMG_BLAST_SURFACE
 ---| "268435456" # DMG_DIRECT
 ---| "536870912" # DMG_BUCKSHOT
+
 --#endregion
 
 --#region ParticleAttachment_t
+
 -- Commented out names don't exist
 --PATTACH_INVALID             = -1
 PATTACH_ABSORIGIN           = 0
@@ -3502,9 +3640,11 @@ MAX_PATTACH_TYPES           = 15
 ---| "13" # PATTACH_CENTER_FOLLOW
 ---| "14" # PATTACH_CUSTOM_GAME_STATE_1
 ---| "15" # MAX_PATTACH_TYPES
+
 --#endregion
 
 --#region Effect flags
+
 -- Enumerations used by Entity:AddEffects, Entity:RemoveEffects and Entity:IsEffectActive.
 -- Names don't exist.
 ---@alias ENUM_EFFECT_FLAGS
@@ -3519,9 +3659,11 @@ MAX_PATTACH_TYPES           = 15
 ---| "256" # EF_ITEM_BLINK Makes the entity blink
 ---| "512" # EF_PARENT_ANIMATES Always assume that the parent entity is animating
 ---| "1024" # EF_FOLLOWBONE Internal flag that is set by Entity:FollowBone
+
 --#endregion
 
 --#region Unknown globals
+
 -- Found through brute force.
 BURST   = 5
 EMPTY   = 0
@@ -3533,5 +3675,7 @@ ACT_FLY = 25
 ACT_HOP = 30
 ACT_RUN = 10
 ACT_USE = 47
+
+--#endregion
 
 --#endregion
