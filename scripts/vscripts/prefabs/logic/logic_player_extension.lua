@@ -4,18 +4,28 @@
 ]]
 require "util.player"
 
----Passes the item held by player's left hand as the activator in the IO chain.
+---Sets the item held by player's left hand as the activator in the IO chain.
 ---@param data TypeIOInvoke
 local function GetHeldLeftHand(data)
-    DoEntFireByInstanceHandle(thisEntity, "FireUser1", "", 0, Player.LeftHand.ItemHeld or Player.LeftHand or Player, data.caller)
-    -- DoEntFire("test_player", "FireUser1", "", 0, Player.LeftHand.ItemHeld or Player.LeftHand or Player, data.caller)
+    DoEntFire(thisEntity:GetName().."_get_held_item", "FireUser1", "", 0, Player.LeftHand.ItemHeld or Player.LeftHand or Player, data.caller)
 end
 
---Passes the item held by player's right hand as the activator in the IO chain.
+--Sets the item held by player's right hand as the activator in the IO chain.
 ---@param data TypeIOInvoke
 local function GetHeldRightHand(data)
-    DoEntFireByInstanceHandle(thisEntity, "FireUser2", "", 0, Player.RightHand.ItemHeld or Player.RightHand or Player, data.caller)
-    -- DoEntFire("test_player", "FireUser1", "", 0, Player.RightHand.ItemHeld or Player.RightHand or Player, data.caller)
+    DoEntFire(thisEntity:GetName().."_get_held_item", "FireUser2", "", 0, Player.RightHand.ItemHeld or Player.RightHand or Player, data.caller)
+end
+
+---Sets the item held by player's primary hand as the activator in the IO chain.
+---@param data TypeIOInvoke
+local function GetHeldPrimaryHand(data)
+    DoEntFire(thisEntity:GetName().."_get_held_item", "FireUser3", "", 0, Player.PrimaryHand.ItemHeld or Player.PrimaryHand or Player, data.caller)
+end
+
+--Sets the item held by player's secondary hand as the activator in the IO chain.
+---@param data TypeIOInvoke
+local function GetHeldSecondaryHand(data)
+    DoEntFire(thisEntity:GetName().."_get_held_item", "FireUser4", "", 0, Player.SecondaryHand.ItemHeld or Player.SecondaryHand or Player, data.caller)
 end
 
 -- Add local functions to private script scope to avoid environment pollution.
