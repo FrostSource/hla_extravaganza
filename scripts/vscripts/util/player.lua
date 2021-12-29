@@ -112,13 +112,13 @@ CBasePlayer.Items = {
     ---Healthpen syringes.
     healthpen = 0,
     ammo = {
-        ---Ammo for the main pistol.
+        ---Ammo for the main pistol. This is number of magazines, not bullets. Multiply by 10 to get bullets.
         energygun = 0,
-        ---Ammo for the rapidfire pistol.
+        ---Ammo for the rapidfire pistol. This is number of magazines, not bullets. Multiply by 30 to get bullets.
         rapidfire = 0,
-        ---Ammo for the shotgun.
+        ---Ammo for the shotgun. This is number of shells.
         shotgun = 0,
-        ---Ammo for the generic pistol.
+        ---Ammo for the generic pistol. This is number of magazines, not bullets.
         generic_pistol = 0,
     }
 }
@@ -181,18 +181,20 @@ PLAYER_MOVETYPE_CONTINUOUS_HAND = 3
 
 ---Get VR movement type.
 ---@return "PLAYER_MOVETYPE_TELEPORT_BLINK"|"PLAYER_MOVETYPE_TELEPORT_SHIFT"|"PLAYER_MOVETYPE_CONTINUOUS_HEAD"|"PLAYER_MOVETYPE_CONTINUOUS_HAND"
-function CBasePlayer:GetMovementType()
+function CBasePlayer:GetMoveType()
     local movetype = Convars:GetInt('hlvr_movetype_default')
     return movetype
 end
 
 ---Returns the entity the player is looking at directly.
+---@param maxDistance? number # Max distance the trace can search.
 ---@return EntityHandle
-function CBasePlayer:GetLookingAt()
+function CBasePlayer:GetLookingAt(maxDistance)
+    maxDistance = maxDistance or 2048
     ---@type TypeTraceTableLine
     local traceTable = {
         startpos = self:EyePosition(),
-        endpos = self:EyePosition() + AnglesToVector(self:EyeAngles()) * 2048,
+        endpos = self:EyePosition() + AnglesToVector(self:EyeAngles()) * maxDistance,
         ignore = self,
     }
     if TraceLine(traceTable) then
@@ -221,6 +223,44 @@ function CBasePlayer:EnableFallDamage()
         if filter then filter:Kill() end
     end
     DoEntFireByInstanceHandle(self, "SetDamageFilter", "", 0, self, self)
+end
+
+---Adds resources to the player.
+---@param pistol_ammo? number
+---@param rapidfire_ammo? number
+---@param shotgun_ammo? number
+---@param resin? number
+function CBasePlayer:AddResources(pistol_ammo, rapidfire_ammo, shotgun_ammo, resin)
+    SendToServerConsole("hlvr_addresources "..(pistol_ammo or 0).." "..(rapidfire_ammo or 0).." "..(shotgun_ammo or 0).." "..(resin or 0))
+
+    -- For setting resources if ever find a way to track resin
+    -- SendToServerConsole("hlvr_setresources "..
+    --     (pistol_ammo or self.Items.ammo.energygun*10).." "..
+    --     (rapidfire_ammo or self.Items.ammo.rapidfire*30).." "..
+    --     (shotgun_ammo or self.Items.ammo.shotgun).." "..
+    --     (resin or self.Items.resin)
+    -- )
+end
+
+---Add pistol ammo to the player.
+---@param amount number
+function CBasePlayer:AddPistolAmmo(amount)
+    self:AddResources(amount, nil, nil, nil)
+end
+---Add shotgun ammo to the player.
+---@param amount number
+function CBasePlayer:AddShotgunAmmo(amount)
+    self:AddResources(nil, nil, amount, nil)
+end
+---Add rapidfire ammo to the player.
+---@param amount number
+function CBasePlayer:AddRapidfireAmmo(amount)
+    self:AddResources(nil, amount, nil, nil)
+end
+---Add resin to the player.
+---@param amount number
+function CBasePlayer:AddResin(amount)
+    self:AddResources(nil, nil, nil, amount)
 end
 
 ---Forces the player to drop this entity if held.
@@ -479,6 +519,14 @@ local function listenEventPlayerRemovedItemFromItemholder(_, data)
     savePlayerData()
 end
 ListenToGameEvent("player_removed_item_from_itemholder", listenEventPlayerRemovedItemFromItemholder, _G)
+
+-- No known way to track resin being taken out reliably.
+-- local function listenEventPlayerDropResinInBackpack(_, data)
+--     -- print("\nSTORE RESIN:")
+--     -- util.PrintTable(data)
+--     -- print("\n")
+-- end
+-- ListenToGameEvent("player_drop_resin_in_backpack", listenEventPlayerDropResinInBackpack, _G)
 
 local function listenEventWeaponSwitch(_, data)
     -- print("\nWEAPON SWITCH:")
