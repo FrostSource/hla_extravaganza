@@ -9,7 +9,7 @@ DoIncludeScript("util/storage", thisEntity:GetPrivateScriptScope())
 local wr
 
 local function PickRandomWeight(data)
-    thisEntity:FireOutput("On"..wr:Random().case, data.activator, thisEntity, {}, 0)
+    thisEntity:FireOutput("On"..wr:Random().case, data.activator, thisEntity, nil, 0)
 end
 
 function Spawn(spawnkeys)
