@@ -10,13 +10,27 @@
 ]]
 Debug = {}
 
-function Debug.PrintAllEntities()
-    local e = Entities:First()
-    print(string.format("\n%-40s %-40s %-40s","Classname:", "Name:", "Model Name:"))
-    print(string.format("%-40s %-40s %-40s","----------", "-----", "-----------"))
-    while e ~= nil do
-        print(string.format("%-40s %-40s %-40s", e:GetClassname(), e:GetName(), e:GetModelName()))
-        e = Entities:Next(e)
+---comment
+---@param list EntityHandle[]
+function Debug.PrintEntityList(list)
+    print(string.format("\n%-12s %-40s %-40s %-40s %-60s","Handle", "Classname:", "Name:", "Model Name:", "Parent Class"))
+    print(string.format("%-12s %-40s %-40s %-40s %-60s",  "------", "----------", "-----", "-----------", "------------"))
+    for _, ent in ipairs(list) do
+        print(string.format("%-12s %-40s %-40s %-40s %-60s", ent, ent:GetClassname(), ent:GetName(), ent:GetModelName(), ent:GetMoveParent() and ent:GetMoveParent():GetClassname() or "" ))
     end
     print()
+end
+
+function Debug.PrintAllEntities()
+    local list = {}
+    local e = Entities:First()
+    while e ~= nil do
+        list[#list+1] = e
+        e = Entities:Next(e)
+    end
+    Debug.PrintEntityList(list)
+end
+
+function Debug.PrintAllEntitiesInSphere(origin, radius)
+    Debug.PrintEntityList(Entities:FindAllInSphere(origin, radius))
 end
