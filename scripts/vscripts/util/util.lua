@@ -90,8 +90,8 @@ end
 ---Prints the keys/values of a table and any tested tables.
 ---
 ---This is different from `DeepPrintTable` in that it will not print members of entity handles.
----@param tbl any
----@param prefix any
+---@param tbl table
+---@param prefix? string
 function util.PrintTable(tbl, prefix)
     prefix = prefix or ""
     print(prefix.."{")
@@ -103,6 +103,42 @@ function util.PrintTable(tbl, prefix)
     end
     print(prefix.."}")
 end
+
+---Get the first child in an entity's hierarchy with a given classname.
+---@param handle EntityHandle
+---@param classname string
+---@return EntityHandle
+function util.GetFirstChildWithClassname(handle, classname)
+    for _, child in ipairs(handle:GetChildren()) do
+        if child:GetClassname() == classname then
+            return child
+        end
+        local c = util:GetFirstChildWithClassname(child)
+        if c then
+            return c
+        end
+    end
+    return nil
+end
+CBaseEntity.GetFirstChildWithClassname = util.GetFirstChildWithClassname
+
+---Get the first child in an entity's hierarchy with a given target name.
+---@param handle EntityHandle
+---@param name string
+---@return EntityHandle
+function util.GetFirstChildWithName(handle, name)
+    for _, child in ipairs(handle:GetChildren()) do
+        if child:GetName() == name then
+            return child
+        end
+        local c = util:GetFirstChildWithClassname(child)
+        if c then
+            return c
+        end
+    end
+    return nil
+end
+CBaseEntity.GetFirstChildWithName = util.GetFirstChildWithName
 
 
 --------------------
