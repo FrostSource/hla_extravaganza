@@ -151,7 +151,10 @@ thisEntity = nil
 ---**vr_tip_attachment (number)** *Hand that grabbed, 1 = left, 2 = right (reversed if left handed).*
 ---| "\"item_released\"" # Player drops an object from hand.
 ---| "\"item_attachments\"" # Unknown.
----| "\"weapon_switch\"" # Player switches weapon.
+---Player switches weapon.
+---
+---**item (string)** *Weapon class 'hand_use_controller', 'hlvr_weapon_energygun', 'hlvr_weapon_rapidfire', 'hlvr_weapon_shotgun', 'hlvr_multitool'.*
+---| "\"weapon_switch\""
 ---| "\"grabbity_glove_pull\"" # Player pulls object with glove.
 ---| "\"grabbity_glove_catch\"" # Player grabs an object after pulling it with glove.
 ---| "\"grabbity_glove_highlight_start\"" # Grabbity glove starts highlighting an object.
@@ -181,8 +184,15 @@ thisEntity = nil
 ---| "\"player_pistol_pickedup_charged_clip\"" #
 ---| "\"player_pistol_armed_charged_clip\"" #
 ---| "\"player_pistol_clip_charge_ended\"" #
----| "\"player_retrieved_backpack_clip\"" # Player grabs pistol magazine from backpack.
----| "\"player_drop_ammo_in_backpack\"" # Player stores any ammo type in backpack.
+---Player grabs weapon ammo from backpack. This does not have any key to determine ammo type.
+---Use weapon_switch event to track held weapon to determine ammo type retrieved.
+---Fires *before* item_pickup event.
+---| "\"player_retrieved_backpack_clip\""
+---Player stores any ammo type in backpack.
+---
+---**ammotype (string)** *Name of ammo type 'Pistol', 'SMG1', 'Buckshot', 'AlyxGun'.*
+---Sometimes for some reason the key is `ammoType` (capital T), seems to happen when shotgun shell is taken from backpack and put back.
+---| "\"player_drop_ammo_in_backpack\""
 ---| "\"player_drop_resin_in_backpack\"" # Player stores resin in backpack.
 ---| "\"player_using_healthstation\"" #
 ---| "\"health_station_open\"" #
@@ -227,8 +237,20 @@ thisEntity = nil
 ---| "\"player_attempted_invalid_pistol_clip_storage\"" # Player tried to store pistol magazine in backpack.
 ---| "\"opened_weapon_switch\"" # Player opened the weapon switch menu.
 ---| "\"player_started_2h_levitate\"" # is this ladders?
----| "\"player_stored_item_in_itemholder\"" # Player put item in wrist pocket. Fires after item_released.
----| "\"player_removed_item_from_itemholder\"" # Player took item from wrist pocket. (does fire after item_pickup?)
+---Player put item in wrist pocket. Fires just after item_released.
+---
+---**item (string)** *Item classname.*
+---
+---**item_name (string)** *Item targetname.*
+---| "\"player_stored_item_in_itemholder\""
+---Player took item from wrist pocket. Fires just after item_pickup event.
+---
+---**item (string)** *Item classname.*
+---
+---**item_name (string)** *Item targetname.*
+---
+---**vr_tip_attachment (number)** *Hand that grabbed, 1 = left, 2 = right (reversed if left handed).*
+---| "\"player_removed_item_from_itemholder\""
 ---| "\"player_picked_up_flashlight\"" #
 ---| "\"player_picked_up_flashlight_single_controller\"" #
 ---| "\"player_attached_flashlight\"" #
