@@ -112,13 +112,13 @@ CBasePlayer.Items = {
     ---Healthpen syringes.
     healthpen = 0,
     ammo = {
-        ---Ammo for the main pistol.
+        ---Ammo for the main pistol. This is number of magazines, not bullets. Multiply by 10 to get bullets.
         energygun = 0,
-        ---Ammo for the rapidfire pistol.
+        ---Ammo for the rapidfire pistol. This is number of magazines, not bullets. Multiply by 30 to get bullets.
         rapidfire = 0,
-        ---Ammo for the shotgun.
+        ---Ammo for the shotgun. This is number of shells.
         shotgun = 0,
-        ---Ammo for the generic pistol.
+        ---Ammo for the generic pistol. This is number of magazines, not bullets.
         generic_pistol = 0,
     }
 }
@@ -144,7 +144,7 @@ CPropVRHand.LastClassGrabbed = ""
 -- Class extension functions --
 -------------------------------
 
----Forces the player to drop an entity if held.
+---Force the player to drop an entity if held.
 ---@param handle CBaseEntity # Handle of the entity to drop
 function CBasePlayer:DropByHandle(handle)
     if IsValidEntity(handle) then
@@ -154,25 +154,43 @@ function CBasePlayer:DropByHandle(handle)
     end
 end
 
----Forces the player to drop any item held in their left hand.
+---Force the player to drop any item held in their left hand.
 function CBasePlayer:DropLeftHand()
     self:DropByHandle(self.LeftHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropLeftHand, "DropLeftHand", CBasePlayer)
 
----Forces the player to drop any item held in their right hand.
+---Force the player to drop any item held in their right hand.
 function CBasePlayer:DropRightHand()
     self:DropByHandle(self.RightHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropRightHand, "DropRightHand", CBasePlayer)
 
----Forces the player to drop any item held in their primary hand.
+---Force the player to drop any item held in their primary hand.
 function CBasePlayer:DropPrimaryHand()
     self:DropByHandle(self.PrimaryHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropPrimaryHand, "DropPrimaryHand", CBasePlayer)
 
----Forces the player to drop any item held in their secondary/off hand.
+---Force the player to drop any item held in their secondary/off hand.
 function CBasePlayer:DropSecondaryHand()
     self:DropByHandle(self.SecondaryHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropSecondaryHand, "DropSecondaryHand", CBasePlayer)
+
+---Force the player to drop the caller entity if held.
+---@param data TypeIOInvoke
+function CBasePlayer:DropCaller(data)
+    self:DropByHandle(data.caller)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.DropCaller, "DropCaller", CBasePlayer)
+
+---Force the player to drop the activator entity if held.
+---@param data TypeIOInvoke
+function CBasePlayer:DropActivator(data)
+    self:DropByHandle(data.activator)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
 
 PLAYER_MOVETYPE_TELEPORT_BLINK  = 0
 PLAYER_MOVETYPE_TELEPORT_SHIFT  = 1
@@ -181,18 +199,20 @@ PLAYER_MOVETYPE_CONTINUOUS_HAND = 3
 
 ---Get VR movement type.
 ---@return "PLAYER_MOVETYPE_TELEPORT_BLINK"|"PLAYER_MOVETYPE_TELEPORT_SHIFT"|"PLAYER_MOVETYPE_CONTINUOUS_HEAD"|"PLAYER_MOVETYPE_CONTINUOUS_HAND"
-function CBasePlayer:GetMovementType()
+function CBasePlayer:GetMoveType()
     local movetype = Convars:GetInt('hlvr_movetype_default')
     return movetype
 end
 
 ---Returns the entity the player is looking at directly.
+---@param maxDistance? number # Max distance the trace can search.
 ---@return EntityHandle
-function CBasePlayer:GetLookingAt()
+function CBasePlayer:GetLookingAt(maxDistance)
+    maxDistance = maxDistance or 2048
     ---@type TypeTraceTableLine
     local traceTable = {
         startpos = self:EyePosition(),
-        endpos = self:EyePosition() + AnglesToVector(self:EyeAngles()) * 2048,
+        endpos = self:EyePosition() + AnglesToVector(self:EyeAngles()) * maxDistance,
         ignore = self,
     }
     if TraceLine(traceTable) then
@@ -211,6 +231,7 @@ function CBasePlayer:DisableFallDamage()
     })
     DoEntFireByInstanceHandle(self, "SetDamageFilter", name, 0, self, self)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DisableFallDamage, "DisableFallDamage", CBasePlayer)
 
 ---Enables fall damage for the player.
 function CBasePlayer:EnableFallDamage()
@@ -222,50 +243,84 @@ function CBasePlayer:EnableFallDamage()
     end
     DoEntFireByInstanceHandle(self, "SetDamageFilter", "", 0, self, self)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.EnableFallDamage, "EnableFallDamage", CBasePlayer)
+
+---Adds resources to the player.
+---@param pistol_ammo? number
+---@param rapidfire_ammo? number
+---@param shotgun_ammo? number
+---@param resin? number
+function CBasePlayer:AddResources(pistol_ammo, rapidfire_ammo, shotgun_ammo, resin)
+    SendToServerConsole("hlvr_addresources "..(pistol_ammo or 0).." "..(rapidfire_ammo or 0).." "..(shotgun_ammo or 0).." "..(resin or 0))
+
+    -- For setting resources if ever find a way to track resin
+    -- SendToServerConsole("hlvr_setresources "..
+    --     (pistol_ammo or self.Items.ammo.energygun*10).." "..
+    --     (rapidfire_ammo or self.Items.ammo.rapidfire*30).." "..
+    --     (shotgun_ammo or self.Items.ammo.shotgun).." "..
+    --     (resin or self.Items.resin)
+    -- )
+end
+
+---Add pistol ammo to the player.
+---@param amount number
+function CBasePlayer:AddPistolAmmo(amount)
+    self:AddResources(amount, nil, nil, nil)
+end
+---Add shotgun ammo to the player.
+---@param amount number
+function CBasePlayer:AddShotgunAmmo(amount)
+    self:AddResources(nil, nil, amount, nil)
+end
+---Add rapidfire ammo to the player.
+---@param amount number
+function CBasePlayer:AddRapidfireAmmo(amount)
+    self:AddResources(nil, amount, nil, nil)
+end
+---Add resin to the player.
+---@param amount number
+function CBasePlayer:AddResin(amount)
+    self:AddResources(nil, nil, nil, amount)
+end
+
+---Marges an existing prop with a given hand.
+---@param hand CPropVRHand|"0"|"1" # The hand handle or index.
+---@param prop EntityHandle|string # The prop handle or targetname.
+---@param hide_hand boolean # If the hand should turn invisible after merging.
+function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
+    if type(hand) == "number" then
+        hand = self.Hand[hand+1]
+    end
+    hand:MergeProp(prop, hide_hand)
+end
+
+---Merges an existing prop with this hand.
+---@param prop EntityHandle|string # The prop handle or targetname.
+---@param hide_hand boolean # If the hand should turn invisible after merging.
+function CPropVRHand:MergeProp(prop, hide_hand)
+    if type(prop) == "string" then
+        prop = Entities:FindByName(nil, prop)
+    end
+    if IsValidEntity(prop) then
+        local glove = util.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
+        -- don't use FollowEntity
+        prop:SetParent(glove, "!bonemerge")
+        if hide_hand then glove:SetRenderAlpha(0) end
+    else
+        Warning("Could not find prop '"..tostring(prop).."' to merge with hand.\n")
+    end
+end
+
 
 ---Forces the player to drop this entity if held.
 ---@param self CBaseEntity
 function CBaseEntity:Drop()
     Player:DropByHandle(self)
 end
-CBaseEntity.drop = CBaseEntity.Drop
-
-
------------------------------------------------------
--- Global proxy functions for easy Hammer invoking --
------------------------------------------------------
-
----Forces the player to drop any item held in their left hand.
-function PlayerDropLeftHand()
-    Player:DropLeftHand()
-end
-
----Forces the player to drop any item held in their right hand.
-function PlayerDropRightHand()
-    Player:DropRightHand()
-end
-
----Forces the player to drop any item held in their primary hand.
-function PlayerDropPrimaryHand()
-    Player:DropPrimaryHand()
-end
-
----Forces the player to drop any item held in their secondary/off hand.
-function PlayerDropSecondaryHand()
-    Player:DropSecondaryHand()
-end
-
----Forces the player to drop the caller entity if held.
----@param data TypeIOInvoke
-function PlayerDropCaller(data)
-    Player:DropByHandle(data.caller)
-end
-
----Forces the player to drop the activator entity if held.
----@param data TypeIOInvoke
-function PlayerDropActivator(data)
-    Player:DropByHandle(data.activator)
-end
+-- CBaseEntity.drop = CBaseEntity.Drop
+print(CBaseEntity)
+print(_G)
+util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
 
 
 -----------------
@@ -479,6 +534,14 @@ local function listenEventPlayerRemovedItemFromItemholder(_, data)
     savePlayerData()
 end
 ListenToGameEvent("player_removed_item_from_itemholder", listenEventPlayerRemovedItemFromItemholder, _G)
+
+-- No known way to track resin being taken out reliably.
+-- local function listenEventPlayerDropResinInBackpack(_, data)
+--     -- print("\nSTORE RESIN:")
+--     -- util.PrintTable(data)
+--     -- print("\n")
+-- end
+-- ListenToGameEvent("player_drop_resin_in_backpack", listenEventPlayerDropResinInBackpack, _G)
 
 local function listenEventWeaponSwitch(_, data)
     -- print("\nWEAPON SWITCH:")

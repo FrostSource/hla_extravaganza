@@ -1719,9 +1719,9 @@ function CEntityInstance:entindex() end
 ---@param outputName string
 ---@param activator CBaseEntity
 ---@param caller CBaseEntity
----@param args table
+---@param parameter string|"nil" # The parameter override to send with the output.
 ---@param delay float
-function CEntityInstance:FireOutput(outputName, activator, caller, args, delay) end
+function CEntityInstance:FireOutput(outputName, activator, caller, parameter, delay) end
 ---Get the entity classname as a string.
 ---@return string classname
 function CEntityInstance:GetClassname() end

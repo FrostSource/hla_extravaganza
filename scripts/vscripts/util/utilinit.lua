@@ -6,7 +6,7 @@
 
         require "util.utilinit"
 ]]
---require "util.debug"
+require "util.debug"
 require "util.enums"
 require "util.util"
 require "util.storage"

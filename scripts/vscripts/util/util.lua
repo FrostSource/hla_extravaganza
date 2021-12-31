@@ -140,6 +140,80 @@ function util.GetFirstChildWithName(handle, name)
 end
 CBaseEntity.GetFirstChildWithName = util.GetFirstChildWithName
 
+---Attempt to find a key in `tbl` pointing to `value`.
+---@param tbl table # The table to search.
+---@param value any # The value to search for.
+---@return string # Returns nil if no key found.
+function util.FindKeyFromValue(tbl, value)
+    for key, val in pairs(tbl) do
+        if val == value then
+            return key
+        end
+    end
+    return nil
+end
+
+---Attempt to find a key in `tbl` pointing to `value` by recursively searching nested tables.
+---@param tbl table # The table to search.
+---@param value any # The value to search for.
+---@param seen? table[] # List of tables that have already been searched.
+---@return string # Returns nil if no key found.
+local function _FindKeyFromValueDeep(tbl, value, seen)
+    seen = seen or {}
+    for key, val in pairs(tbl) do
+        if val == value then
+            return key
+        elseif type(val) == "table" and not vlua.find(seen, val) then
+            seen[#seen+1] = val
+            local k = _FindKeyFromValueDeep(val, value, seen)
+            if k then return k end
+        end
+    end
+    return nil
+end
+
+---Attempt to find a key in `tbl` pointing to `value` by recursively searching nested tables.
+---@param tbl table # The table to search.
+---@param value any # The value to search for.
+---@return string # Returns nil if no key found.
+function util.FindKeyFromValueDeep(tbl, value)
+    return _FindKeyFromValueDeep(tbl, value)
+end
+
+---Adds a function to the global scope with alternate casing styles.
+---@param func function # The function to sanitize.
+---@param name? string # Optionally the name of the function for faster processing. Is required if using a local function.
+---@param scope? table # Optionally the explicit scope to put the sanitized functions in.
+function util.SanitizeFunctionForHammer(func, name, scope)
+    -- if name is nil then find the name
+    local fenv = getfenv(func)
+    if name == "" or name == nil then
+        name = util.FindKeyFromValueDeep(fenv, func)
+        -- if name is still after search environment, search locals
+        if name == nil then
+            -- locals get put in global scope
+            fenv = _G
+            local i = 1
+            while true do
+                name,val = debug.getlocal(2,i)
+                if name == nil or val == func then break end
+                i = i + 1
+            end
+            -- if name is still nil then function doesn't exist yet
+            if name == nil then
+                Warning("Trying to sanitize function ["..tostring(func).."] which doesn't exist in environment!\n")
+                return
+            end
+        end
+    end
+    fenv = scope or fenv
+    print("Sanitizing function '"..name.."' for Hammer in scope ["..tostring(fenv).."]")
+    fenv[name] = func
+    fenv[name:lower()] = func
+    fenv[name:upper()] = func
+    fenv[name:sub(1,1):upper()..name:sub(2)] = func
+end
+
 
 --------------------
 -- Math functions --
