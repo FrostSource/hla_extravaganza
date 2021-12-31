@@ -283,6 +283,35 @@ function CBasePlayer:AddResin(amount)
     self:AddResources(nil, nil, nil, amount)
 end
 
+---Marges an existing prop with a given hand.
+---@param hand CPropVRHand|"0"|"1" # The hand handle or index.
+---@param prop EntityHandle|string # The prop handle or targetname.
+---@param hide_hand boolean # If the hand should turn invisible after merging.
+function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
+    if type(hand) == "number" then
+        hand = self.Hand[hand+1]
+    end
+    hand:MergeProp(prop, hide_hand)
+end
+
+---Merges an existing prop with this hand.
+---@param prop EntityHandle|string # The prop handle or targetname.
+---@param hide_hand boolean # If the hand should turn invisible after merging.
+function CPropVRHand:MergeProp(prop, hide_hand)
+    if type(prop) == "string" then
+        prop = Entities:FindByName(nil, prop)
+    end
+    if IsValidEntity(prop) then
+        local glove = util.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
+        -- don't use FollowEntity
+        prop:SetParent(glove, "!bonemerge")
+        if hide_hand then glove:SetRenderAlpha(0) end
+    else
+        Warning("Could not find prop '"..tostring(prop).."' to merge with hand.\n")
+    end
+end
+
+
 ---Forces the player to drop this entity if held.
 ---@param self CBaseEntity
 function CBaseEntity:Drop()
