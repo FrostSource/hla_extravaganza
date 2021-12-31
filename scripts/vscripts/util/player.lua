@@ -144,7 +144,7 @@ CPropVRHand.LastClassGrabbed = ""
 -- Class extension functions --
 -------------------------------
 
----Forces the player to drop an entity if held.
+---Force the player to drop an entity if held.
 ---@param handle CBaseEntity # Handle of the entity to drop
 function CBasePlayer:DropByHandle(handle)
     if IsValidEntity(handle) then
@@ -154,24 +154,36 @@ function CBasePlayer:DropByHandle(handle)
     end
 end
 
----Forces the player to drop any item held in their left hand.
+---Force the player to drop any item held in their left hand.
 function CBasePlayer:DropLeftHand()
     self:DropByHandle(self.LeftHand)
 end
 
----Forces the player to drop any item held in their right hand.
+---Force the player to drop any item held in their right hand.
 function CBasePlayer:DropRightHand()
     self:DropByHandle(self.RightHand)
 end
 
----Forces the player to drop any item held in their primary hand.
+---Force the player to drop any item held in their primary hand.
 function CBasePlayer:DropPrimaryHand()
     self:DropByHandle(self.PrimaryHand)
 end
 
----Forces the player to drop any item held in their secondary/off hand.
+---Force the player to drop any item held in their secondary/off hand.
 function CBasePlayer:DropSecondaryHand()
     self:DropByHandle(self.SecondaryHand)
+end
+
+---Force the player to drop the caller entity if held.
+---@param data TypeIOInvoke
+function CBasePlayer:DropCaller(data)
+    self:DropByHandle(data.caller)
+end
+
+---Force the player to drop the activator entity if held.
+---@param data TypeIOInvoke
+function CBasePlayer:DropActivator(data)
+    self:DropByHandle(data.activator)
 end
 
 PLAYER_MOVETYPE_TELEPORT_BLINK  = 0
@@ -269,43 +281,6 @@ function CBaseEntity:Drop()
     Player:DropByHandle(self)
 end
 CBaseEntity.drop = CBaseEntity.Drop
-
-
------------------------------------------------------
--- Global proxy functions for easy Hammer invoking --
------------------------------------------------------
-
----Forces the player to drop any item held in their left hand.
-function PlayerDropLeftHand()
-    Player:DropLeftHand()
-end
-
----Forces the player to drop any item held in their right hand.
-function PlayerDropRightHand()
-    Player:DropRightHand()
-end
-
----Forces the player to drop any item held in their primary hand.
-function PlayerDropPrimaryHand()
-    Player:DropPrimaryHand()
-end
-
----Forces the player to drop any item held in their secondary/off hand.
-function PlayerDropSecondaryHand()
-    Player:DropSecondaryHand()
-end
-
----Forces the player to drop the caller entity if held.
----@param data TypeIOInvoke
-function PlayerDropCaller(data)
-    Player:DropByHandle(data.caller)
-end
-
----Forces the player to drop the activator entity if held.
----@param data TypeIOInvoke
-function PlayerDropActivator(data)
-    Player:DropByHandle(data.activator)
-end
 
 
 -----------------
@@ -536,3 +511,6 @@ local function listenEventWeaponSwitch(_, data)
     Player.CurrentWeapon = data.item
 end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, _G)
+
+local function IAmOneTest()
+end
