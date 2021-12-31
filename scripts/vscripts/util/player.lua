@@ -158,33 +158,39 @@ end
 function CBasePlayer:DropLeftHand()
     self:DropByHandle(self.LeftHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropLeftHand, "DropLeftHand", CBasePlayer)
 
 ---Force the player to drop any item held in their right hand.
 function CBasePlayer:DropRightHand()
     self:DropByHandle(self.RightHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropRightHand, "DropRightHand", CBasePlayer)
 
 ---Force the player to drop any item held in their primary hand.
 function CBasePlayer:DropPrimaryHand()
     self:DropByHandle(self.PrimaryHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropPrimaryHand, "DropPrimaryHand", CBasePlayer)
 
 ---Force the player to drop any item held in their secondary/off hand.
 function CBasePlayer:DropSecondaryHand()
     self:DropByHandle(self.SecondaryHand)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropSecondaryHand, "DropSecondaryHand", CBasePlayer)
 
 ---Force the player to drop the caller entity if held.
 ---@param data TypeIOInvoke
 function CBasePlayer:DropCaller(data)
     self:DropByHandle(data.caller)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropCaller, "DropCaller", CBasePlayer)
 
 ---Force the player to drop the activator entity if held.
 ---@param data TypeIOInvoke
 function CBasePlayer:DropActivator(data)
     self:DropByHandle(data.activator)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
 
 PLAYER_MOVETYPE_TELEPORT_BLINK  = 0
 PLAYER_MOVETYPE_TELEPORT_SHIFT  = 1
@@ -225,6 +231,7 @@ function CBasePlayer:DisableFallDamage()
     })
     DoEntFireByInstanceHandle(self, "SetDamageFilter", name, 0, self, self)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DisableFallDamage, "DisableFallDamage", CBasePlayer)
 
 ---Enables fall damage for the player.
 function CBasePlayer:EnableFallDamage()
@@ -236,6 +243,7 @@ function CBasePlayer:EnableFallDamage()
     end
     DoEntFireByInstanceHandle(self, "SetDamageFilter", "", 0, self, self)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.EnableFallDamage, "EnableFallDamage", CBasePlayer)
 
 ---Adds resources to the player.
 ---@param pistol_ammo? number
@@ -280,7 +288,10 @@ end
 function CBaseEntity:Drop()
     Player:DropByHandle(self)
 end
-CBaseEntity.drop = CBaseEntity.Drop
+-- CBaseEntity.drop = CBaseEntity.Drop
+print(CBaseEntity)
+print(_G)
+util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
 
 
 -----------------
@@ -511,6 +522,3 @@ local function listenEventWeaponSwitch(_, data)
     Player.CurrentWeapon = data.item
 end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, _G)
-
-local function IAmOneTest()
-end
