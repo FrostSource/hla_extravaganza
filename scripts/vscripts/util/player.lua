@@ -294,6 +294,25 @@ function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
     hand:MergeProp(prop, hide_hand)
 end
 
+---@type function[]
+local registered_event_callbacks = {}
+
+---Register a callback with an event name for a player event.
+---@param event string|"\"player_activate\""|"\"vr_player_ready\""|"\"item_pickup\""|"\"item_released\""|"\"primary_hand_changed\""|"\"player_drop_ammo_in_backpack\""|"\"player_retrieved_backpack_clip\""|"\"player_stored_item_in_itemholder\""|"\"player_removed_item_from_itemholder\""|"\"weapon_switch\""
+---@param callback function
+function RegisterPlayerEventCallback(name, event, callback)
+    registered_event_callbacks[event][name] = callback
+end
+
+---Unregisters a callback with a name.
+---@param name string
+function UnregisterPlayerEventCallback(name)
+    for _, event in pairs(registered_event_callbacks) do
+        event[name] = nil
+    end
+end
+
+
 ---Merges an existing prop with this hand.
 ---@param prop EntityHandle|string # The prop handle or targetname.
 ---@param hide_hand boolean # If the hand should turn invisible after merging.
@@ -309,6 +328,12 @@ function CPropVRHand:MergeProp(prop, hide_hand)
     else
         Warning("Could not find prop '"..tostring(prop).."' to merge with hand.\n")
     end
+end
+
+---Return true if this hand is currently holding a prop.
+---@return boolean
+function CPropVRHand:IsHoldingProp()
+    return IsValidEntity(self.ItemHeld)
 end
 
 
@@ -328,6 +353,16 @@ util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
 -----------------
 
 local shellgroup_cache = 0
+
+local player_weapon_to_ammotype =
+{
+    [PLAYER_WEAPON_HAND] = "Pistol",
+    [PLAYER_WEAPON_MULTITOOL] = "Pistol",
+    [PLAYER_WEAPON_ENERGYGUN] = "Pistol",
+    [PLAYER_WEAPON_RAPIDFIRE] = "SMG1",
+    [PLAYER_WEAPON_SHOTGUN] = "Buckshot",
+    [PLAYER_WEAPON_GENERIC_PISTOL] = "AlyxGun",
+}
 
 local function savePlayerData()
     Storage.SaveTable(Player, "PlayerItems", Player.Items)
@@ -358,8 +393,16 @@ local function listenEventPlayerActivate(_, data)
                 Player.SecondaryHand = Player.LeftHand
             end
             Player.HMDAnchor = Player:GetHMDAnchor()
+            -- Registered callback
+            for _, callback in pairs(registered_event_callbacks["vr_player_ready"]) do
+                callback({player = Player, hmd_avatar = Player.HMDAvatar})
+            end
         end
     end, 0)
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {player = Player}))
+    end
     StopListeningToGameEvent(listenEventPlayerActivateID)
 end
 listenEventPlayerActivateID = ListenToGameEvent("player_activate", listenEventPlayerActivate, _G)
@@ -387,6 +430,10 @@ local function listenEventItemPickup(_, data)
     if hand_opposite.ItemHeld == hand.ItemHeld then
         hand_opposite.ItemHeld = nil
     end
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {item = ent_held, item_class = data.item}))
+    end
 end
 ListenToGameEvent("item_pickup", listenEventItemPickup, _G)
 
@@ -407,6 +454,10 @@ local function listenEventItemReleased(_, data)
     hand.LastItemDropped = hand.ItemHeld
     hand.LastClassDropped = data.item
     hand.ItemHeld = nil
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {item = Player.LastItemDropped, item_class = data.item}))
+    end
 end
 ListenToGameEvent("item_released", listenEventItemReleased, _G)
 
@@ -418,6 +469,10 @@ local function listenEventPrimaryHandChanged(_, data)
     else
         Player.PrimaryHand = Player.RightHand
         Player.SecondaryHand = Player.LeftHand
+    end
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
     end
 end
 ListenToGameEvent("primary_hand_changed", listenEventPrimaryHandChanged, _G)
@@ -434,45 +489,58 @@ local function listenEventPlayerDropAmmoInBackpack(_, data)
 
     -- Sometimes for some reason the key is `ammoType` (capital T), seems to happen when shotgun shell is taken from backpack and put back.
     local ammotype = data.ammotype or data.ammoType
+    local ammo_amount = 0
     -- Energygun
     if ammotype == "Pistol" then
         if Player.LastClassDropped == "item_hlvr_clip_energygun_multiple" then
             Player.Items.ammo.energygun = Player.Items.ammo.energygun + 4
+            ammo_amount = 4
             -- print("Player stored 4 energygun clips")
         else
             Player.Items.ammo.energygun = Player.Items.ammo.energygun + 1
+            ammo_amount = 1
             -- print("Player stored 1 energygun clip")
         end
     -- Rapidfire
     elseif ammotype == "SMG1" then
         Player.Items.ammo.rapidfire = Player.Items.ammo.rapidfire + 1
+        ammo_amount = 1
         -- print("Player stored 1 rapidfire clip")
     -- Shotgun (how to get shellgroup count?)
     elseif ammotype == "Buckshot" then
         if Player.LastClassDropped == "item_hlvr_clip_shotgun_multiple" then
             Player.Items.ammo.shotgun = Player.Items.ammo.shotgun + 4
+            ammo_amount = 4
             -- print("Player stored 4 shotgun shells")
         elseif Player.LastClassDropped == "item_hlvr_clip_shotgun_shellgroup" then
             -- this can be 2 or 3.. how to figure out??
             Player.Items.ammo.shotgun = Player.Items.ammo.shotgun + shellgroup_cache--2--3
+            ammo_amount = shellgroup_cache
             -- print("Player stored "..shellgroup_cache .." shotgun shells")
         else
             Player.Items.ammo.shotgun = Player.Items.ammo.shotgun + 1
+            ammo_amount = 1
             -- print("Player stored 1 shotgun shell")
         end
     -- Generic pistol
     elseif ammotype == "AlyxGun" then
         if Player.LastClassDropped == "item_hlvr_clip_generic_pistol_multiple" then
             Player.Items.ammo.generic_pistol = Player.Items.ammo.generic_pistol + 4
+            ammo_amount = 4
             -- print("Player stored 4 generic pistol clips")
         else
             Player.Items.ammo.generic_pistol = Player.Items.ammo.generic_pistol + 1
+            ammo_amount = 1
             -- print("Player stored 1 generic pistol clip")
         end
     else
         print("Couldn't figure out ammo for "..tostring(ammotype))
     end
     savePlayerData()
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+    end
 end
 ListenToGameEvent("player_drop_ammo_in_backpack", listenEventPlayerDropAmmoInBackpack, _G)
 
@@ -481,25 +549,41 @@ local function listenEventPlayerRetrievedBackpackClip(_, data)
     -- util.PrintTable(data)
     -- print("\n")
 
+    local do_callback,ammotype,ammo_amount = true,player_weapon_to_ammotype[Player.CurrentWeapon],0
     if Player.CurrentWeapon == PLAYER_WEAPON_ENERGYGUN
     or Player.CurrentWeapon == PLAYER_WEAPON_HAND
     or Player.CurrentWeapon == PLAYER_WEAPON_MULTITOOL then
         Player.Items.ammo.energygun = Player.Items.ammo.energygun - 1
+        ammo_amount = 1
     elseif Player.CurrentWeapon == PLAYER_WEAPON_RAPIDFIRE then
         Player.Items.ammo.rapidfire = Player.Items.ammo.rapidfire - 1
+        ammo_amount = 1
     elseif Player.CurrentWeapon == PLAYER_WEAPON_SHOTGUN then
+        do_callback = false
         -- Delayed think is used because item_pickup is fired after this event
         Player:SetContextThink("delay_shotgun_shellgroup", function()
             -- Player always retrieves a shellgroup even if no autoloader and single shell
             -- checking just in case
+            ammo_amount = #Player.LastItemGrabbed:GetChildren()
             if Player.LastClassGrabbed == "item_hlvr_clip_shotgun_shellgroup" then
-                Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - #Player.LastItemGrabbed:GetChildren()
+                Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - ammo_amount
+            end
+            -- Registered callback
+            for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+                callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
             end
         end, 0)
     elseif Player.CurrentWeapon == PLAYER_WEAPON_GENERIC_PISTOL then
         Player.Items.ammo.generic_pistol = Player.Items.ammo.generic_pistol - 1
+        ammo_amount = 1
     end
     savePlayerData()
+    if do_callback then
+        -- Registered callback
+        for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+            callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+        end
+    end
 end
 ListenToGameEvent("player_retrieved_backpack_clip", listenEventPlayerRetrievedBackpackClip, _G)
 
@@ -516,6 +600,10 @@ local function listenEventPlayerStoredItemInItemholder(_, data)
         Player.Items.healthpen = Player.Items.healthpen + 1
     end
     savePlayerData()
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
+    end
 end
 ListenToGameEvent("player_stored_item_in_itemholder", listenEventPlayerStoredItemInItemholder, _G)
 
@@ -532,6 +620,10 @@ local function listenEventPlayerRemovedItemFromItemholder(_, data)
         Player.Items.healthpen = Player.Items.healthpen - 1
     end
     savePlayerData()
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
+    end
 end
 ListenToGameEvent("player_removed_item_from_itemholder", listenEventPlayerRemovedItemFromItemholder, _G)
 
@@ -549,5 +641,9 @@ local function listenEventWeaponSwitch(_, data)
     -- print("\n")
 
     Player.CurrentWeapon = data.item
+    -- Registered callback
+    for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
+    end
 end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, _G)
