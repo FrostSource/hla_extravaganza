@@ -1,5 +1,6 @@
 --[[
     v2.0.0
+    https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
     Values are saved into the entity running this script. If the entity
@@ -48,22 +49,23 @@
 
     --
 
-    This script can also be loaded on a per entity basis into the script's scope
-    using the following line:
-
-    DoIncludeScript("util/storage", thisEntity:GetPrivateScriptScope())
-
-    If you have extravaganza.code-snippets then you can add this quickly by
-    starting to type "storage".
-
-    This allows you to save values to the entity running the script easily:
+    Entity versions of the functions exist to make saving to a specific entity easier:
 
     thisEntity:SaveNumber("hp", thisEntity:GetHealth())
     thisEntity:SetHealth(thisEntity:LoadNumber("hp"))
 ]]
 
+local debug_allowed = true
+---Print a warning message if in developer mode.
+---@param msg any
+local function Warn(msg)
+    -- if debug_allowed and Convars:GetBool( 'developer' ) then
+    if debug_allowed then
+        Warning(msg)
+    end
+end
 
----Resolves the given handle
+---Resolve a given handle.
 ---@param handle EntityHandle
 ---@return EntityHandle
 local function resolveHandle(handle)
@@ -82,7 +84,7 @@ local function resolveHandle(handle)
     -- Otherwise save on player
     local player = GetListenServerHost()
     if not player then
-        Warning("Trying to save a global value before player has spawned!\n")
+        Warn("Trying to save a global value before player has spawned!\n")
         return nil
     end
     return player
@@ -93,38 +95,13 @@ local function resolveHandle(handle)
     -- return handle or thisEntity or GetListenServerHost()
 end
 
+
 local separator = ".:|:."
 
 if thisEntity then
     print("Storage is being included in an entity context...")
 
     require "util.storage"
-
-    -- Done one by one for code hint purposes
-    thisEntity.SaveString  = _G.Storage.SaveString
-    thisEntity.SaveNumber  = _G.Storage.SaveNumber
-    thisEntity.SaveBoolean = _G.Storage.SaveBoolean
-    thisEntity.SaveVector  = _G.Storage.SaveVector
-    thisEntity.SaveQAngle  = _G.Storage.SaveQAngle
-    -- thisEntity.SaveArray   = _G.Storage.SaveArray
-    thisEntity.SaveTable   = _G.Storage.SaveTable
-    thisEntity.SaveEntity  = _G.Storage.SaveEntity
-    thisEntity.Save        = _G.Storage.Save
-
-    thisEntity.LoadString  = _G.Storage.LoadString
-    thisEntity.LoadNumber  = _G.Storage.LoadNumber
-    thisEntity.LoadBoolean = _G.Storage.LoadBoolean
-    thisEntity.LoadVector  = _G.Storage.LoadVector
-    thisEntity.LoadQAngle  = _G.Storage.LoadQAngle
-    -- thisEntity.LoadArray   = _G.Storage.LoadArray
-    thisEntity.LoadTable   = _G.Storage.LoadTable
-    thisEntity.LoadEntity  = _G.Storage.LoadEntity
-    thisEntity.Load        = _G.Storage.Load
-
-    -- Can be done with a loop:
-    -- for funcName, func in pairs(_G.Storage) do
-    --     thisEntity[funcName] = func
-    -- end
 else
     print("Storage is being required in a global context...")
     Storage = {}
@@ -140,7 +117,7 @@ else
     function Storage.SaveString(handle, name, value)
         handle = resolveHandle(handle)
         if not handle then
-            Warning("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
             return
         end
         handle:SetContext(name, value, 0)
@@ -154,7 +131,7 @@ else
     function Storage.SaveNumber(handle, name, value)
         handle = resolveHandle(handle)
         if not handle then
-            Warning("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
             return
         end
         handle:SetContextNum(name, value, 0)
@@ -252,12 +229,16 @@ else
     ---@param entity EntityHandle # Entity to save.
     function Storage.SaveEntity(handle, name, entity)
         local ent_name = entity:GetName()
+        local uniqueKey = DoUniqueString("saved_entity")
         if ent_name == "" then
-            ent_name = DoUniqueString("saved_entity")
+            ent_name = uniqueKey
             entity:SetEntityName(ent_name)
         end
-        entity:Attribute_SetIntValue("saved_entity"..name, 1)
+        -- setting attribute on saved entity
+        entity:Attribute_SetIntValue(uniqueKey, 1)
+        -- setting contexts for saving handle
         handle:SetContext(name, ent_name, 0)
+        handle:SetContext(name..separator.."unique", uniqueKey, 0)
         handle:SetContext(name..separator.."type", "entity", 0)
     end
 
@@ -273,17 +254,18 @@ else
         if t=="string" then Storage.SaveString(handle, name, value)
         elseif t=="number" then Storage.SaveNumber(handle, name, value)
         elseif t=="boolean" then Storage.SaveBoolean(handle, name, value)
+        elseif IsValidEntity(value) then Storage.SaveEntity(handle, name, value)
             -- Better way to determining base class?
-        elseif IsValidEntity(value) then Storage.SaveString(handle, name..".type", "entity") Storage.SaveEntity(handle, name, value)
+            ---@diagnostic disable-next-line: undefined-field
         elseif value.__index==Vector().__index then Storage.SaveVector(handle, name, value)
-        ---@diagnostic disable-next-line: undefined-field
+            ---@diagnostic disable-next-line: undefined-field
         elseif value.__index==QAngle().__index then Storage.SaveQAngle(handle, name, value)
         elseif t=="table" then Storage.SaveTable(handle, name, value)
             -- if #value > 0 then Storage.SaveString(handle, name..".type", "array") Storage.SaveArray(handle, name, value)
             --     -- else Storage.SaveTable(handle, name, value)
             -- end
         else
-            Warning("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
+            Warn("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
         end
     end
 
@@ -300,7 +282,7 @@ else
     function Storage.LoadNumberOrString(handle, name, default)
         local value = resolveHandle(handle):GetContext(name)
         if not value then
-            Warning("Number or string " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
+            Warn("Number or string " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
             return default
         end
         return value
@@ -317,7 +299,7 @@ else
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
         if not value or t ~= "string" then
-            Warning("String " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
+            Warn("String " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
             return default
         end
         return value
@@ -333,7 +315,7 @@ else
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
         if not value or t ~= "number" then
-            Warning("Number " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
+            Warn("Number " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
             return default
         end
         return value
@@ -349,7 +331,7 @@ else
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
         if not value or t ~= "boolean" then
-            Warning("Boolean " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
+            Warn("Boolean " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
             return default
         end
         return value == 1
@@ -364,7 +346,7 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t ~= "vector" then
-            Warning("Vector " .. name .. " could not be loaded!\n")
+            Warn("Vector " .. name .. " could not be loaded!\n")
             return default
         end
         local x = handle:GetContext(name .. ".x") or 0
@@ -382,7 +364,7 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t ~= "qangle" then
-            Warning("QAngle " .. name .. " could not be loaded!\n")
+            Warn("QAngle " .. name .. " could not be loaded!\n")
             return default
         end
         local x = handle:GetContext(name .. ".x") or 0
@@ -402,7 +384,7 @@ else
         local arr = {}
         local len = handle:GetContext(name)
         if not len then
-            Warning("Array " .. name .. " could not be loaded!\n")
+            Warn("Array " .. name .. " could not be loaded!\n")
             return default
         end
         for i = 1, len do
@@ -421,7 +403,7 @@ else
         local keysPacked = handle:GetContext(name..separator.."keys")
         local indicesPacked = handle:GetContext(name..separator.."indices")
         if not keysPacked and not indicesPacked then
-            Warning("Table " .. name .. " could not be loaded!\n")
+            Warn("Table " .. name .. " could not be loaded!\n")
             return default
         end
         keysPacked = keysPacked or ""
@@ -447,23 +429,24 @@ else
     function Storage.LoadEntity(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
+        local uniqueKey = handle:GetContext(name..separator.."unique")
         local ent_name = handle:GetContext(name)
         if not ent_name or t ~= "entity" then
-            Warning("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")\n")
+            Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")\n")
             return default
         end
         local ents = Entities:FindAllByName(ent_name)
         if not ents then
-            Warning("No entities of '" .. name .. "' found with saved name '" .. ent_name .. "', returning default.\n")
+            Warn("No entities of '" .. name .. "' found with saved name '" .. ent_name .. "', returning default.\n")
             return default
         end
         for _, ent in ipairs(ents) do
-            if ent:Attribute_GetIntValue("saved_entity"..name, 0) == 1 then
+            if ent:Attribute_GetIntValue(uniqueKey, 0) == 1 then
                 return ent
             end
         end
         -- Return default if no entities with saved value.
-        Warning("No entities of '" .. name .. "' have saved attribute! Returning default.\n")
+        Warn("No entities of '" .. name .. "' have saved attribute! Returning default.\n")
         return default
     end
 
@@ -476,7 +459,7 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if not t then
-            Warning("Value " .. name .. " could not be loaded!\n")
+            Warn("Value " .. name .. " could not be loaded!\n")
             return default
         end
         if t=="string" then return Storage.LoadString(handle, name, default)
@@ -487,8 +470,27 @@ else
         elseif t=="table" then return Storage.LoadTable(handle, name, default)
         elseif t=="entity" then return Storage.LoadEntity(handle, name, default)
         else
-            Warning("Unknown type '"..t.."' for name '"..name.."'\n")
+            Warn("Unknown type '"..t.."' for name '"..name.."'\n")
             return default
         end
     end
+
+    -- Done one by one for code hint purposes
+    CBaseEntity.SaveString  = Storage.SaveString
+    CBaseEntity.SaveNumber  = Storage.SaveNumber
+    CBaseEntity.SaveBoolean = Storage.SaveBoolean
+    CBaseEntity.SaveVector  = Storage.SaveVector
+    CBaseEntity.SaveQAngle  = Storage.SaveQAngle
+    CBaseEntity.SaveTable   = Storage.SaveTable
+    CBaseEntity.SaveEntity  = Storage.SaveEntity
+    CBaseEntity.Save        = Storage.Save
+
+    CBaseEntity.LoadString  = Storage.LoadString
+    CBaseEntity.LoadNumber  = Storage.LoadNumber
+    CBaseEntity.LoadBoolean = Storage.LoadBoolean
+    CBaseEntity.LoadVector  = Storage.LoadVector
+    CBaseEntity.LoadQAngle  = Storage.LoadQAngle
+    CBaseEntity.LoadTable   = Storage.LoadTable
+    CBaseEntity.LoadEntity  = Storage.LoadEntity
+    CBaseEntity.Load        = Storage.Load
 end
