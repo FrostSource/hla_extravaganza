@@ -90,18 +90,21 @@
 	/*
 		Trace tables.
 	*/
-  
+
 	"Trace Line Table Snippet":{
 		"scope": "lua",
 		"prefix": ["Trace Line Table", "Snippet"],
 		"body": [
-			"---@type TypeTraceTableLine",
+			"---@type TraceTableLine",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
-			"\tignore = ${3:thisEntity},",
+			"\tignore = $3,",
+			"\t$1",
+			"}",
+			"if TraceLine(traceTable) then",
 			"\t$0",
-			"}"
+			"end"
 		],
 		"description": "Create a trace table snippet for the TraceLine function."
 	},
@@ -110,15 +113,18 @@
 		"scope": "lua",
 		"prefix": ["Trace Hull Table", "Snippet"],
 		"body": [
-			"---@type TypeTraceTableHull",
+			"---@type TraceTableHull",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
 			"\tmin = ${3:Vector(0,0,0),}",
 			"\tmax = ${4:Vector(0,0,0),}",
 			"\tignore = ${5:thisEntity},",
+			"\t$1",
+			"}",
+			"if TraceHull(traceTable) then",
 			"\t$0",
-			"}"
+			"end"
 		],
 		"description": "Create a trace table snippet for the TraceHull function."
 	},
@@ -127,13 +133,16 @@
 		"scope": "lua",
 		"prefix": ["Trace Collideable Table", "Snippet"],
 		"body": [
-			"---@type TypeTraceTableCollideable",
+			"---@type TraceTableCollideable",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
 			"\tent = ${3:thisEntity},",
+			"\t$1",
+			"}",
+			"if TraceCollideable(traceTable) then",
 			"\t$0",
-			"}"
+			"end"
 		],
 		"description": "Create a trace table snippet for the TraceCollideable function."
 	},
