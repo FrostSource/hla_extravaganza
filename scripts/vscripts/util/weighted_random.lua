@@ -30,9 +30,25 @@
 ]]
 
 ---@class WeightedRandom
----@field ItemPool table[]
-local WeightedRandomBaseClass = {}
+local WeightedRandomBaseClass = {
+    ---Root list containing all weighted tables.
+    ---@type table[]
+    ItemPool = {},
+    ---If true this weighted random will use math.randomseed().
+    ---Otherwise it uses Valve's RandomFloat().
+    UseRandomSeed = false,
+}
 WeightedRandomBaseClass.__index = WeightedRandomBaseClass
+
+---Add a table value with an associated weight.
+---
+---Note: The table `tbl` is not cloned, the given reference is used.
+---@param tbl table # Table of values that will be returned.
+---@param weight number # Weight for this table.
+function WeightedRandomBaseClass:Add(tbl, weight)
+    tbl.weight = weight
+    self.ItemPool[#self.ItemPool+1] = tbl
+end
 
 ---Returns the total weight of this weighted random object.
 ---@return number
@@ -48,7 +64,12 @@ end
 ---@return table
 function WeightedRandomBaseClass:Random()
     local weight_sum = self:TotalWeight()
-    local weight_remaining = RandomFloat(0, weight_sum)
+    local weight_remaining
+    if self.UseRandomSeed then
+        weight_remaining = math.random(0, weight_sum)
+    else
+        weight_remaining = RandomFloat(0, weight_sum)
+    end
     for _,item in ipairs(self.ItemPool) do
         weight_remaining = weight_remaining - item.weight
         if weight_remaining < 0 then

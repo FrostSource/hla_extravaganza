@@ -1,4 +1,7 @@
 --[[
+    v1.1.0
+    https://github.com/FrostSource/hla_extravaganza
+
     This file contains utility functions to help reduce repetitive code
     and add general miscellaneous functionality.
 
@@ -16,6 +19,31 @@
         local vmath = Util.Math
 
 ]]
+
+---------------------
+-- Global functions
+---------------------
+
+---Get the file name of the current script. E.g. `util.util`
+---@param sep? string # Separator character
+---@return string
+function GetScriptFile(sep)
+    sep = sep or "."
+    local sys_sep = package.config:sub(1,1)
+    local src = debug.getinfo(2,'S').source
+    src = src:match('^.+vscripts[/\\](.+).lua$')
+    local split = util.SplitString(src, sys_sep)
+    src = table.concat(split, sep)
+    return src
+end
+
+
+----------------------
+-- Utility functions
+-- (should some of these be global?)
+----------------------
+
+
 ---@diagnostic disable: lowercase-global
 util = {}
 
@@ -68,8 +96,10 @@ end
 ---@param name string
 ---@param class string
 ---@param position CBaseEntity
+---@param radius? number # Default is 128
 ---@return EntityHandle
-function util.EstimateNearestEntity(name, class, position)
+function util.EstimateNearestEntity(name, class, position, radius)
+    radius = radius or 128
     local ent
     if name ~= "" then
         local found_ents = Entities:FindAllByName(name)
@@ -78,11 +108,11 @@ function util.EstimateNearestEntity(name, class, position)
             ent = found_ents[1]
         else
             -- If multiple exist then we need to estimate the entity that was grabbed.
-            ent = Entities:FindByNameNearest(name, position, 128)
+            ent = Entities:FindByNameNearest(name, position, radius)
         end
     else
         -- Entity without name (hopefully doesn't happen) is found by nearest class type.
-        ent = Entities:FindByClassnameNearest(class, position, 128)
+        ent = Entities:FindByClassnameNearest(class, position, radius)
     end
     return ent
 end
@@ -180,7 +210,8 @@ function util.FindKeyFromValueDeep(tbl, value)
     return _FindKeyFromValueDeep(tbl, value)
 end
 
----Adds a function to the global scope with alternate casing styles.
+---Add a function to the global scope with alternate casing styles.
+---Makes a function easier to call from Hammer through I/O.
 ---@param func function # The function to sanitize.
 ---@param name? string # Optionally the name of the function for faster processing. Is required if using a local function.
 ---@param scope? table # Optionally the explicit scope to put the sanitized functions in.
@@ -212,6 +243,46 @@ function util.SanitizeFunctionForHammer(func, name, scope)
     fenv[name:lower()] = func
     fenv[name:upper()] = func
     fenv[name:sub(1,1):upper()..name:sub(2)] = func
+end
+
+---Returns the size of any table.
+---@param tbl table
+---@return integer
+function util.TableSize(tbl)
+    local count = 0
+    for _, _ in pairs(tbl) do
+        count = count + 1
+    end
+    return count
+end
+
+---Remove a value from a table, returning it if it exists.
+---@param tbl table
+---@param value any
+---@return any
+function util.RemoveFromTable(tbl, value)
+    local i = vlua.find(tbl, value)
+    if i then
+        return table.remove(tbl, i)
+    end
+    return nil
+end
+
+---Split an input string using a separator string.
+---
+---Found at https://stackoverflow.com/a/7615129
+---@param inputstr string # String to split.
+---@param sep string # String to split by.
+---@return string[]
+function util.SplitString(inputstr, sep)
+    if sep == nil then
+        sep = '%s'
+    end
+    local t = {}
+    for str in string.gmatch(inputstr, '([^'..sep..']+)') do
+        table.insert(t, str)
+    end
+    return t
 end
 
 
