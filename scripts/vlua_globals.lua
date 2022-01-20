@@ -76,7 +76,7 @@ thisEntity = nil
 ---@field damage_force Vector
 ---@field damage integer
 
----@class TypeTraceTableBase
+---@class TraceTableBase
 ---@field startpos Vector # Global vector where to start the trace.
 ---@field endpos Vector # Global vector where to end the trace.
 ---@field pos Vector # Global vector where the trace hit.
@@ -85,50 +85,24 @@ thisEntity = nil
 ---@field startsolid boolean # Whether the trace started inside the entity. This parameter is set to nil if it is false.
 ---@field normal Vector # Global normal vector of the surface hit.
 
----@class TypeTraceTableCollideable : TypeTraceTableBase
----@field ent CBaseEntity # Entity to trace against.
+---@class TraceTableCollideable : TraceTableBase
+---@field ent EntityHandle # Entity to trace against.
 ---@field mins Vector # (Optional) Minimum coordinates of the bounding box. Local to the entity.
 ---@field maxs Vector # (Optional) Maximum coordinates of the bounding box. Local to the entity.
 
----@class TypeTraceTableHull : TypeTraceTableBase
+---@class TraceTableHull : TraceTableBase
 ---@field min Vector # Minimum extents of the bounding box.
 ---@field max Vector # Maximum extents of the bounding box.
 ---@field mask integer # Collision type bitmask.
----@field ignore CBaseEntity # Entity to ignore when tracing.
----@field enthit CBaseEntity # Handle of the entity the trace hit.
+---@field ignore EntityHandle # Entity to ignore when tracing.
+---@field enthit EntityHandle # Handle of the entity the trace hit.
 
----@class TypeTraceTableLine : TypeTraceTableBase
+---@class TraceTableLine : TraceTableBase
 ---@field mask integer # Collision type bitmask.
----@field ignore CBaseEntity # Entity to ignore when tracing.
----@field enthit CBaseEntity # Handle of the entity the trace hit.
+---@field ignore EntityHandle # Entity to ignore when tracing.
+---@field enthit EntityHandle # Handle of the entity the trace hit.
 
 --#region Game Events
-
----@class TypeTraceTableBase
----@field startpos Vector # Global vector where to start the trace.
----@field endpos Vector # Global vector where to end the trace.
----@field pos Vector # Global vector where the trace hit.
----@field fraction float # Fraction from the start to end where the trace hit.
----@field hit boolean # Whether the trace hit something. Always present.
----@field startsolid boolean # Whether the trace started inside the entity. This parameter is set to nil if it is false.
----@field normal Vector # Global normal vector of the surface hit.
-
----@class TypeTraceTableCollideable : TypeTraceTableBase
----@field ent CBaseEntity # Entity to trace against.
----@field mins Vector # (Optional) Minimum coordinates of the bounding box. Local to the entity.
----@field maxs Vector # (Optional) Maximum coordinates of the bounding box. Local to the entity.
-
----@class TypeTraceTableHull : TypeTraceTableBase
----@field min Vector # Minimum extents of the bounding box.
----@field max Vector # Maximum extents of the bounding box.
----@field mask integer # Collision type bitmask.
----@field ignore CBaseEntity # Entity to ignore when tracing.
----@field enthit CBaseEntity # Handle of the entity the trace hit.
-
----@class TypeTraceTableLine : TypeTraceTableBase
----@field mask integer # Collision type bitmask.
----@field ignore CBaseEntity # Entity to ignore when tracing.
----@field enthit CBaseEntity # Handle of the entity the trace hit.
 
 -- A case can be made more removing many of these events that have no use in Alyx.
 ---@alias GAME_EVENTS_HLVR
@@ -583,7 +557,7 @@ function max(x, y) end
 ---@param y float
 ---@return float
 function min(x, y) end
----Merges table2 into table1, matching keys will remain untouched in table1.
+---Returns a new table with `table2` merged into `table1`, with `table1` overwriting any keys in `table2`.
 ---Use vlua.tableadd to concatenate tables.
 ---@param table1 table
 ---@param table2 table
@@ -1332,6 +1306,7 @@ function vlua.map(o, mapFunc) end
 ---@return any?
 function vlua.reduce(o, reduceFunc) end
 ---Implements tableadd function to support += paradigm used in Squirrel.
+---Adds `t2` into `t1` overwriting any existing keys.
 ---@param t1 table
 ---@param t2 table
 ---@return table
