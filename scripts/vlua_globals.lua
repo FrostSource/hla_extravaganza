@@ -1251,7 +1251,7 @@ function vlua.contains(t, key) end
 function vlua.delete(t, key) end
 ---Implements Squirrel clone operator.
 ---@param t table
----@return integer
+---@return table
 function vlua.clone(t) end
 ---Implements Squirrel rawdelete library function.
 ---@param t table
