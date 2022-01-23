@@ -46,6 +46,7 @@ If you can't follow the guide or have an aversion to git, you can [join the disc
 | HLA Custom Wrist Pockets | Allows custom hologram models to display for any model placed into the wrist pocket instead of the default health syringe. | https://github.com/FrostSource/hla-custom-wrist-pockets
 | HLA Backpack System | A custom backpack system allowing any prop_physics to be stored in the backpack and retrieved at a later time. | https://github.com/FrostSource/HLA-Backpack-System
 | HLA Caption Parser | A small program to compile caption source files into useable .dat files. **Due to the way captions are loaded this is not suitable for addons uploaded to the workshop.** | https://github.com/FrostSource/HLACaptionReplacer/tree/caption-parser
+| Source Sound Converter | Created by jakes1403/jakers1403 Use this program to generate a vsndevts file from a sounds folder for Source 2 games. | https://github.com/jakes1403/SourceSoundConverter
 
 # Full Project Downloads
 
