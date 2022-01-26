@@ -1,6 +1,5 @@
 --[[
-    v2.0.0
-    https://github.com/FrostSource/hla_extravaganza
+    v2.0.1
 
     Helps with saving/loading values for persistency between game sessions.
     Values are saved into the entity running this script. If the entity
@@ -53,9 +52,14 @@
 
     thisEntity:SaveNumber("hp", thisEntity:GetHealth())
     thisEntity:SetHealth(thisEntity:LoadNumber("hp"))
+
+    --
+
+    Please be aware that there seems to be a hard limit on 63 characters for strings.
+    Try to keep your names and values as short as possible or break them up into more values.
 ]]
 
-local debug_allowed = true
+local debug_allowed = false
 ---Print a warning message if in developer mode.
 ---@param msg any
 local function Warn(msg)
@@ -96,7 +100,7 @@ local function resolveHandle(handle)
 end
 
 
-local separator = ".:|:."
+local separator = "::"
 
 if thisEntity then
     print("Storage is being included in an entity context...")
@@ -110,11 +114,12 @@ else
     -- SAVING --
     ------------
 
-    ---Save a string.
+    ---Save a string. Strings seem to be limited to 63 characters!
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value string # String to save.
     function Storage.SaveString(handle, name, value)
+        --TODO: Break up strings longer than 63 chars. Also update table saving with this.
         handle = resolveHandle(handle)
         if not handle then
             Warn("Invalid save handle ("..tostring(handle)..")!\n")
@@ -172,26 +177,6 @@ else
         Storage.SaveNumber(handle, name .. ".z", qangle.z)
     end
 
-    --[[
-    ---Save an ordered array of numbers or strings.
-    ---@param handle CBaseEntity # Entity to save on.
-    ---@param name string # Name to save as.
-    ---@param array any[] # Array to save.
-    function Storage.SaveArray(handle, name, array)
-        -- Save number of items first
-        Storage.SaveNumber(handle, name, #array)
-        -- Then save values
-        for index, value in ipairs(array) do
-            local t = type(value)
-            if t == "number" then
-                Storage.SaveNumber(handle, name..index, value)
-            elseif t == "string" then
-                Storage.SaveString(handle, name..index, value)
-            end
-        end
-    end
-    ]]
-
     ---Save a table.
     ---
     ---May be ordered, unordered or mixed.
@@ -202,21 +187,20 @@ else
     ---@param tbl table<any,any>
     function Storage.SaveTable(handle, name, tbl)
         handle = resolveHandle(handle)
-        local indices = ""
-        local keys = ""
+        local indexCount = 0
+        local keyCount = 0
         for key, value in pairs(tbl) do
             if type(key)=="number" then
-                indices = indices .. key .. separator
+                indexCount = indexCount + 1
+                handle:SetContextNum(name.."index"..indexCount, key, 0)
             else
-                keys = keys .. key .. separator
+                keyCount = keyCount + 1
+                handle:SetContext(name.."key"..keyCount, key, 0)
             end
-            Storage.Save(handle, name..separator.."keys"..separator..key, value)
+            Storage.Save(handle, name..separator..key, value)
         end
-        keys = keys:sub(1, #keys-1)
-        -- If context value starts with number it will ignore other characters so prefix a char.
-        indices = "|"..indices:sub(1, #indices-1)
-        handle:SetContext(name..separator.."keys", keys, 0)
-        handle:SetContext(name..separator.."indices", indices, 0)
+        handle:SetContextNum(name..separator.."keyCount", keyCount, 0)
+        handle:SetContextNum(name..separator.."indexCount", indexCount, 0)
         handle:SetContext(name..separator.."type", "table", 0)
     end
 
@@ -261,9 +245,6 @@ else
             ---@diagnostic disable-next-line: undefined-field
         elseif value.__index==QAngle().__index then Storage.SaveQAngle(handle, name, value)
         elseif t=="table" then Storage.SaveTable(handle, name, value)
-            -- if #value > 0 then Storage.SaveString(handle, name..".type", "array") Storage.SaveArray(handle, name, value)
-            --     -- else Storage.SaveTable(handle, name, value)
-            -- end
         else
             Warn("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
         end
@@ -272,22 +253,6 @@ else
     -------------
     -- LOADING --
     -------------
-
-    --[[
-    ---Load a number or string by name, whichever was stored.
-    ---@param handle CBaseEntity # Entity to load from.
-    ---@param name string # Name the number or string was saved as.
-    ---@param default? string # Optional default value.
-    ---@return number|string
-    function Storage.LoadNumberOrString(handle, name, default)
-        local value = resolveHandle(handle):GetContext(name)
-        if not value then
-            Warn("Number or string " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
-            return default
-        end
-        return value
-    end
-    ]]
 
     ---Load a string.
     ---@param handle CBaseEntity # Entity to save on.
@@ -373,50 +338,27 @@ else
         return QAngle(x, y, z)
     end
 
-    --[[
-    ---Load an array.
-    ---@param handle CBaseEntity # Entity to save on.
-    ---@param name string # Name the array was saved as.
-    ---@param default? any[] # Optional default value.
-    ---@return any[]
-    function Storage.LoadArray(handle, name, default)
-        handle = resolveHandle(handle)
-        local arr = {}
-        local len = handle:GetContext(name)
-        if not len then
-            Warn("Array " .. name .. " could not be loaded!\n")
-            return default
-        end
-        for i = 1, len do
-            arr[#arr+1] = handle:GetContext(name..i)
-        end
-        return arr
-    end
-    ]]
-
     ---Load a table.
     ---@param handle EntityHandle
     ---@param name string
     ---@param default table<any,any>
     function Storage.LoadTable(handle, name, default)
         handle = resolveHandle(handle)
-        local keysPacked = handle:GetContext(name..separator.."keys")
-        local indicesPacked = handle:GetContext(name..separator.."indices")
-        if not keysPacked and not indicesPacked then
+        local keyCount = handle:GetContext(name..separator.."keyCount")
+        local indexCount = handle:GetContext(name..separator.."indexCount")
+        if not keyCount and not indexCount then
             Warn("Table " .. name .. " could not be loaded!\n")
             return default
         end
-        keysPacked = keysPacked or ""
-        indicesPacked = indicesPacked or ""
-        --                         Remove the prefixed char
-        local indices = vlua.split(indicesPacked:sub(2, #indicesPacked), separator)
-        local keys = vlua.split(keysPacked, separator)
-        local tbl, s_keys = {}, name..separator.."keys"..separator
-        for _, index in pairs(indices) do
-            tbl[tonumber(index)] = Storage.Load(handle, s_keys..index)
+
+        local tbl, s_key = {}, name..separator
+        for i = 1, indexCount do
+            local key = handle:GetContext(name.."index"..i)
+            tbl[tonumber(key)] = Storage.Load(handle, s_key..key)
         end
-        for _, key in pairs(keys) do
-            tbl[key] = Storage.Load(handle, s_keys..key)
+        for i = 1, keyCount do
+            local key = handle:GetContext(name.."key"..i)
+            tbl[key] = Storage.Load(handle, s_key..key)
         end
         return tbl
     end
