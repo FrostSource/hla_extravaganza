@@ -227,6 +227,10 @@ else
     ---@param name string # Name to save as.
     ---@param entity EntityHandle # Entity to save.
     function Storage.SaveEntity(handle, name, entity)
+        if not IsValidEntity(entity) then
+            Warn("Trying to save entity "..tostring(entity).."["..name.."] that doesn't exist.")
+            return
+        end
         local ent_name = entity:GetName()
         local uniqueKey = DoUniqueString("saved_entity")
         if ent_name == "" then
