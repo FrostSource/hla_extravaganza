@@ -1,5 +1,5 @@
 --[[
-    v2.0.2
+    v2.0.3
 
     Helps with saving/loading values for persistency between game sessions.
     Values are saved into the entity running this script. If the entity
@@ -118,12 +118,13 @@ else
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value string # String to save.
+    ---@return boolean # If the save was successful.
     function Storage.SaveString(handle, name, value)
         --TODO: Break up strings longer than 63 chars. Also update table saving with this.
         handle = resolveHandle(handle)
         if not handle then
             Warn("Invalid save handle ("..tostring(handle)..")!\n")
-            return
+            return false
         end
         if #value > 62 then
             local index = 0
@@ -139,54 +140,75 @@ else
             handle:SetContext(name, ":"..value, 0)
             handle:SetContext(name..separator.."type", "string", 0)
         end
+        return true
     end
 
     ---Save a number.
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value number # Number to save.
+    ---@return boolean # If the save was successful.
     function Storage.SaveNumber(handle, name, value)
         handle = resolveHandle(handle)
         if not handle then
             Warn("Invalid save handle ("..tostring(handle)..")!\n")
-            return
+            return false
         end
         handle:SetContextNum(name, value, 0)
         handle:SetContext(name..separator.."type", "number", 0)
+        return true
     end
 
     ---Save a boolean.
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param bool boolean # Boolean to save.
+    ---@return boolean # If the save was successful.
     function Storage.SaveBoolean(handle, name, bool)
         handle = resolveHandle(handle)
+        if not handle then
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            return false
+        end
         handle:SetContextNum(name, bool and 1 or 0, 0)
         handle:SetContext(name..separator.."type", "boolean", 0)
+        return true
     end
 
     ---Save a Vector.
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param vector Vector # Vector to save.
+    ---@return boolean # If the save was successful.
     function Storage.SaveVector(handle, name, vector)
         handle = resolveHandle(handle)
+        if not handle then
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            return false
+        end
         handle:SetContext(name..separator.."type", "vector", 0)
         Storage.SaveNumber(handle, name .. ".x", vector.x)
         Storage.SaveNumber(handle, name .. ".y", vector.y)
         Storage.SaveNumber(handle, name .. ".z", vector.z)
+        return true
     end
 
     ---Save a QAngle.
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param qangle QAngle # QAngle to save.
+    ---@return boolean # If the save was successful.
     function Storage.SaveQAngle(handle, name, qangle)
         handle = resolveHandle(handle)
+        if not handle then
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            return false
+        end
         handle:SetContext(name..separator.."type", "qangle", 0)
         Storage.SaveNumber(handle, name .. ".x", qangle.x)
         Storage.SaveNumber(handle, name .. ".y", qangle.y)
         Storage.SaveNumber(handle, name .. ".z", qangle.z)
+        return true
     end
 
     ---Save a table.
@@ -197,26 +219,34 @@ else
     ---@param handle EntityHandle
     ---@param name string
     ---@param tbl table<any,any>
+    ---@return boolean # If the save was successful.
     function Storage.SaveTable(handle, name, tbl)
         handle = resolveHandle(handle)
+        if not handle then
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            return false
+        end
         local index_count = 0
         local key_count = 0
         local name_sep = name..separator
         local index_concat = name_sep.."index"..separator
         local key_concat = name_sep.."key"..separator
         for key, value in pairs(tbl) do
-            if type(key) == "number" then
-                index_count = index_count + 1
-                handle:SetContextNum(index_concat..index_count, key, 0)
-            else
-                key_count = key_count + 1
-                Storage.SaveString(handle, key_concat..key_count, key)
+            -- Only add the key if the value was successfully saved (up to individual functions).
+            if Storage.Save(handle, name_sep..key, value) then
+                if type(key) == "number" then
+                    index_count = index_count + 1
+                    handle:SetContextNum(index_concat..index_count, key, 0)
+                else
+                    key_count = key_count + 1
+                    Storage.SaveString(handle, key_concat..key_count, key)
+                end
             end
-            Storage.Save(handle, name_sep..key, value)
         end
         handle:SetContextNum(name_sep.."key_count", key_count, 0)
         handle:SetContextNum(name_sep.."index_count", index_count, 0)
         handle:SetContext(name_sep.."type", "table", 0)
+        return true
     end
 
     ---Save an entity reference.
@@ -226,10 +256,16 @@ else
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param entity EntityHandle # Entity to save.
+    ---@return boolean # If the save was successful.
     function Storage.SaveEntity(handle, name, entity)
+        handle = resolveHandle(handle)
+        if not handle then
+            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            return false
+        end
         if not IsValidEntity(entity) then
-            Warn("Trying to save entity "..tostring(entity).."["..name.."] that doesn't exist.")
-            return
+            Warn("Trying to save entity ("..tostring(entity)..")["..name.."] that doesn't exist.")
+            return false
         end
         local ent_name = entity:GetName()
         local uniqueKey = DoUniqueString("saved_entity")
@@ -243,6 +279,7 @@ else
         Storage.SaveString(handle, name..separator.."targetname", ent_name)
         handle:SetContext(name..separator.."unique", uniqueKey, 0)
         handle:SetContext(name..separator.."type", "entity", 0)
+        return true
     end
 
     ---Save a value.
@@ -252,22 +289,24 @@ else
     ---@param handle CBaseEntity # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value any # Value to save.
+    ---@return boolean # If the save was successful.
     function Storage.Save(handle, name, value)
         local t = type(value)
-        if t=="string" then Storage.SaveString(handle, name, value)
-        elseif t=="number" then Storage.SaveNumber(handle, name, value)
-        elseif t=="boolean" then Storage.SaveBoolean(handle, name, value)
+        if t=="string" then return Storage.SaveString(handle, name, value)
+        elseif t=="number" then return Storage.SaveNumber(handle, name, value)
+        elseif t=="boolean" then return Storage.SaveBoolean(handle, name, value)
         elseif t=="table" then
             if type(value.__self) == "userdata" then
-                Storage.SaveEntity(handle, name, value)
+                return Storage.SaveEntity(handle, name, value)
             else
-                Storage.SaveTable(handle, name, value)
+                return Storage.SaveTable(handle, name, value)
             end
         -- better way to get userdata class?
-        elseif value.__index==Vector().__index then Storage.SaveVector(handle, name, value)
-        elseif value.__index==QAngle().__index then Storage.SaveQAngle(handle, name, value)
+        elseif value.__index==Vector().__index then return Storage.SaveVector(handle, name, value)
+        elseif value.__index==QAngle().__index then return Storage.SaveQAngle(handle, name, value)
         else
             Warn("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
+            return false
         end
     end
 
@@ -404,8 +443,6 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         local uniqueKey = handle:GetContext(name..separator.."unique")
-        -- local ent_name = handle:GetContext(name)
-        print("Entity load aslg", name, Storage.LoadString(handle, name..separator.."targetname"))
         local ent_name = Storage.LoadString(handle, name..separator.."targetname")
         if t ~= "entity" or not ent_name then
             Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")\n")
