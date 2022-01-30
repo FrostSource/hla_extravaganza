@@ -1,11 +1,11 @@
 --[[
-    v2.0.1
+    v2.0.2
 
     Helps with saving/loading values for persistency between game sessions.
     Values are saved into the entity running this script. If the entity
     is killed the values cannot be retrieved during that game session.
 
-    To use this script globally you must require it:
+    To use this script you must require it into global scope:
 
     require "util.storage"
 
@@ -55,8 +55,8 @@
 
     --
 
-    Please be aware that there seems to be a hard limit on 63 characters for strings.
-    Try to keep your names and values as short as possible or break them up into more values.
+    Strings longer than 62 characters are split up into multiple saves to work around the 64 character limit.
+    This limit does not apply to names.
 ]]
 
 local debug_allowed = false
@@ -125,8 +125,20 @@ else
             Warn("Invalid save handle ("..tostring(handle)..")!\n")
             return
         end
-        handle:SetContext(name, value, 0)
-        handle:SetContext(name..separator.."type", "string", 0)
+        if #value > 62 then
+            local index = 0
+            while #value > 0 do
+                index = index + 1
+                local split_point = math.min(62, #value)
+                handle:SetContext(name..separator.."split"..index, ":"..value:sub(1, split_point), 0)
+                value = value:sub(split_point+1, #value)
+            end
+            handle:SetContextNum(name..separator.."splits", index, 0)
+            handle:SetContext(name..separator.."type", "splitstring", 0)
+        else
+            handle:SetContext(name, ":"..value, 0)
+            handle:SetContext(name..separator.."type", "string", 0)
+        end
     end
 
     ---Save a number.
@@ -187,21 +199,24 @@ else
     ---@param tbl table<any,any>
     function Storage.SaveTable(handle, name, tbl)
         handle = resolveHandle(handle)
-        local indexCount = 0
-        local keyCount = 0
+        local index_count = 0
+        local key_count = 0
+        local name_sep = name..separator
+        local index_concat = name_sep.."index"..separator
+        local key_concat = name_sep.."key"..separator
         for key, value in pairs(tbl) do
-            if type(key)=="number" then
-                indexCount = indexCount + 1
-                handle:SetContextNum(name.."index"..indexCount, key, 0)
+            if type(key) == "number" then
+                index_count = index_count + 1
+                handle:SetContextNum(index_concat..index_count, key, 0)
             else
-                keyCount = keyCount + 1
-                handle:SetContext(name.."key"..keyCount, key, 0)
+                key_count = key_count + 1
+                Storage.SaveString(handle, key_concat..key_count, key)
             end
-            Storage.Save(handle, name..separator..key, value)
+            Storage.Save(handle, name_sep..key, value)
         end
-        handle:SetContextNum(name..separator.."keyCount", keyCount, 0)
-        handle:SetContextNum(name..separator.."indexCount", indexCount, 0)
-        handle:SetContext(name..separator.."type", "table", 0)
+        handle:SetContextNum(name_sep.."key_count", key_count, 0)
+        handle:SetContextNum(name_sep.."index_count", index_count, 0)
+        handle:SetContext(name_sep.."type", "table", 0)
     end
 
     ---Save an entity reference.
@@ -221,7 +236,7 @@ else
         -- setting attribute on saved entity
         entity:Attribute_SetIntValue(uniqueKey, 1)
         -- setting contexts for saving handle
-        handle:SetContext(name, ent_name, 0)
+        Storage.SaveString(handle, name..separator.."targetname", ent_name)
         handle:SetContext(name..separator.."unique", uniqueKey, 0)
         handle:SetContext(name..separator.."type", "entity", 0)
     end
@@ -238,13 +253,15 @@ else
         if t=="string" then Storage.SaveString(handle, name, value)
         elseif t=="number" then Storage.SaveNumber(handle, name, value)
         elseif t=="boolean" then Storage.SaveBoolean(handle, name, value)
-        elseif IsValidEntity(value) then Storage.SaveEntity(handle, name, value)
-            -- Better way to determining base class?
-            ---@diagnostic disable-next-line: undefined-field
+        elseif t=="table" then
+            if type(value.__self) == "userdata" then
+                Storage.SaveEntity(handle, name, value)
+            else
+                Storage.SaveTable(handle, name, value)
+            end
+        -- better way to get userdata class?
         elseif value.__index==Vector().__index then Storage.SaveVector(handle, name, value)
-            ---@diagnostic disable-next-line: undefined-field
         elseif value.__index==QAngle().__index then Storage.SaveQAngle(handle, name, value)
-        elseif t=="table" then Storage.SaveTable(handle, name, value)
         else
             Warn("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
         end
@@ -262,12 +279,19 @@ else
     function Storage.LoadString(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
-        local value = handle:GetContext(name)
-        if not value or t ~= "string" then
-            Warn("String " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
-            return default
+        if t == "string" then
+            local value = handle:GetContext(name)
+            return value:sub(2)
+        elseif t == "splitstring" then
+            local splits = handle:GetContext(name..separator.."splits")
+            local str = ""
+            for index = 1, splits do
+                str = str .. (handle:GetContext(name..separator.."split"..index):sub(2))
+            end
+            return str
         end
-        return value
+        Warn("String " .. name .. " could not be loaded!\n")
+        return default
     end
 
     ---Load a number.
@@ -344,21 +368,25 @@ else
     ---@param default table<any,any>
     function Storage.LoadTable(handle, name, default)
         handle = resolveHandle(handle)
-        local keyCount = handle:GetContext(name..separator.."keyCount")
-        local indexCount = handle:GetContext(name..separator.."indexCount")
-        if not keyCount and not indexCount then
+        local name_sep = name..separator
+        local t = handle:GetContext(name_sep.."type")
+        local key_count = handle:GetContext(name_sep.."key_count")
+        local index_count = handle:GetContext(name_sep.."index_count")
+        if t ~= "table" or (not key_count and not index_count)  then
             Warn("Table " .. name .. " could not be loaded!\n")
             return default
         end
 
-        local tbl, s_key = {}, name..separator
-        for i = 1, indexCount do
-            local key = handle:GetContext(name.."index"..i)
-            tbl[tonumber(key)] = Storage.Load(handle, s_key..key)
+        local index_concat = name_sep.."index"..separator
+        local key_concat = name_sep.."key"..separator
+        local tbl = {}
+        for i = 1, index_count do
+            local index = handle:GetContext(index_concat..i)
+            tbl[index] = Storage.Load(handle, name_sep..index)
         end
-        for i = 1, keyCount do
-            local key = handle:GetContext(name.."key"..i)
-            tbl[key] = Storage.Load(handle, s_key..key)
+        for i = 1, key_count do
+            local key = handle:LoadString(key_concat..i)
+            tbl[key] = Storage.Load(handle, name_sep..key)
         end
         return tbl
     end
@@ -372,8 +400,10 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         local uniqueKey = handle:GetContext(name..separator.."unique")
-        local ent_name = handle:GetContext(name)
-        if not ent_name or t ~= "entity" then
+        -- local ent_name = handle:GetContext(name)
+        print("Entity load aslg", name, Storage.LoadString(handle, name..separator.."targetname"))
+        local ent_name = Storage.LoadString(handle, name..separator.."targetname")
+        if t ~= "entity" or not ent_name then
             Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")\n")
             return default
         end
@@ -404,7 +434,7 @@ else
             Warn("Value " .. name .. " could not be loaded!\n")
             return default
         end
-        if t=="string" then return Storage.LoadString(handle, name, default)
+        if t=="string" or t=="splitstring" then return Storage.LoadString(handle, name, default)
         elseif t=="number" then return Storage.LoadNumber(handle, name, default)
         elseif t=="boolean" then return Storage.LoadBoolean(handle, name, default)
         elseif t=="vector" then return Storage.LoadVector(handle, name, default)
