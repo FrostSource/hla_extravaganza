@@ -4,7 +4,10 @@
 ]]
 require "util.player"
 
+---@type EntityHandle
 local items
+---@type EntityHandle
+local tracing
 
 -----------------------------
 -- Getting Held Items
@@ -88,7 +91,13 @@ end
 ---@param data TypeIOInvoke
 local function GetLookingAt(data)
     local ent = Player:GetLookingAt()
-    DoEntFire(thisEntity:GetName().."_get_looking_at", "Trigger", "", 0, ent or data.activator, data.caller)
+    -- DoEntFire(thisEntity:GetName().."_get_looking_at", "Trigger", "", 0, ent or data.activator, data.caller)
+    tracing:FireOutput("OnCase01", ent or data.activator, data.caller, "", 0)
+end
+
+local function GetFlashlightPointedAt(data)
+    local ent = Player:GetFlashlightPointedAt()
+    tracing:FireOutput("OnCase02", ent or data.activator, data.caller, "", 0)
 end
 
 ---Forces the player to drop the caller entity if held.
@@ -112,6 +121,7 @@ end
 
 local function ready(saveLoaded)
     items = Entities:FindByName(nil, thisEntity:GetName().."_get_items")
+    tracing = Entities:FindByName(nil, thisEntity:GetName().."_get_tracing")
 end
 
 -- Fix for script executing twice on restore.
