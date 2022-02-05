@@ -89,11 +89,12 @@
 
 	/*
 		Trace tables.
+		For some reason using the word Table in the prefix causes dedentation.
 	*/
 
-	"Trace Line Table Snippet":{
+	"Trace Line Table Snippet3":{
 		"scope": "lua",
-		"prefix": ["Trace Line Table", "Snippet"],
+		"prefix": ["Trace Line", "Snippet"],
 		"body": [
 			"---@type TraceTableLine",
 			"local traceTable = {",
@@ -102,7 +103,8 @@
 			"\tignore = $3,",
 			"\t$1",
 			"}",
-			"if TraceLine(traceTable) then",
+			"TraceLine(traceTable)",
+			"if traceTable.hit then",
 			"\t$0",
 			"end"
 		],
@@ -111,7 +113,7 @@
 
 	"Trace Hull Table Snippet":{
 		"scope": "lua",
-		"prefix": ["Trace Hull Table", "Snippet"],
+		"prefix": ["Trace Hull", "Snippet"],
 		"body": [
 			"---@type TraceTableHull",
 			"local traceTable = {",
@@ -122,7 +124,8 @@
 			"\tignore = ${5:thisEntity},",
 			"\t$1",
 			"}",
-			"if TraceHull(traceTable) then",
+			"TraceHull(traceTable)",
+			"if traceTable.hit then",
 			"\t$0",
 			"end"
 		],
@@ -131,7 +134,7 @@
 
 	"Trace Collideable Table Snippet":{
 		"scope": "lua",
-		"prefix": ["Trace Collideable Table", "Snippet"],
+		"prefix": ["Trace Collideable", "Snippet"],
 		"body": [
 			"---@type TraceTableCollideable",
 			"local traceTable = {",
@@ -140,7 +143,8 @@
 			"\tent = ${3:thisEntity},",
 			"\t$1",
 			"}",
-			"if TraceCollideable(traceTable) then",
+			"TraceCollideable(traceTable)",
+			"if traceTable.hit then",
 			"\t$0",
 			"end"
 		],
