@@ -1,5 +1,6 @@
 --[[
-    v1.0.0
+    v1.1.1
+    https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
     entity access for player related entities by extending the player class.
@@ -90,16 +91,19 @@ CBasePlayer.LastItemGrabbed = nil
 ---@type string
 CBasePlayer.LastClassGrabbed = ""
 
-PLAYER_WEAPON_HAND           = "hand_use_controller"
-PLAYER_WEAPON_ENERGYGUN      = "hlvr_weapon_energygun"
-PLAYER_WEAPON_RAPIDFIRE      = "hlvr_weapon_rapidfire"
-PLAYER_WEAPON_SHOTGUN        = "hlvr_weapon_shotgun"
-PLAYER_WEAPON_MULTITOOL      = "hlvr_multitool"
-PLAYER_WEAPON_GENERIC_PISTOL = "hlvr_weapon_generic_pistol"
+PLAYER_WEAPON_HAND           = "hand"
+PLAYER_WEAPON_ENERGYGUN      = "energygun"
+PLAYER_WEAPON_RAPIDFIRE      = "rapidfire"
+PLAYER_WEAPON_SHOTGUN        = "shotgun"
+PLAYER_WEAPON_MULTITOOL      = "multitool"
+PLAYER_WEAPON_GENERIC_PISTOL = "generic_pistol"
 
 ---**The classname of the weapon/item attached to hand.
 ---@type string|"PLAYER_WEAPON_HAND"|"PLAYER_WEAPON_ENERGYGUN"|"PLAYER_WEAPON_RAPIDFIRE"|"PLAYER_WEAPON_SHOTGUN"|"PLAYER_WEAPON_MULTITOOL"|"PLAYER_WEAPON_GENERIC_PISTOL"
-CBasePlayer.CurrentWeapon = PLAYER_WEAPON_HAND
+CBasePlayer.CurrentlyEquipped = PLAYER_WEAPON_HAND
+---**The classname of the weapon/item previously attached to hand.
+---@type string|"PLAYER_WEAPON_HAND"|"PLAYER_WEAPON_ENERGYGUN"|"PLAYER_WEAPON_RAPIDFIRE"|"PLAYER_WEAPON_SHOTGUN"|"PLAYER_WEAPON_MULTITOOL"|"PLAYER_WEAPON_GENERIC_PISTOL"
+CBasePlayer.PreviouslyEquipped = PLAYER_WEAPON_HAND
 
 ---**Table of items player currently has possession of.**
 CBasePlayer.Items = {
@@ -112,13 +116,13 @@ CBasePlayer.Items = {
     ---Healthpen syringes.
     healthpen = 0,
     ammo = {
-        ---Ammo for the main pistol.
+        ---Ammo for the main pistol. This is number of magazines, not bullets. Multiply by 10 to get bullets.
         energygun = 0,
-        ---Ammo for the rapidfire pistol.
+        ---Ammo for the rapidfire pistol. This is number of magazines, not bullets. Multiply by 30 to get bullets.
         rapidfire = 0,
-        ---Ammo for the shotgun.
+        ---Ammo for the shotgun. This is number of shells.
         shotgun = 0,
-        ---Ammo for the generic pistol.
+        ---Ammo for the generic pistol. This is number of magazines, not bullets.
         generic_pistol = 0,
     }
 }
@@ -138,13 +142,16 @@ CPropVRHand.LastItemGrabbed = nil
 ---**The classname of the last entity grabbed by this hand. In case the entity no longer exists.**
 ---@type string
 CPropVRHand.LastClassGrabbed = ""
+---**The literal type of this hand.**
+---@type integer|"0"|"1"
+CPropVRHand.Literal = nil
 
 
 -------------------------------
 -- Class extension functions --
 -------------------------------
 
----Forces the player to drop an entity if held.
+---Force the player to drop an entity if held.
 ---@param handle CBaseEntity # Handle of the entity to drop
 function CBasePlayer:DropByHandle(handle)
     if IsValidEntity(handle) then
@@ -154,25 +161,77 @@ function CBasePlayer:DropByHandle(handle)
     end
 end
 
----Forces the player to drop any item held in their left hand.
+---Force the player to drop any item held in their left hand.
 function CBasePlayer:DropLeftHand()
-    self:DropByHandle(self.LeftHand)
+    self:DropByHandle(self.LeftHand.ItemHeld)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropLeftHand, "DropLeftHand", CBasePlayer)
 
----Forces the player to drop any item held in their right hand.
+---Force the player to drop any item held in their right hand.
 function CBasePlayer:DropRightHand()
-    self:DropByHandle(self.RightHand)
+    self:DropByHandle(self.RightHand.ItemHeld)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DropRightHand, "DropRightHand", CBasePlayer)
 
----Forces the player to drop any item held in their primary hand.
+---Force the player to drop any item held in their primary hand.
 function CBasePlayer:DropPrimaryHand()
-    self:DropByHandle(self.PrimaryHand)
+    self:DropByHandle(self.PrimaryHand.ItemHeld)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.DropPrimaryHand, "DropPrimaryHand", CBasePlayer)
+
+---Force the player to drop any item held in their secondary/off hand.
+function CBasePlayer:DropSecondaryHand()
+    self:DropByHandle(self.SecondaryHand.ItemHeld)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.DropSecondaryHand, "DropSecondaryHand", CBasePlayer)
+
+---Force the player to drop the caller entity if held.
+---@param data TypeIOInvoke
+function CBasePlayer:DropCaller(data)
+    self:DropByHandle(data.caller)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.DropCaller, "DropCaller", CBasePlayer)
+
+---Force the player to drop the activator entity if held.
+---@param data TypeIOInvoke
+function CBasePlayer:DropActivator(data)
+    self:DropByHandle(data.activator)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
+
+---Force the player to grab `handle` with `hand`.
+---@param handle EntityHandle
+---@param hand? CPropVRHand|"0"|"1"
+function CBasePlayer:GrabByHandle(handle, hand)
+    if IsValidEntity(handle) then
+        -- If no hand provided, find nearest
+        if hand == nil then
+            local pos = handle:GetOrigin()
+            if VectorDistanceSq(self.Hand[1]:GetOrigin(),pos) < VectorDistanceSq(self.Hand[2]:GetOrigin(),pos) then
+                hand = "0"
+            else
+                hand = "1"
+            end
+        elseif IsEntity(hand) then
+            hand = hand:GetHandID()
+        end
+        DoEntFireByInstanceHandle(handle, "Use", tostring(hand), 0, self, self)
+    end
 end
 
----Forces the player to drop any item held in their secondary/off hand.
-function CBasePlayer:DropSecondaryHand()
-    self:DropByHandle(self.SecondaryHand)
+---Force the player to grab the caller entity.
+---@param data TypeIOInvoke
+function CBasePlayer:GrabCaller(data)
+    self:GrabByHandle(data.caller)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.GrabCaller, "GrabCaller", CBasePlayer)
+
+---Force the player to grab the activator entity.
+---@param data TypeIOInvoke
+function CBasePlayer:GrabActivator(data)
+    self:GrabByHandle(data.activator)
+end
+util.SanitizeFunctionForHammer(CBasePlayer.GrabActivator, "GrabActivator", CBasePlayer)
 
 PLAYER_MOVETYPE_TELEPORT_BLINK  = 0
 PLAYER_MOVETYPE_TELEPORT_SHIFT  = 1
@@ -181,18 +240,20 @@ PLAYER_MOVETYPE_CONTINUOUS_HAND = 3
 
 ---Get VR movement type.
 ---@return "PLAYER_MOVETYPE_TELEPORT_BLINK"|"PLAYER_MOVETYPE_TELEPORT_SHIFT"|"PLAYER_MOVETYPE_CONTINUOUS_HEAD"|"PLAYER_MOVETYPE_CONTINUOUS_HAND"
-function CBasePlayer:GetMovementType()
+function CBasePlayer:GetMoveType()
     local movetype = Convars:GetInt('hlvr_movetype_default')
     return movetype
 end
 
 ---Returns the entity the player is looking at directly.
+---@param maxDistance? number # Max distance the trace can search.
 ---@return EntityHandle
-function CBasePlayer:GetLookingAt()
-    ---@type TypeTraceTableLine
+function CBasePlayer:GetLookingAt(maxDistance)
+    maxDistance = maxDistance or 2048
+    ---@type TraceTableLine
     local traceTable = {
         startpos = self:EyePosition(),
-        endpos = self:EyePosition() + AnglesToVector(self:EyeAngles()) * 2048,
+        endpos = self:EyePosition() + AnglesToVector(self:EyeAngles()) * maxDistance,
         ignore = self,
     }
     if TraceLine(traceTable) then
@@ -211,6 +272,7 @@ function CBasePlayer:DisableFallDamage()
     })
     DoEntFireByInstanceHandle(self, "SetDamageFilter", name, 0, self, self)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.DisableFallDamage, "DisableFallDamage", CBasePlayer)
 
 ---Enables fall damage for the player.
 function CBasePlayer:EnableFallDamage()
@@ -222,50 +284,192 @@ function CBasePlayer:EnableFallDamage()
     end
     DoEntFireByInstanceHandle(self, "SetDamageFilter", "", 0, self, self)
 end
+util.SanitizeFunctionForHammer(CBasePlayer.EnableFallDamage, "EnableFallDamage", CBasePlayer)
+
+---Adds resources to the player.
+---@param pistol_ammo? number
+---@param rapidfire_ammo? number
+---@param shotgun_ammo? number
+---@param resin? number
+function CBasePlayer:AddResources(pistol_ammo, rapidfire_ammo, shotgun_ammo, resin)
+    SendToServerConsole("hlvr_addresources "..(pistol_ammo or 0).." "..(rapidfire_ammo or 0).." "..(shotgun_ammo or 0).." "..(resin or 0))
+
+    -- For setting resources if ever find a way to track resin
+    -- SendToServerConsole("hlvr_setresources "..
+    --     (pistol_ammo or self.Items.ammo.energygun*10).." "..
+    --     (rapidfire_ammo or self.Items.ammo.rapidfire*30).." "..
+    --     (shotgun_ammo or self.Items.ammo.shotgun).." "..
+    --     (resin or self.Items.resin)
+    -- )
+end
+
+---Add pistol ammo to the player.
+---@param amount number
+function CBasePlayer:AddPistolAmmo(amount)
+    self:AddResources(amount, nil, nil, nil)
+end
+---Add shotgun ammo to the player.
+---@param amount number
+function CBasePlayer:AddShotgunAmmo(amount)
+    self:AddResources(nil, nil, amount, nil)
+end
+---Add rapidfire ammo to the player.
+---@param amount number
+function CBasePlayer:AddRapidfireAmmo(amount)
+    self:AddResources(nil, amount, nil, nil)
+end
+---Add resin to the player.
+---@param amount number
+function CBasePlayer:AddResin(amount)
+    self:AddResources(nil, nil, nil, amount)
+end
+
+---Marges an existing prop with a given hand.
+---@param hand CPropVRHand|"0"|"1" # The hand handle or index.
+---@param prop EntityHandle|string # The prop handle or targetname.
+---@param hide_hand boolean # If the hand should turn invisible after merging.
+function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
+    if type(hand) == "number" then
+        hand = self.Hand[hand+1]
+    end
+    hand:MergeProp(prop, hide_hand)
+end
+
+---Return if the player has a gun equipped.
+---@return boolean
+function CBasePlayer:HasWeaponEquipped()
+    return self.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN
+        or self.CurrentlyEquipped == PLAYER_WEAPON_SHOTGUN
+        or self.CurrentlyEquipped == PLAYER_WEAPON_RAPIDFIRE
+        or self.CurrentlyEquipped == PLAYER_WEAPON_GENERIC_PISTOL
+end
+
+---Get the amount of ammo stored in the backpack for the currently equipped weapon.
+---@return number # The amount of ammo, or 0 if no weapon equipped.
+function CBasePlayer:GetCurrentWeaponReserves()
+    return self.Items.ammo[self.CurrentlyEquipped] or 0
+end
+
+---Player has item holder equipped.
+---@return boolean
+function CBasePlayer:HasItemHolder()
+    for _, hand in ipairs(self.Hand) do
+        if hand:GetFirstChildWithClassname("hlvr_hand_item_holder") then
+            return true
+        end
+    end
+    -- For one handed players.
+    if self.HMDAvatar:GetFirstChildWithClassname("hlvr_hand_item_holder") then
+        return true
+    end
+    return false
+end
+
+---Player has grabbity gloves equipped.
+---@return boolean
+function CBasePlayer:HasGrabbityGloves()
+    return self.PrimaryHand:GetGrabbityGlove() ~= nil
+end
+
+function CBasePlayer:GetFlashlight()
+    return self.SecondaryHand:GetFirstChildWithClassname("hlvr_flashlight_attachment")
+end
+
+---Get the first entity the flashlight is pointed at (if the flashlight exists).
+---@param maxDistance number # Max tracing distance, default is 2048.
+---@return EntityHandle # The entity that was hit, or nil.
+---@return Vector # The position the trace hit, regardless of entity found.
+function CBasePlayer:GetFlashlightPointedAt(maxDistance)
+    local flashlight = self:GetFlashlight()
+    if flashlight then
+        local attach = flashlight:ScriptLookupAttachment("light_attach")
+        local origin = flashlight:GetAttachmentOrigin(attach)
+        local endpoint = origin + flashlight:GetAttachmentForward(attach) * (maxDistance or 2048)
+        ---@type TraceTableLine
+        local traceTable = {
+            startpos = origin,
+            endpos = endpoint,
+            ignore = flashlight,
+        }
+        TraceLine(traceTable)
+        return traceTable.enthit, traceTable.pos
+    end
+end
+
+---@type table<function,boolean>[]
+local registered_event_callbacks = {
+    player_activate = {},
+    vr_player_ready = {},
+    item_pickup = {},
+    item_released = {},
+    primary_hand_changed = {},
+    player_drop_ammo_in_backpack = {},
+    player_retrieved_backpack_clip = {},
+    player_stored_item_in_itemholder = {},
+    player_removed_item_from_itemholder = {},
+    weapon_switch = {},
+}
+
+---Register a callback function with for a player event.
+---@param event string|"\"player_activate\""|"\"vr_player_ready\""|"\"item_pickup\""|"\"item_released\""|"\"primary_hand_changed\""|"\"player_drop_ammo_in_backpack\""|"\"player_retrieved_backpack_clip\""|"\"player_stored_item_in_itemholder\""|"\"player_removed_item_from_itemholder\""|"\"weapon_switch\""
+---@param callback function
+function RegisterPlayerEventCallback(event, callback)
+    print("Registering player callback", event, callback)
+    registered_event_callbacks[event][callback] = true
+end
+
+---Unregister a callback with a name.
+---@param callback function
+function UnregisterPlayerEventCallback(callback)
+    print("Unregistering player callback", callback)
+    for _, event in pairs(registered_event_callbacks) do
+        event[callback] = nil
+    end
+end
+
+
+---Merge an existing prop with this hand.
+---@param prop EntityHandle|string # The prop handle or targetname.
+---@param hide_hand boolean # If the hand should turn invisible after merging.
+function CPropVRHand:MergeProp(prop, hide_hand)
+    if type(prop) == "string" then
+        prop = Entities:FindByName(nil, prop)
+    end
+    if IsValidEntity(prop) then
+        local glove = util.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
+        -- don't use FollowEntity
+        prop:SetParent(glove, "!bonemerge")
+        if hide_hand then glove:SetRenderAlpha(0) end
+    else
+        Warning("Could not find prop '"..tostring(prop).."' to merge with hand.\n")
+    end
+end
+
+---Return true if this hand is currently holding a prop.
+---@return boolean
+function CPropVRHand:IsHoldingItem()
+    return IsValidEntity(self.ItemHeld)
+end
+
+---Get the entity for this hands grabbity glove.
+---@return EntityHandle
+function CPropVRHand:GetGrabbityGlove()
+    return self:GetFirstChildWithClassname("prop_grabbity_gloves")
+end
+
 
 ---Forces the player to drop this entity if held.
 ---@param self CBaseEntity
 function CBaseEntity:Drop()
     Player:DropByHandle(self)
 end
-CBaseEntity.drop = CBaseEntity.Drop
+util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
 
-
------------------------------------------------------
--- Global proxy functions for easy Hammer invoking --
------------------------------------------------------
-
----Forces the player to drop any item held in their left hand.
-function PlayerDropLeftHand()
-    Player:DropLeftHand()
+---Force the player to grab this entity with the nearest hand.
+function CBaseEntity:Grab()
+    Player:GrabByHandle(self, nil)
 end
-
----Forces the player to drop any item held in their right hand.
-function PlayerDropRightHand()
-    Player:DropRightHand()
-end
-
----Forces the player to drop any item held in their primary hand.
-function PlayerDropPrimaryHand()
-    Player:DropPrimaryHand()
-end
-
----Forces the player to drop any item held in their secondary/off hand.
-function PlayerDropSecondaryHand()
-    Player:DropSecondaryHand()
-end
-
----Forces the player to drop the caller entity if held.
----@param data TypeIOInvoke
-function PlayerDropCaller(data)
-    Player:DropByHandle(data.caller)
-end
-
----Forces the player to drop the activator entity if held.
----@param data TypeIOInvoke
-function PlayerDropActivator(data)
-    Player:DropByHandle(data.activator)
-end
+util.SanitizeFunctionForHammer(CBaseEntity.Grab, "Grab", CBaseEntity)
 
 
 -----------------
@@ -274,12 +478,22 @@ end
 
 local shellgroup_cache = 0
 
+local player_weapon_to_ammotype =
+{
+    [PLAYER_WEAPON_HAND] = "Pistol",
+    [PLAYER_WEAPON_MULTITOOL] = "Pistol",
+    [PLAYER_WEAPON_ENERGYGUN] = "Pistol",
+    [PLAYER_WEAPON_RAPIDFIRE] = "SMG1",
+    [PLAYER_WEAPON_SHOTGUN] = "Buckshot",
+    [PLAYER_WEAPON_GENERIC_PISTOL] = "AlyxGun",
+}
+
 local function savePlayerData()
     Storage.SaveTable(Player, "PlayerItems", Player.Items)
 end
 
 local function loadPlayerData()
-    Storage.LoadTable(Player, "PlayerItems", Player.Items)
+    Player.Items = Storage.LoadTable(Player, "PlayerItems", Player.Items)
 end
 
 -- Setting up player values.
@@ -287,11 +501,17 @@ local listenEventPlayerActivateID
 local function listenEventPlayerActivate(_, data)
     Player = GetListenServerHost()
     loadPlayerData()
+    local player_previously_activated = Storage.LoadBoolean(Player, "PlayerPreviouslyActivated", false)
+    Storage.SaveBoolean(Player, "PlayerPreviouslyActivated", true)
     Player:SetContextThink("global_player_setup_delay", function()
         Player.HMDAvatar = Player:GetHMDAvatar()
         if Player.HMDAvatar then
             Player.Hand[1] = Player.HMDAvatar:GetVRHand(0)
             Player.Hand[2] = Player.HMDAvatar:GetVRHand(1)
+            Player.Hand[1].Literal = Player.Hand[1]:GetLiteralHandType()
+            Player.Hand[2].Literal = Player.Hand[2]:GetLiteralHandType()
+            Player.Hand[1]:SetEntityName("player_hand_left")
+            Player.Hand[1]:SetEntityName("player_hand_right")
             Player.LeftHand = Player.Hand[1]
             Player.RightHand = Player.Hand[2]
             Player.IsLeftHanded = Convars:GetBool("hlvr_left_hand_primary")
@@ -303,8 +523,16 @@ local function listenEventPlayerActivate(_, data)
                 Player.SecondaryHand = Player.LeftHand
             end
             Player.HMDAnchor = Player:GetHMDAnchor()
+            -- Registered callback
+            for callback, _ in pairs(registered_event_callbacks["vr_player_ready"]) do
+                callback({player = Player, hmd_avatar = Player.HMDAvatar, game_loaded = player_previously_activated})
+            end
         end
     end, 0)
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {player = Player, game_loaded = player_previously_activated}))
+    end
     StopListeningToGameEvent(listenEventPlayerActivateID)
 end
 listenEventPlayerActivateID = ListenToGameEvent("player_activate", listenEventPlayerActivate, _G)
@@ -332,6 +560,14 @@ local function listenEventItemPickup(_, data)
     if hand_opposite.ItemHeld == hand.ItemHeld then
         hand_opposite.ItemHeld = nil
     end
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        data.item = ent_held
+        data.item_class = data.item
+        data.hand = hand
+        data.hand_opposite = hand_opposite
+        callback(data)
+    end
 end
 ListenToGameEvent("item_pickup", listenEventItemPickup, _G)
 
@@ -343,6 +579,7 @@ local function listenEventItemReleased(_, data)
     -- 1=primary,2=secondary converted to 0=left,1=right
     local handId = util.GetHandIdFromTip(data.vr_tip_attachment)
     local hand = Player.Hand[handId + 1]
+    local hand_opposite = Player.Hand[(1 - handId) + 1]
     -- Hack to get the number of shells dropped
     if data.item == "item_hlvr_clip_shotgun_shellgroup" then
         shellgroup_cache = #hand.ItemHeld:GetChildren()
@@ -352,6 +589,14 @@ local function listenEventItemReleased(_, data)
     hand.LastItemDropped = hand.ItemHeld
     hand.LastClassDropped = data.item
     hand.ItemHeld = nil
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        data.item_class = data.item
+        data.item = Player.LastItemDropped
+        data.hand = hand
+        data.hand_opposite = hand_opposite
+        callback(data)
+    end
 end
 ListenToGameEvent("item_released", listenEventItemReleased, _G)
 
@@ -363,6 +608,10 @@ local function listenEventPrimaryHandChanged(_, data)
     else
         Player.PrimaryHand = Player.RightHand
         Player.SecondaryHand = Player.LeftHand
+    end
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
     end
 end
 ListenToGameEvent("primary_hand_changed", listenEventPrimaryHandChanged, _G)
@@ -379,45 +628,58 @@ local function listenEventPlayerDropAmmoInBackpack(_, data)
 
     -- Sometimes for some reason the key is `ammoType` (capital T), seems to happen when shotgun shell is taken from backpack and put back.
     local ammotype = data.ammotype or data.ammoType
+    local ammo_amount = 0
     -- Energygun
     if ammotype == "Pistol" then
         if Player.LastClassDropped == "item_hlvr_clip_energygun_multiple" then
             Player.Items.ammo.energygun = Player.Items.ammo.energygun + 4
+            ammo_amount = 4
             -- print("Player stored 4 energygun clips")
         else
             Player.Items.ammo.energygun = Player.Items.ammo.energygun + 1
+            ammo_amount = 1
             -- print("Player stored 1 energygun clip")
         end
     -- Rapidfire
     elseif ammotype == "SMG1" then
         Player.Items.ammo.rapidfire = Player.Items.ammo.rapidfire + 1
+        ammo_amount = 1
         -- print("Player stored 1 rapidfire clip")
-    -- Shotgun (how to get shellgroup count?)
+    -- Shotgun
     elseif ammotype == "Buckshot" then
         if Player.LastClassDropped == "item_hlvr_clip_shotgun_multiple" then
             Player.Items.ammo.shotgun = Player.Items.ammo.shotgun + 4
+            ammo_amount = 4
             -- print("Player stored 4 shotgun shells")
         elseif Player.LastClassDropped == "item_hlvr_clip_shotgun_shellgroup" then
             -- this can be 2 or 3.. how to figure out??
             Player.Items.ammo.shotgun = Player.Items.ammo.shotgun + shellgroup_cache--2--3
+            ammo_amount = shellgroup_cache
             -- print("Player stored "..shellgroup_cache .." shotgun shells")
         else
             Player.Items.ammo.shotgun = Player.Items.ammo.shotgun + 1
+            ammo_amount = 1
             -- print("Player stored 1 shotgun shell")
         end
     -- Generic pistol
     elseif ammotype == "AlyxGun" then
         if Player.LastClassDropped == "item_hlvr_clip_generic_pistol_multiple" then
             Player.Items.ammo.generic_pistol = Player.Items.ammo.generic_pistol + 4
+            ammo_amount = 4
             -- print("Player stored 4 generic pistol clips")
         else
             Player.Items.ammo.generic_pistol = Player.Items.ammo.generic_pistol + 1
+            ammo_amount = 1
             -- print("Player stored 1 generic pistol clip")
         end
     else
         print("Couldn't figure out ammo for "..tostring(ammotype))
     end
     savePlayerData()
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+    end
 end
 ListenToGameEvent("player_drop_ammo_in_backpack", listenEventPlayerDropAmmoInBackpack, _G)
 
@@ -426,25 +688,41 @@ local function listenEventPlayerRetrievedBackpackClip(_, data)
     -- util.PrintTable(data)
     -- print("\n")
 
-    if Player.CurrentWeapon == PLAYER_WEAPON_ENERGYGUN
-    or Player.CurrentWeapon == PLAYER_WEAPON_HAND
-    or Player.CurrentWeapon == PLAYER_WEAPON_MULTITOOL then
+    local do_callback,ammotype,ammo_amount = true,player_weapon_to_ammotype[Player.CurrentlyEquipped],0
+    if Player.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN
+    or Player.CurrentlyEquipped == PLAYER_WEAPON_HAND
+    or Player.CurrentlyEquipped == PLAYER_WEAPON_MULTITOOL then
         Player.Items.ammo.energygun = Player.Items.ammo.energygun - 1
-    elseif Player.CurrentWeapon == PLAYER_WEAPON_RAPIDFIRE then
+        ammo_amount = 1
+    elseif Player.CurrentlyEquipped == PLAYER_WEAPON_RAPIDFIRE then
         Player.Items.ammo.rapidfire = Player.Items.ammo.rapidfire - 1
-    elseif Player.CurrentWeapon == PLAYER_WEAPON_SHOTGUN then
+        ammo_amount = 1
+    elseif Player.CurrentlyEquipped == PLAYER_WEAPON_SHOTGUN then
+        do_callback = false
         -- Delayed think is used because item_pickup is fired after this event
         Player:SetContextThink("delay_shotgun_shellgroup", function()
             -- Player always retrieves a shellgroup even if no autoloader and single shell
             -- checking just in case
+            ammo_amount = #Player.LastItemGrabbed:GetChildren()
             if Player.LastClassGrabbed == "item_hlvr_clip_shotgun_shellgroup" then
-                Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - #Player.LastItemGrabbed:GetChildren()
+                Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - ammo_amount
+            end
+            -- Registered callback
+            for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
+                callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
             end
         end, 0)
-    elseif Player.CurrentWeapon == PLAYER_WEAPON_GENERIC_PISTOL then
+    elseif Player.CurrentlyEquipped == PLAYER_WEAPON_GENERIC_PISTOL then
         Player.Items.ammo.generic_pistol = Player.Items.ammo.generic_pistol - 1
+        ammo_amount = 1
     end
     savePlayerData()
+    if do_callback then
+        -- Registered callback
+        for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+            callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+        end
+    end
 end
 ListenToGameEvent("player_retrieved_backpack_clip", listenEventPlayerRetrievedBackpackClip, _G)
 
@@ -461,6 +739,10 @@ local function listenEventPlayerStoredItemInItemholder(_, data)
         Player.Items.healthpen = Player.Items.healthpen + 1
     end
     savePlayerData()
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
+    end
 end
 ListenToGameEvent("player_stored_item_in_itemholder", listenEventPlayerStoredItemInItemholder, _G)
 
@@ -477,14 +759,38 @@ local function listenEventPlayerRemovedItemFromItemholder(_, data)
         Player.Items.healthpen = Player.Items.healthpen - 1
     end
     savePlayerData()
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
+    end
 end
 ListenToGameEvent("player_removed_item_from_itemholder", listenEventPlayerRemovedItemFromItemholder, _G)
+
+-- No known way to track resin being taken out reliably.
+-- local function listenEventPlayerDropResinInBackpack(_, data)
+--     -- print("\nSTORE RESIN:")
+--     -- util.PrintTable(data)
+--     -- print("\n")
+-- end
+-- ListenToGameEvent("player_drop_resin_in_backpack", listenEventPlayerDropResinInBackpack, _G)
 
 local function listenEventWeaponSwitch(_, data)
     -- print("\nWEAPON SWITCH:")
     -- util.PrintTable(data)
     -- print("\n")
 
-    Player.CurrentWeapon = data.item
+    Player.PreviouslyEquipped = Player.CurrentlyEquipped
+    if data.item == "hand_use_controller" then Player.CurrentlyEquipped = PLAYER_WEAPON_HAND
+    elseif data.item == "hlvr_weapon_energygun" then Player.CurrentlyEquipped = PLAYER_WEAPON_ENERGYGUN
+    elseif data.item == "hlvr_weapon_rapidfire" then Player.CurrentlyEquipped = PLAYER_WEAPON_RAPIDFIRE
+    elseif data.item == "hlvr_weapon_shotgun" then Player.CurrentlyEquipped = PLAYER_WEAPON_SHOTGUN
+    elseif data.item == "hlvr_multitool" then Player.CurrentlyEquipped = PLAYER_WEAPON_MULTITOOL
+    elseif data.item == "hlvr_weapon_generic_pistol" then Player.CurrentlyEquipped = PLAYER_WEAPON_GENERIC_PISTOL
+    end
+
+    -- Registered callback
+    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
+        callback(vlua.tableadd(data, {}))
+    end
 end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, _G)

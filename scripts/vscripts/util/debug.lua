@@ -1,5 +1,6 @@
 --[[
     v1.0.1
+    https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
 
