@@ -89,51 +89,64 @@
 
 	/*
 		Trace tables.
+		For some reason using the word Table in the prefix causes dedentation.
 	*/
-  
-	"Trace Line Table Snippet":{
+
+	"Trace Line Table Snippet3":{
 		"scope": "lua",
-		"prefix": ["Trace Line Table", "Snippet"],
+		"prefix": ["Trace Line", "Snippet"],
 		"body": [
-			"---@type TypeTraceTableLine",
+			"---@type TraceTableLine",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
-			"\tignore = ${3:thisEntity},",
+			"\tignore = $3,",
+			"\t$1",
+			"}",
+			"TraceLine(traceTable)",
+			"if traceTable.hit then",
 			"\t$0",
-			"}"
+			"end"
 		],
 		"description": "Create a trace table snippet for the TraceLine function."
 	},
 
 	"Trace Hull Table Snippet":{
 		"scope": "lua",
-		"prefix": ["Trace Hull Table", "Snippet"],
+		"prefix": ["Trace Hull", "Snippet"],
 		"body": [
-			"---@type TypeTraceTableHull",
+			"---@type TraceTableHull",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
 			"\tmin = ${3:Vector(0,0,0),}",
 			"\tmax = ${4:Vector(0,0,0),}",
 			"\tignore = ${5:thisEntity},",
+			"\t$1",
+			"}",
+			"TraceHull(traceTable)",
+			"if traceTable.hit then",
 			"\t$0",
-			"}"
+			"end"
 		],
 		"description": "Create a trace table snippet for the TraceHull function."
 	},
 
 	"Trace Collideable Table Snippet":{
 		"scope": "lua",
-		"prefix": ["Trace Collideable Table", "Snippet"],
+		"prefix": ["Trace Collideable", "Snippet"],
 		"body": [
-			"---@type TypeTraceTableCollideable",
+			"---@type TraceTableCollideable",
 			"local traceTable = {",
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
 			"\tent = ${3:thisEntity},",
+			"\t$1",
+			"}",
+			"TraceCollideable(traceTable)",
+			"if traceTable.hit then",
 			"\t$0",
-			"}"
+			"end"
 		],
 		"description": "Create a trace table snippet for the TraceCollideable function."
 	},
