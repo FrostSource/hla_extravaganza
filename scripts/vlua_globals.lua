@@ -1,7 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 1.2.1
+    Version 1.2.2
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -1423,7 +1423,7 @@ function CBaseEntity:GetBounds() end
 ---Get vector to center of object - absolute coords
 ---@return Vector
 function CBaseEntity:GetCenter() end
----Get the entities parented to this entity.
+---Get the entities parented to this entity. Including children of children.
 ---@return EntityHandle[]
 function CBaseEntity:GetChildren() end
 ---Looks up a context and returns it if available. May return string, float, or nil (if the context isn't found)
@@ -2552,18 +2552,18 @@ function debugoverlay:Circle(Vector_1, Quaternion_2, float_3, int_4, int_5, int_
 ---@param noDepthTest boolean
 ---@param seconds float
 function debugoverlay:CircleScreenOriented(origin, radius, red, green, blue, alpha, noDepthTest, seconds) end
----Draws a wireframe cone. Specify endpoint and direction in world space.
----@param pos1 Vector
----@param pos2 Vector
----@param unknown float
----@param unknown2 float
+---Draws a wireframe cone.
+---@param pos Vector # Starting tip for the cone.
+---@param axis Vector # Normalized direction the cone faces.
+---@param radius float # Radius of the cone.
+---@param distance float # How far the cone will draw.
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
 ---@param seconds float
-function debugoverlay:Cone(pos1, pos2, unknown, unknown2, red, green, blue, alpha, noDepthTest, seconds) end
+function debugoverlay:Cone(pos, axis, radius, distance, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a screen-aligned cross. Specify origin in world space.
 ---@param origin Vector
 ---@param radius float
@@ -3360,7 +3360,8 @@ function Uint64:ToHexString() end
 ---@field x number Pitch angle.
 ---@field y number Yaw angle.
 ---@field z number Roll angle.
-QAngle = {}
+---@field __index string
+QAngleClass = {}
 ---Creates a new QAngle.
 ---@param pitch float
 ---@param yaw float
@@ -3371,23 +3372,23 @@ function QAngle(pitch, yaw, roll) end
 ---Note: Use RotateOrientation() instead to properly rotate angles.
 ---@param qangle QAngle
 ---@return QAngle
-function QAngle:__add(qangle) end
+function QAngleClass:__add(qangle) end
 ---Overloaded ==. Tests for Equality
 ---@param qangle QAngle
 ---@return QAngle
-function QAngle:__eq(qangle) end
+function QAngleClass:__eq(qangle) end
 ---Overloaded .. Converts the QAngle to a human readable string.
 ---@return string
-function QAngle:__tostring() end
+function QAngleClass:__tostring() end
 ---Returns the forward vector.
 ---@return Vector
-function QAngle:Forward() end
+function QAngleClass:Forward() end
 ---Returns the left vector.
 ---@return Vector
-function QAngle:Left() end
+function QAngleClass:Left() end
 ---Returns the up vector.
 ---@return Vector
-function QAngle:Up() end
+function QAngleClass:Up() end
 
 --#endregion
 
@@ -3410,13 +3411,14 @@ Quaternion = {}
 ---@field x number X-axis
 ---@field y number Y-axis
 ---@field z number Z-axis
-Vector = {}
+---@field __index string
+VectorClass = {}
 ---Creates a new vector with the specified Cartesian coordinates.
 ----@param x float
 ----@param y float
 ----@param z float
 ----@return Vector
---function Vector(x, y, z) end
+function Vector(x, y, z) end
 ---Overloaded +. Adds vectors together.
 ---@param vector Vector
 ---@return Vector
@@ -3424,50 +3426,50 @@ function Vector:__add(vector) end
 ---Overloaded /. Divides vectors.
 ---@param vector Vector
 ---@return Vector
-function Vector:__div(vector) end
+function VectorClass:__div(vector) end
 ---Overloaded ==. Tests for Equality.
 ---@param vector Vector
 ---@return boolean
-function Vector:__eq(vector) end
+function VectorClass:__eq(vector) end
 ---Overloaded # returns the length of the vector.
 ---@return float
-function Vector:__len() end
+function VectorClass:__len() end
 ---Overloaded * returns the vectors multiplied together. can also be used to multiply with scalars.
 ---@param vector Vector
 ---@return Vector
-function Vector:__mul(vector) end
+function VectorClass:__mul(vector) end
 ---Overloaded -. Subtracts vectors
 ---@param vector Vector
 ---@return Vector
-function Vector:__sub(vector) end
+function VectorClass:__sub(vector) end
 ---Overloaded .. Converts vectors to strings
 ---@return string
-function Vector:__tostring() end
+function VectorClass:__tostring() end
 ---Overloaded unary - operator. Reverses the vector.
 ---@return Vector
-function Vector:__unm() end
+function VectorClass:__unm() end
 ---Cross product of two vectors.
 ---@param vector Vector
 ---@return Vector
-function Vector:Cross(vector) end
+function VectorClass:Cross(vector) end
 ---Dot product of two vectors.
 ---@param vector Vector
 ---@return float
-function Vector:Dot(vector) end
+function VectorClass:Dot(vector) end
 ---Length of the Vector.
 ---@return float
-function Vector:Length() end
+function VectorClass:Length() end
 ---Length of the Vector in the XY plane.
 ---@return float
-function Vector:Length2D() end
+function VectorClass:Length2D() end
 ---Linear interpolation between the vector and the passed in target over t = [0,1].
 ---@param target Vector
 ---@param t float
 ---@return Vector
-function Vector:Lerp(target, t) end
+function VectorClass:Lerp(target, t) end
 ---Returns the vector normalized.
 ---@return Vector
-function Vector:Normalized() end
+function VectorClass:Normalized() end
 
 --#endregion
 
