@@ -41,6 +41,25 @@ function IsEntity(handle)
     return type(handle) == "table" and handle.__self
 end
 
+---Add an output to a given entity `handle`.
+---@param handle EntityHandle # The entity to add the `output` to.
+---@param output string # The output name to add.
+---@param target EntityHandle|string # The entity the output should target, either handle or targetname.
+---@param input string # The input name on `target`.
+---@param parameter? string # The parameter override for `input`.
+---@param delay? number # Delay for the output in seconds.
+---@param activator? EntityHandle # Activator for the output.
+---@param caller? EntityHandle # Caller for the output.
+---@param fireOnce? boolean # If the output should only fire once.
+function AddOutput(handle, output, target, input, parameter, delay, activator, caller, fireOnce)
+    if IsEntity(target) then target = target:GetName() end
+    parameter = parameter or ""
+    delay = delay or 0
+    if fireOnce then fireOnce = 1 else fireOnce = -1 end
+    local output_str = output..">"..target..">"..input..">"..parameter..">"..delay..">"..fireOnce
+    DoEntFireByInstanceHandle(handle, "AddOutput", output_str, 0, activator or nil, caller or nil)
+end
+
 
 ----------------------
 -- Utility functions
@@ -149,10 +168,6 @@ function util.GetFirstChildWithClassname(handle, classname)
         if child:GetClassname() == classname then
             return child
         end
-        local c = util:GetFirstChildWithClassname(child)
-        if c then
-            return c
-        end
     end
     return nil
 end
@@ -166,10 +181,6 @@ function util.GetFirstChildWithName(handle, name)
     for _, child in ipairs(handle:GetChildren()) do
         if child:GetName() == name then
             return child
-        end
-        local c = util:GetFirstChildWithClassname(child)
-        if c then
-            return c
         end
     end
     return nil
@@ -310,8 +321,45 @@ function util.Delay(func, delay)
 end
 
 
+----------------------------
+-- Base entity extensions --
+----------------------------
+
+---Get the top level entities parented to this entity. Not children of children.
+---@return table
+function CBaseEntity:GetTopChildren()
+    local children = {}
+    for _, child in ipairs(self:GetChildren()) do
+        if child:GetMoveParent() == self then
+            children[#children+1] = child
+        end
+    end
+    return children
+end
+
+CBaseEntity.AddOutput = AddOutput
+
+---Send an input to this entity.
+---@param action string # Input name.
+---@param value? string # Parameter override for the input.
+---@param delay? number # Delay in seconds.
+---@param activator? EntityHandle
+---@param caller? EntityHandle
+function CBaseEntity:EntFire(action, value, delay, activator, caller)
+    DoEntFireByInstanceHandle(self, action, value or "", delay or 0, activator or nil, caller or nil)
+end
+
+
 --------------------
 -- Math functions --
 --------------------
 
 util.math = {}
+
+---Get the sign of a number.
+---@param number number
+---@return "1"|"0"|"-1"
+function util.math.sign(number)
+    return number > 0 and 1 or (number < 0 and -1 or 0)
+end
+
