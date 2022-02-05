@@ -37,6 +37,10 @@ function GetScriptFile(sep)
     return src
 end
 
+function IsEntity(handle)
+    return type(handle) == "table" and handle.__self
+end
+
 
 ----------------------
 -- Utility functions
@@ -124,11 +128,13 @@ end
 ---@param prefix? string
 function util.PrintTable(tbl, prefix)
     prefix = prefix or ""
+    local visited = {tbl}
     print(prefix.."{")
     for key, value in pairs(tbl) do
         print( string.format( "\t%s%-32s %s", prefix, key, "= " .. (type(value) == "string" and ("\"" .. tostring(value) .. "\"") or tostring(value)) .. " ("..type(value)..")" ) )
-        if type(value)=="table" then
+        if type(value) == "table" and not vlua.find(visited, value) then
             util.PrintTable(value, prefix.."\t")
+            visited[#visited+1] = value
         end
     end
     print(prefix.."}")
@@ -283,6 +289,24 @@ function util.SplitString(inputstr, sep)
         table.insert(t, str)
     end
     return t
+end
+
+---Appends `array2` onto `array1` as a new array.
+---Safe extend function alternative to `vlua.extend`.
+---@param array1 any[]
+---@param array2 any[]
+function util.AppendArray(array1, array2)
+    array1 = vlua.clone(array1)
+    for i = 1, #array2 do
+        table.insert(array1, array2[i])
+    end
+    return array1
+end
+
+---Delay some code.
+---@param func function
+function util.Delay(func, delay)
+    Player:SetContextThink(DoUniqueString("delay"), func, delay)
 end
 
 
