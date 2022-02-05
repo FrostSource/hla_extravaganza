@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -101,6 +101,9 @@ PLAYER_WEAPON_GENERIC_PISTOL = "generic_pistol"
 ---**The classname of the weapon/item attached to hand.
 ---@type string|"PLAYER_WEAPON_HAND"|"PLAYER_WEAPON_ENERGYGUN"|"PLAYER_WEAPON_RAPIDFIRE"|"PLAYER_WEAPON_SHOTGUN"|"PLAYER_WEAPON_MULTITOOL"|"PLAYER_WEAPON_GENERIC_PISTOL"
 CBasePlayer.CurrentlyEquipped = PLAYER_WEAPON_HAND
+---**The classname of the weapon/item previously attached to hand.
+---@type string|"PLAYER_WEAPON_HAND"|"PLAYER_WEAPON_ENERGYGUN"|"PLAYER_WEAPON_RAPIDFIRE"|"PLAYER_WEAPON_SHOTGUN"|"PLAYER_WEAPON_MULTITOOL"|"PLAYER_WEAPON_GENERIC_PISTOL"
+CBasePlayer.PreviouslyEquipped = PLAYER_WEAPON_HAND
 
 ---**Table of items player currently has possession of.**
 CBasePlayer.Items = {
@@ -196,7 +199,7 @@ function CBasePlayer:DropActivator(data)
 end
 util.SanitizeFunctionForHammer(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
 
----comment
+---Force the player to grab `handle` with `hand`.
 ---@param handle EntityHandle
 ---@param hand? CPropVRHand|"0"|"1"
 function CBasePlayer:GrabByHandle(handle, hand)
@@ -209,10 +212,10 @@ function CBasePlayer:GrabByHandle(handle, hand)
             else
                 hand = "1"
             end
-        elseif IsValidEntity(hand) then
+        elseif IsEntity(hand) then
             hand = hand:GetHandID()
         end
-        DoEntFireByInstanceHandle(handle, "Use", hand, 0, self, self)
+        DoEntFireByInstanceHandle(handle, "Use", tostring(hand), 0, self, self)
     end
 end
 
@@ -335,27 +338,29 @@ end
 ---Return if the player has a gun equipped.
 ---@return boolean
 function CBasePlayer:HasWeaponEquipped()
-    return Player.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN
-        or Player.CurrentlyEquipped == PLAYER_WEAPON_SHOTGUN
-        or Player.CurrentlyEquipped == PLAYER_WEAPON_RAPIDFIRE
-        or Player.CurrentlyEquipped == PLAYER_WEAPON_GENERIC_PISTOL
+    return self.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN
+        or self.CurrentlyEquipped == PLAYER_WEAPON_SHOTGUN
+        or self.CurrentlyEquipped == PLAYER_WEAPON_RAPIDFIRE
+        or self.CurrentlyEquipped == PLAYER_WEAPON_GENERIC_PISTOL
 end
 
 ---Get the amount of ammo stored in the backpack for the currently equipped weapon.
 ---@return number # The amount of ammo, or 0 if no weapon equipped.
 function CBasePlayer:GetCurrentWeaponReserves()
-    return Player.Items.ammo[Player.CurrentlyEquipped] or 0
+    return self.Items.ammo[self.CurrentlyEquipped] or 0
 end
 
 ---Player has item holder equipped.
 ---@return boolean
 function CBasePlayer:HasItemHolder()
     for _, hand in ipairs(self.Hand) do
-        for _, child in ipairs(hand:GetChildren()) do
-            if child:GetClassname() == "hlvr_hand_item_holder" then
-                return true
-            end
+        if hand:GetFirstChildWithClassname("hlvr_hand_item_holder") then
+            return true
         end
+    end
+    -- For one handed players.
+    if self.HMDAvatar:GetFirstChildWithClassname("hlvr_hand_item_holder") then
+        return true
     end
     return false
 end
@@ -363,14 +368,32 @@ end
 ---Player has grabbity gloves equipped.
 ---@return boolean
 function CBasePlayer:HasGrabbityGloves()
-    for _, hand in ipairs(self.Hand) do
-        for _, child in ipairs(hand:GetChildren()) do
-            if child:GetClassname() == "prop_grabbity_gloves" then
-                return true
-            end
-        end
+    return self.PrimaryHand:GetGrabbityGlove() ~= nil
+end
+
+function CBasePlayer:GetFlashlight()
+    return self.SecondaryHand:GetFirstChildWithClassname("hlvr_flashlight_attachment")
+end
+
+---Get the first entity the flashlight is pointed at (if the flashlight exists).
+---@param maxDistance number # Max tracing distance, default is 2048.
+---@return EntityHandle # The entity that was hit, or nil.
+---@return Vector # The position the trace hit, regardless of entity found.
+function CBasePlayer:GetFlashlightPointedAt(maxDistance)
+    local flashlight = self:GetFlashlight()
+    if flashlight then
+        local attach = flashlight:ScriptLookupAttachment("light_attach")
+        local origin = flashlight:GetAttachmentOrigin(attach)
+        local endpoint = origin + flashlight:GetAttachmentForward(attach) * (maxDistance or 2048)
+        ---@type TraceTableLine
+        local traceTable = {
+            startpos = origin,
+            endpos = endpoint,
+            ignore = flashlight,
+        }
+        TraceLine(traceTable)
+        return traceTable.enthit, traceTable.pos
     end
-    return false
 end
 
 ---@type table<function,boolean>[]
@@ -426,6 +449,12 @@ end
 ---@return boolean
 function CPropVRHand:IsHoldingItem()
     return IsValidEntity(self.ItemHeld)
+end
+
+---Get the entity for this hands grabbity glove.
+---@return EntityHandle
+function CPropVRHand:GetGrabbityGlove()
+    return self:GetFirstChildWithClassname("prop_grabbity_gloves")
 end
 
 
@@ -750,6 +779,7 @@ local function listenEventWeaponSwitch(_, data)
     -- util.PrintTable(data)
     -- print("\n")
 
+    Player.PreviouslyEquipped = Player.CurrentlyEquipped
     if data.item == "hand_use_controller" then Player.CurrentlyEquipped = PLAYER_WEAPON_HAND
     elseif data.item == "hlvr_weapon_energygun" then Player.CurrentlyEquipped = PLAYER_WEAPON_ENERGYGUN
     elseif data.item == "hlvr_weapon_rapidfire" then Player.CurrentlyEquipped = PLAYER_WEAPON_RAPIDFIRE
