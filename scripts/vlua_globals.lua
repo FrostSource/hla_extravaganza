@@ -49,7 +49,7 @@
 ---@alias EntityHandle CBaseEntity|CEntityInstance|CBaseModelEntity|CBasePlayer|CHL2_Player|CBaseAnimating|CBaseFlex|CBaseCombatCharacter|CBodyComponent|CAI_BaseNPC|CBaseTrigger|CEnvEntityMaker|CInfoWorldLayer|CLogicRelay|CMarkupVolumeTagged|CEnvProjectedTexture|CPhysicsProp|CSceneEntity|CPointClientUIWorldPanel|CPointTemplate|CPointWorldText|CPropHMDAvatar|CPropVRHand
 
 ---@class EHANDLE
----@class ScriptScope
+---@alias ScriptScope table
 ---@alias COMMON_OPVAR_NAMES "skylight_proximity_array"|"skylight_invert_scalar_array"|"hotel_sub_basement_proximity_array"|"large_room_addin_array"|"small_room_invert_scalar_array"|"hotel_small_room_proximity_array"|"xen_proximity_array"
 
 ---@type EntityHandle
@@ -427,13 +427,13 @@ function AnglesToVector(angle) end
 ---@deprecated
 function AxisAngleToQuaternion(axis, angle) end
 ---Compute the closest point relative to a vector on the OBB of an entity.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@param position Vector
 ---@return Vector
 function CalcClosestPointOnEntityOBB(entity, position) end
 ---Compute the distance between two entity OBB. A negative return value indicates an input error. A return value of zero indicates that the OBBs are overlapping.
----@param entity1 CBaseEntity
----@param entity2 CBaseEntity
+---@param entity1 EntityHandle
+---@param entity2 EntityHandle
 ---@return float
 function CalcDistanceBetweenEntityOBB(entity1, entity2) end
 ---Calculate the cross product between two vectors (also available as a Vector class method).
@@ -712,7 +712,7 @@ function Msg(message) end
 function PrintLinkedConsoleMessage(message, command) end
 ---Have entity say message. Will appear in console in 'Client' channel.
 ---For some reason will trim word "say" from beginning of message.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@param message string
 ---@param teamOnly boolean If true message will only be sent to clients on same team.
 function Say(entity, message, teamOnly) end
@@ -784,8 +784,8 @@ function ConnectOutputs(outputs)
     })
 end
 ---Allocate a CTakeDamageInfo object, used as an argument to CBaseEntity::TakeDamage(). Call DestroyDamageInfo( hInfo ) to free the object.
----@param inflictor CBaseEntity
----@param attacker CBaseEntity
+---@param inflictor EntityHandle
+---@param attacker EntityHandle
 ---@param force Vector
 ---@param hitPos Vector
 ---@param damage float
@@ -819,16 +819,16 @@ function DestroyDamageInfo(info) end
 ---@param action string
 ---@param value string
 ---@param delay float
----@param activator CBaseEntity
----@param caller CBaseEntity
+---@param activator EntityHandle
+---@param caller EntityHandle
 function DoEntFire(target, action, value, delay, activator, caller) end
 ---Internal native function for EntFireByHandle().
----@param target CBaseEntity
+---@param target EntityHandle
 ---@param action string
 ---@param value string
 ---@param delay float
----@param activator CBaseEntity
----@param caller CBaseEntity
+---@param activator EntityHandle
+---@param caller EntityHandle
 function DoEntFireByInstanceHandle(target, action, value, delay, activator, caller) end
 ---Generate an entity I/O event on all entities matching the specified target name. The script scope of the calling entity should be passed to the first parameter.
 ---@param scope ScriptScope
@@ -836,15 +836,15 @@ function DoEntFireByInstanceHandle(target, action, value, delay, activator, call
 ---@param action string
 ---@param value? string Default = ""
 ---@param delay? float Default = 0.0
----@param activator? CBaseEntity Default = thisEntity
+---@param activator? EntityHandle Default = thisEntity
 function EntFire(scope, target, action, value, delay, activator) end
 ---Generate an entity I/O event on the specified entity. The calling entity should be passed to the first parameter.
----@param self CBaseEntity
----@param target CBaseEntity
+---@param self EntityHandle
+---@param target EntityHandle
 ---@param action string
 ---@param value? string # Default = ""
 ---@param delay? float # Default = 0.0
----@param activator? CBaseEntity # Default = self
+---@param activator? EntityHandle # Default = self
 function EntFireByHandle(self, target, action, value, delay, activator) end
 ---Turn an entity index integer to an HScript (entity handle) representing that entity's script instance.
 ---@param entindex integer
@@ -870,15 +870,15 @@ function FireEntityIOInputVec(EHANDLE, inputName, value) end
 ---@return float
 function GetMaxOutputDelay(EHANDLE, outputName) end
 ---Get Angular Velocity for VPHYS or normal object. Returns a vector of the axis of rotation, multiplied by the rotation in radians per second.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@return Vector
 function GetPhysAngularVelocity(entity) end
 ---Get Velocity for VPHYS or normal object.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@return Vector
 function GetPhysVelocity(entity) end
 ---Returns the validity of the entity. Opposite of CBaseEntity:IsNull()
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@return boolean
 function IsValidEntity(entity) end
 ---Get a script instance of a player by player ID.
@@ -905,7 +905,7 @@ function PrecacheModel(modelName, context) end
 ---@param context CScriptPrecacheContext
 function PrecacheResource(resourceType, resourcePath, context) end
 ---Set Angular Velocity for VPHYS or normal object, from a vector of the axis of rotation, multiplied by the rotation in radians per second.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@param velocity Vector
 function SetPhysAngularVelocity(entity, velocity) end
 ---Set rendering on/off for an EHANDLE.
@@ -947,11 +947,11 @@ function SpawnEntityListFromTableSynchronous(spawnKeysList) end
 ---@param effectName string
 function StopEffect(entity, effectName) end
 ---Deletes the entity
----@param entity CBaseEntity
+---@param entity EntityHandle
 function UTIL_Remove(entity) end
 ---Deletes the entity with no delay.
 ---Warning:	Incorrect usage may cause crashes
----@param entity CBaseEntity
+---@param entity EntityHandle
 function UTIL_RemoveImmediate(entity) end
 
 --#endregion
@@ -982,7 +982,7 @@ function TraceLine(parameters) end
 function EmitGlobalSound(sound) end
 ---Play named sound on Entity.
 ---@param sound string
----@param entity CBaseEntity
+---@param entity EntityHandle
 function EmitSoundOn(sound, entity) end
 ---Play named sound only on the client for the passed in player.
 ---@param sound string
@@ -1003,7 +1003,7 @@ function SetOpvarFloatAll(stackName, operatorName, opvarName, opvarValue) end
 function SetOpvarFloatPlayer(stackName, operatorName, opvarName, opvarValue, player) end
 ---Start a sound event. Appears to always emit from the player.
 ---@param sound string
----@param unknown CBaseEntity
+---@param unknown EntityHandle
 function StartSoundEvent(sound, unknown) end
 ---Start a sound event from position
 ---@param sound string
@@ -1019,19 +1019,19 @@ function StartSoundEventFromPositionReliable(sound, position) end
 function StartSoundEventFromPositionUnreliable(sound, position) end
 ---Start a sound event with reliable delivery
 ---@param sound string
----@param unknown CBaseEntity
+---@param unknown EntityHandle
 function StartSoundEventReliable(sound, unknown) end
 ---Start a sound event with optional delivery
 ---@param sound string
----@param unknown CBaseEntity
+---@param unknown EntityHandle
 function StartSoundEventUnreliable(sound, unknown) end
 ---Stops a sound event. Seems to be exactly the same as StopSoundOn.
 ---@param sound string
----@param entity CBaseEntity # The entity playing the sound.
+---@param entity EntityHandle # The entity playing the sound.
 function StopSoundEvent(sound, entity) end
 ---Stop named sound on Entity.
 ---@param sound string
----@param playingEntity CBaseEntity
+---@param playingEntity EntityHandle
 function StopSoundOn(sound, playingEntity) end
 
 --#endregion
@@ -1107,7 +1107,7 @@ function IsClient() end
 ---@return boolean
 function IsDedicatedServer() end
 ---Returns true if the entity is valid and marked for deletion.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@return boolean
 function IsMarkedForDeletion(entity) end
 ---Returns true if this is lua running from the server.dll.
@@ -1155,7 +1155,7 @@ function RemoveSpawnGroupFilterProxy(str) end
 ---@return boolean
 function rr_AddDecisionRule(rule) end
 ---Commit the result of QueryBestResponse back to the given entity to play.
----@param entity CBaseEntity|unknown
+---@param entity EntityHandle|unknown
 ---@param airesponse unknown
 ---@return boolean
 function rr_CommitAIResponse(entity, airesponse) end
@@ -1386,11 +1386,11 @@ function CBaseEntity:EyePosition() end
 function CBaseEntity:FirstMoveChild() end
 ---Parents calling entity to the passed entity matching origin and angle, with optional bone merging.
 ---Pass nil to unfollow.
----@param entity CBaseEntity|nil
+---@param entity EntityHandle|nil
 ---@param boneMerge boolean
 function CBaseEntity:FollowEntity(entity, boneMerge) end
 ---Returns a table containing the criteria that would be used for response queries on this entity. This is the same as the table that is passed to response rule script function callbacks.
----@param result CBaseEntity
+---@param result EntityHandle
 function CBaseEntity:GatherCriteria(result) end
 ---Returns the world space origin of the entity.
 ---@return Vector
@@ -1521,7 +1521,7 @@ function CBaseEntity:IsPlayer() end
 ---Deletes the entity (UTIL_Remove())
 function CBaseEntity:Kill() end
 ---	Return the next entity in the same movement hierarchy.
----@return CBaseEntity
+---@return EntityHandle
 function CBaseEntity:NextMovePeer() end
 ---Takes duration, value for a temporary override.
 ---Doesn't seem to work.
@@ -1609,10 +1609,10 @@ function CBaseEntity:SetMaxHealth(maxHP) end
 ---@param origin Vector
 function CBaseEntity:SetOrigin(origin) end
 ---	Sets this entity's owner.
----@param owningEntity CBaseEntity
+---@param owningEntity EntityHandle
 function CBaseEntity:SetOwner(owningEntity) end
 ---Set the parent for this entity. The attachment is optional, pass an empty string to not use it.
----@param parent CBaseEntity
+---@param parent EntityHandle
 ---@param attachmentName string | "\"\""
 function CBaseEntity:SetParent(parent, attachmentName) end
 ---Set entity team.
@@ -1683,7 +1683,7 @@ function CEntityInstance:DisconnectOutput(output, functionName) end
 ---	Removes a connected script function from an I/O event on the passed entity.
 ---@param output string
 ---@param functionName string
----@param entity CBaseEntity
+---@param entity EntityHandle
 function CEntityInstance:DisconnectRedirectedOutput(output, functionName, entity) end
 ---Get the entity index of this entity. Will be different every time the map loads.
 ---Use EntIndexToHScript() to convert back to handle.
@@ -1692,8 +1692,8 @@ function CEntityInstance:DisconnectRedirectedOutput(output, functionName, entity
 function CEntityInstance:entindex() end
 ---Fire an entity output.
 ---@param outputName string
----@param activator CBaseEntity
----@param caller CBaseEntity
+---@param activator EntityHandle
+---@param caller EntityHandle
 ---@param parameter string|"nil" # The parameter override to send with the output.
 ---@param delay float
 function CEntityInstance:FireOutput(outputName, activator, caller, parameter, delay) end
@@ -1732,7 +1732,7 @@ function CEntityInstance:GetPublicScriptScope() end
 ---Adds an I/O connection that will call the named function on the passed entity when the specified output fires.
 ---@param output string
 ---@param functionName string
----@param entity CBaseEntity
+---@param entity EntityHandle
 function CEntityInstance:RedirectOutput(output, functionName, entity) end
 ---Deletes the entity (UTIL_Remove())
 function CEntityInstance:RemoveSelf() end
@@ -2157,7 +2157,7 @@ function Entities:FindAllByTarget(targetSet) end
 ---@return EntityHandle[]
 function Entities:FindAllInSphere(origin, maxRadius) end
 ---Find entities by class name. Pass nil to start an iteration, or reference to a previously found entity to continue a search.
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param className string
 ---@return EntityHandle
 function Entities:FindByClassname(startFrom, className) end
@@ -2168,26 +2168,26 @@ function Entities:FindByClassname(startFrom, className) end
 ---@return EntityHandle
 function Entities:FindByClassnameNearest(className, origin, maxRadius) end
 ---Find entities by class name within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param className string
 ---@param origin Vector
 ---@param maxRadius float
 ---@return EntityHandle
 function Entities:FindByClassnameWithin(startFrom, className, origin, maxRadius) end
 ---Find entities by model name. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param modelName string
 ---@return EntityHandle
 function Entities:FindByModel(startFrom, modelName) end
 ---Find entities by model name within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param modelName string
 ---@param origin Vector
 ---@param maxRadius float
 ---@return EntityHandle
 function Entities:FindByModelWithin(startFrom, modelName, origin, maxRadius) end
 ---Find entities by name. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param lastEnt CBaseEntity|nil
+---@param lastEnt EntityHandle|"nil"
 ---@param searchString string
 ---@return EntityHandle
 function Entities:FindByName(lastEnt, searchString) end
@@ -2198,7 +2198,7 @@ function Entities:FindByName(lastEnt, searchString) end
 ---@return EntityHandle
 function Entities:FindByNameNearest(name, origin, maxRadius) end
 ---Find entities by name within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param name string
 ---@param origin Vector
 ---@param maxRadius float
@@ -2206,12 +2206,12 @@ function Entities:FindByNameNearest(name, origin, maxRadius) end
 function Entities:FindByNameWithin(startFrom, name, origin, maxRadius) end
 ---Find entities by targetname. Pass nil to start an iteration, or reference to a previously found entity to continue a search
 ---How does this work?
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param targetName string
 ---@return EntityHandle
 function Entities:FindByTarget(startFrom, targetName) end
 ---Find entities within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom CBaseEntity|nil
+---@param startFrom EntityHandle|"nil"
 ---@param origin Vector
 ---@param maxRadius float
 ---@return EntityHandle
@@ -2223,7 +2223,7 @@ function Entities:First() end
 ---@return CHL2_Player
 function Entities:GetLocalPlayer() end
 ---Continue an iteration over the list of entities, providing reference to a previously found entity
----@param startFrom CBaseEntity What happens if starting from nil?
+---@param startFrom EntityHandle What happens if starting from nil?
 ---@return EntityHandle
 function Entities:Next(startFrom) end
 
@@ -2264,7 +2264,7 @@ function CBaseTrigger:Disable() end
 ---Enable the trigger
 function CBaseTrigger:Enable() end
 ---Checks whether the passed entity is touching the trigger.
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@return boolean
 function CBaseTrigger:IsTouching(entity) end
 
@@ -2296,7 +2296,7 @@ CEnvEntityMaker = {}
 ---Create an entity at the location of the maker
 function CEnvEntityMaker:SpawnEntity() end
 ---Create an entity at the location of a specified entity instance
----@param entity CBaseEntity
+---@param entity EntityHandle
 function CEnvEntityMaker:SpawnEntityAtEntityOrigin(entity) end
 ---Create an entity at a specified location and orientaton, orientation is Euler angle in degrees (pitch, yaw, roll)
 ---@param origin Vector
@@ -2337,8 +2337,8 @@ function CInfoWorldLayer:ShowWorldLayer() end
 ---@class CLogicRelay : CEntityInstance
 CLogicRelay = {}
 ---Trigger(hActivator, hCaller) : Triggers the logic_relay
----@param hActivator CBaseEntity
----@param hCaller CBaseEntity
+---@param hActivator EntityHandle
+---@param hCaller EntityHandle
 function CLogicRelay:Trigger(hActivator, hCaller) end
 
 --#endregion
@@ -2952,7 +2952,7 @@ function CPropHMDAvatar:GetVRHand(nHandID) end
 ---@class CPropVRHand : CBaseAnimating
 CPropVRHand = {}
 ---Add the attachment to this hand.
----@param attachment CBaseEntity
+---@param attachment EntityHandle
 function CPropVRHand:AddHandAttachment(attachment) end
 ---Add a model override for this hand.
 ---@param modelName string
@@ -2985,13 +2985,13 @@ function CPropVRHand:GetVelocity() end
 ---Remove all model overrides for this hand.
 function CPropVRHand:RemoveAllHandModelOverrides() end
 ---Remove hand attachment by handle.
----@param hAttachment CBaseEntity
+---@param hAttachment EntityHandle
 function CPropVRHand:RemoveHandAttachmentByHandle(hAttachment) end
 ---Remove a model override for this hand.
 ---@param pModelName string
 function CPropVRHand:RemoveHandModelOverride(pModelName) end
 ---Set the attachment for this hand.
----@param hAttachment CBaseEntity
+---@param hAttachment EntityHandle
 function CPropVRHand:SetHandAttachment(hAttachment) end
 
 --#endregion
@@ -3005,13 +3005,13 @@ ParticleManager = {}
 ---Creates a new particle effect. Returns the index of the created effect.
 ---@param particleName string
 ---@param particleAttach ENUM_PATTACH
----@param owningEntity CBaseEntity
+---@param owningEntity EntityHandle
 ---@return integer particleID
 function ParticleManager:CreateParticle(particleName, particleAttach, owningEntity) end
 ---Creates a new particle effect that only plays for the specified player. Returns the index of the created effect.
 ---@param particleName string
 ---@param particleAttach ENUM_PATTACH
----@param owningEntity CBaseEntity
+---@param owningEntity EntityHandle
 ---@param owningPlayer CBasePlayer
 ---@return integer particleID
 function ParticleManager:CreateParticleForPlayer(particleName, particleAttach, owningEntity, owningPlayer) end
@@ -3038,7 +3038,7 @@ function ParticleManager:SetParticleControl(particleID, controlIndex, controlDat
 ---Attaches the control point to an entity.
 ---@param particleID integer
 ---@param controlIndex integer
----@param entity CBaseEntity
+---@param entity EntityHandle
 ---@param attachType ENUM_PATTACH
 ---@param attachment string
 ---@param origin Vector
@@ -3162,7 +3162,7 @@ function CTakeDamageInfo:SetAllowFriendlyFire(allow) end
 ---@param ammoType integer what is ammo type?
 function CTakeDamageInfo:SetAmmoType(ammoType) end
 ---
----@param attacker CBaseEntity
+---@param attacker EntityHandle
 function CTakeDamageInfo:SetAttacker(attacker) end
 ---
 ---@param block boolean
