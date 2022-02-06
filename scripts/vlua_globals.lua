@@ -1730,6 +1730,7 @@ function CEntityInstance:GetPrivateScriptScope() end
 ---@return ScriptScope
 function CEntityInstance:GetPublicScriptScope() end
 ---Adds an I/O connection that will call the named function on the passed entity when the specified output fires.
+---This means the redirection is persistent after game loads.
 ---@param output string
 ---@param functionName string
 ---@param entity EntityHandle
