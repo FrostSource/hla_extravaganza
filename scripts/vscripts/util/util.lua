@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code
@@ -24,8 +24,8 @@
 -- Global functions
 ---------------------
 
----Get the file name of the current script. E.g. `util.util`
----@param sep? string # Separator character
+---Get the file name of the current script without folders or extension. E.g. `util.util`
+---@param sep? string # Separator character, default is '.'
 ---@return string
 function GetScriptFile(sep)
     sep = sep or "."
@@ -37,6 +37,9 @@ function GetScriptFile(sep)
     return src
 end
 
+---Get if the given `handle` value is an entity, regardless of if it's still alive.
+---@param handle EntityHandle|any
+---@return boolean
 function IsEntity(handle)
     return type(handle) == "table" and handle.__self
 end
@@ -70,40 +73,7 @@ end
 ---@diagnostic disable: lowercase-global
 util = {}
 
----Returns a table to be used with one of the Trace* functions.
----
----**Use vlua_snippets trace snippets instead.**
----@param startPos Vector
----@param endPos Vector
----@param ignore? CBaseEntity
----@param isCollideable? boolean
----@param min? Vector
----@param max? Vector
----@deprecated
----@return table
-function util.TraceTable(startPos, endPos, ignore, isCollideable, min, max)
-    local t
-    if isCollideable then
-        t = {
-            startPos = startPos,
-            endPos = endPos,
-            ent = ignore,
-        }
-        if min then t.mins = min end
-        if max then t.maxs = min end
-    else
-        t = {
-            startPos = startPos,
-            endPos = endPos,
-            ignore = ignore,
-            min = min or Vector(0,0,0),
-            max = max or Vector(0,0,0),
-        }
-    end
-    return t
-end
-
----Converts vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
+---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
 ---@param vr_tip_attachment "1"|"2"
 ---@return "0"|"1"
 function util.GetHandIdFromTip(vr_tip_attachment)
@@ -318,35 +288,6 @@ end
 ---@param func function
 function util.Delay(func, delay)
     Player:SetContextThink(DoUniqueString("delay"), func, delay)
-end
-
-
-----------------------------
--- Base entity extensions --
-----------------------------
-
----Get the top level entities parented to this entity. Not children of children.
----@return table
-function CBaseEntity:GetTopChildren()
-    local children = {}
-    for _, child in ipairs(self:GetChildren()) do
-        if child:GetMoveParent() == self then
-            children[#children+1] = child
-        end
-    end
-    return children
-end
-
-CBaseEntity.AddOutput = AddOutput
-
----Send an input to this entity.
----@param action string # Input name.
----@param value? string # Parameter override for the input.
----@param delay? number # Delay in seconds.
----@param activator? EntityHandle
----@param caller? EntityHandle
-function CBaseEntity:EntFire(action, value, delay, activator, caller)
-    DoEntFireByInstanceHandle(self, action, value or "", delay or 0, activator or nil, caller or nil)
 end
 
 
