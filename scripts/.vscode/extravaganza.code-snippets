@@ -21,7 +21,6 @@
 			"",
 			"-- Fix for script executing twice on restore.",
 			"-- This binds to the new local ready function on second execution.",
-			"---@diagnostic disable-next-line: undefined-field",
 			"if thisEntity:GetPrivateScriptScope().savewasloaded then",
 			"\tthisEntity:SetContextThink(\"init\", function() ready(true) end, 0)",
 			"end",
@@ -41,5 +40,15 @@
 			"local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end",
 		],
 		"description": "Code that most entity scripts should start with."
+	},
+
+	"Add Locals To Script Scope":{
+		"scope": "lua",
+		"prefix": ["Add locals to script scope", "localfix"],
+		"body": [
+			"-- Add local functions to private script scope to avoid environment pollution.",
+			"local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end",
+		],
+		"description": "Adds local functions to private script scope to avoid environment pollution."
 	}
 }
