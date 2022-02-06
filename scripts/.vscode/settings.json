@@ -6,7 +6,9 @@
     "Lua.color.mode": "SemanticEnhanced",
     "Lua.completion.autoRequire": false,
     "Lua.diagnostics.ignoredFiles": "Enable",
+    // vlua_globals.lua needs a large preload size.
     "Lua.workspace.preloadFileSize": 300,
     "Lua.hover.enumsLimit": 1,
+    // 5.1 is the version Alyx uses.
     "Lua.runtime.version": "Lua 5.1"
 }
