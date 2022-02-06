@@ -1,19 +1,15 @@
-# Simple zipping automation for release packages.
-# In future this should generate checksums and compare differences to output change log.
+# Simple html table generation of lua docs for github readmes.
+# Copies to clipboard.
 from collections import OrderedDict
 from pathlib import Path
 import sys
-import tools_base
 import pyperclip as pc
-
-root = tools_base.addon_dir
-release = root.joinpath("release/")
 
 # No line templates
 
 table_base = '''<table><tr><td><b>Function</b></td><td><b>Description</b></td></tr>{}</table>'''
 
-function_template = '''<tr><td width="75%"><code>{}</code></td width="25%"><td>{}</td></tr>'''
+function_template = '''<tr><td width="75%">{}</td width="25%"><td>{}</td></tr>'''
 
 # Lined templates
 
@@ -98,7 +94,6 @@ class LuaFunction:
         # Function name
         parser.skip_word("function")
         self.name = parser.get_word([" ","("])
-        # print(f"Function name: {self.name}")
         parser.next()
 
         # Gather params
@@ -107,7 +102,6 @@ class LuaFunction:
             self.params[parser.get_word([" ",",",")"])] = ""
             # Skipping , or )
             parser.next()
-        # print(f"Params:", self.params)
 
         # Get doc info
         description_builder = ""
@@ -123,10 +117,6 @@ class LuaFunction:
                 desc = parser.get_word(["\n","\r"])
                 description_builder += desc+" " if desc != "" else "\n"
         self.description = description_builder.rstrip()
-        
-        # print(f"Params with types:", self.params)
-        # print(f"Returns:", self.return_type)
-        # print(f"Desc: {self.description}")
     
     def get_signature(self, valve:bool = True)->str:
         p = ""
@@ -151,7 +141,6 @@ def lua_doc_from_file(file:Path)->str:
     lines = f.readlines()
     function_docs = list()
     i = 0
-    # for i in range(len(lines)):
     while i < len(lines):
         line = lines[i].lstrip()
         # Naive multiline comment skipping
@@ -176,9 +165,6 @@ def lua_doc_from_file(file:Path)->str:
     pc.copy(doc_table)
 
 
-
-
-
 def iterate_files(files:"list[str]"):
     """Iterate a list of files and generate a full doc string.
 
@@ -200,9 +186,8 @@ def iterate_files(files:"list[str]"):
             lua_doc_from_file(file)
 
 
-
 if __name__ == '__main__':
-    # iterate_files(sys.argv[1:])
+    iterate_files(sys.argv[1:])
     # test = LuaFunction(
     #     "    function Storage.SaveString(handle, name, value)\n",
     #     [
@@ -215,5 +200,4 @@ if __name__ == '__main__':
     #     ]
     #     )
     # print(test.get_signature())
-    lua_doc_from_file(Path(r'C:\Program Files (x86)\SteamLibrary\steamapps\common\Half-Life Alyx\content\hlvr_addons\hla_extravaganza\scripts\vscripts\util\storage.lua'))
     print("DONE")
