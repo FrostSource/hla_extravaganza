@@ -41,6 +41,7 @@ end
 ---@param handle EntityHandle|any
 ---@return boolean
 function IsEntity(handle)
+    ---@diagnostic disable-next-line: undefined-field
     return type(handle) == "table" and handle.__self
 end
 

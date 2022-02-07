@@ -124,7 +124,7 @@ function QueueClass:Contains(value)
 end
 
 
----Creates a new `Queue` object.
+---Create a new `Queue` object.
 ---Last value is at the front of the queue.
 ---@param ... any
 ---@return Queue

@@ -114,8 +114,8 @@ else
     -- SAVING --
     ------------
 
-    ---Save a string. Strings seem to be limited to 63 characters!
-    ---@param handle CBaseEntity # Entity to save on.
+    ---Save a string.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value string # String to save.
     ---@return boolean # If the save was successful.
@@ -144,7 +144,7 @@ else
     end
 
     ---Save a number.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value number # Number to save.
     ---@return boolean # If the save was successful.
@@ -160,7 +160,7 @@ else
     end
 
     ---Save a boolean.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param bool boolean # Boolean to save.
     ---@return boolean # If the save was successful.
@@ -176,7 +176,7 @@ else
     end
 
     ---Save a Vector.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param vector Vector # Vector to save.
     ---@return boolean # If the save was successful.
@@ -194,7 +194,7 @@ else
     end
 
     ---Save a QAngle.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param qangle QAngle # QAngle to save.
     ---@return boolean # If the save was successful.
@@ -253,7 +253,7 @@ else
     ---
     ---Entity handles change between game sessions so this function
     ---modifies the passed entity to make sure it can keep track of it.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param entity EntityHandle # Entity to save.
     ---@return boolean # If the save was successful.
@@ -286,7 +286,7 @@ else
     ---
     ---Uses type inference to save the value.
     ---If you are experiencing errors consider saving with one of the explicit type saves.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param value any # Value to save.
     ---@return boolean # If the save was successful.
@@ -315,7 +315,7 @@ else
     -------------
 
     ---Load a string.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the string was saved as.
     ---@param default? string # Optional default value.
     ---@return string
@@ -338,7 +338,7 @@ else
     end
 
     ---Load a number.
-    ---@param handle CBaseEntity # Entity to load from.
+    ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name the number was saved as.
     ---@param default? number # Optional default value.
     ---@return number
@@ -354,7 +354,7 @@ else
     end
 
     ---Load a boolean value.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the boolean was saved as.
     ---@param default? boolean # Optional default value.
     ---@return boolean
@@ -370,7 +370,7 @@ else
     end
 
     ---Load a Vector.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the Vector was saved as.
     ---@param default? Vector # Optional default value.
     ---@return Vector
@@ -388,7 +388,7 @@ else
     end
 
     ---Load a QAngle.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the QAngle was saved as.
     ---@param default? QAngle # Optional default value.
     ---@return QAngle
@@ -435,7 +435,7 @@ else
     end
 
     ---Load an entity.
-    ---@param handle CBaseEntity # Entity to save on.
+    ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
     ---@param default EntityHandle # Optional default value.
     ---@return EntityHandle
@@ -464,7 +464,7 @@ else
     end
 
     ---Load a value.
-    ---@param handle CBaseEntity # Entity to load from.
+    ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name the value was saved as.
     ---@param default? any # Optional default value.
     ---@return any
