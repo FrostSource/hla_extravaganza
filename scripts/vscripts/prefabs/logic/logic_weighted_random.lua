@@ -2,8 +2,8 @@
     v2.0.0
     Prefab specific functions for maps/prefabs/logic/logic_weighted_random/logic_weighted_random.vmap
 ]]
+require "util.storage"
 require "util.weighted_random"
-DoIncludeScript("util/storage", thisEntity:GetPrivateScriptScope())
 
 ---@type WeightedRandom
 local wr
@@ -35,7 +35,6 @@ end
 
 -- Fix for script executing twice on restore.
 -- This binds to the new local ready function on second execution.
----@diagnostic disable-next-line: undefined-field
 if thisEntity:GetPrivateScriptScope().savewasloaded then
     thisEntity:SetContextThink("init", function() ready(true) end, 0)
 end
