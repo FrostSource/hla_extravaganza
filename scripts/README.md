@@ -1,29 +1,32 @@
 # Scripts
 
-> This collection includes stand alone scripts and scripts used in conjunction with prefabs and other assets. See the individual README.md files for information on how the script is used. If no README is present it is likely used by another asset and shouldn't be used on its own unless you understand the contents.
-
-> If a script does not have an accompanying README but you think it *should*, please [open up a new issue](https://github.com/FrostSource/hla_extravaganza/issues/new) with a reference/link to the script file with a short explaination why it should.
+> This collection includes stand alone scripts and scripts used in conjunction with prefabs and other assets. See the individual script header for information about how the script is used.
 
 ---
 
 ## vlua_globals.lua
 
-This file helps intellisense in editors like Visual Studio Code by introducing definitions of all known VLua functions into the global scope. It is purely for helping with the coding process and does not introduce or modify any functionality in-game.
+### What is it?
 
-I recommend using [Visual Studio Code](https://code.visualstudio.com/) with this Lua extension:
-https://marketplace.visualstudio.com/items?itemName=sumneko.lua
+This file is for use with [Visual Studio Code](https://code.visualstudio.com/) and the [Lua Language Server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua), improving intellisense by declaring all known Lua functions specific to Half-Life: Alyx into the global scope. It is purely for helping with the coding process and does not introduce or modify any functionality in-game.
 
-Place this file in the top level of your scripting folder, e.g.
-    
+### Why use it?
+
+If you've written a script in VS Code for Alyx you might be familiar with warnings about unknown names and types.
+
+![](../.images/vlua_globals_no_help.png)
+
+`vlua_globals.lua` fixes these issues and provides full code completion for known functions and methods, including descriptions and type hinting. This dramatically improves the coding process allowing you to focus on writing the script instead of looking up function definitions or double checking if a warning is legitimate.
+
+![](../.images/vlua_globals_completion.png)
+![](../.images/vlua_globals_type.gif)
+
+### Installation
+
+Copy the `vlua_globals.lua` file anywhere within your VS Code workspace. It is often placed in the root of your scripts folder, e.g.
+
     game\hlvr_addons\my_addon\scripts\
-    
-or
 
-    game\hlvr_addons\my_addon\scripts\vscripts\
-
-As long as the editor knows about this file it should assume its contents belong in the global scope, even though this file will never be executed.
-
-Hook snippets are included in the [.vscode/vlua_snippets.code-snippets](.vscode/vlua_snippets.code-snippets) file to help speed up the process.
-Start typing "hook" or the name of the function for the options to appear.
+As long as the editor knows about this file it should assume its contents belong in the global scope, even though this file will never be executed. If you are using Git and are having issues with `vlua_globals.lua` not being recognized, make sure it is **not** excluded via .gitignore.
 
 *More information is included in the header of the script itself.*
