@@ -3,7 +3,7 @@ by FrostSource
 
 > ### Allows quick and easy bone merging to a combine so you can have citizens or zombies firing guns as soon as possible.
 
-> The prefab has some basic functionality for spawning and assigning squad, but for full functionality in a map the prefab should be collapsed or saved as a new prefab with the desired settings.
+> The prefab has some basic functionality for spawning and assigning squad, but for full functionality in a map the prefab should be collapsed or saved as a new prefab with the desired settings. The `Fade Corpse` spawnflag has been unticked to avoid a [known issue](#known-issues), it is recommended to clean up dead bodies through map I/O.
 
 ---
 
@@ -42,6 +42,6 @@ by FrostSource
 
 ## Known Issues
 
-When the engine decide to remove the ragdoll body it will create a new entity with a visible combine model for a few seconds. This is more noticeable on lower settings.
+When the engine decides to remove the ragdoll body it will create a new entity with a visible combine model (or the model of the npc you're bonemerging to) for a few seconds. This is more noticeable on lower settings.
 
 ---
