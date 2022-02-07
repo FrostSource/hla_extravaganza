@@ -1,6 +1,6 @@
 --[[
     v1.1.0
-    Weighted random allows you to assign chances to values.
+    Weighted random allows you to assign chances to tables.
 
     Should be loaded into global scope for using the following line:
 
@@ -50,7 +50,7 @@ function WeightedRandomBaseClass:Add(tbl, weight)
     self.ItemPool[#self.ItemPool+1] = tbl
 end
 
----Returns the total weight of this weighted random object.
+---Get the total weight of this weighted random object.
 ---@return number
 function WeightedRandomBaseClass:TotalWeight()
     local weight_sum = 0
@@ -60,7 +60,7 @@ function WeightedRandomBaseClass:TotalWeight()
     return weight_sum
 end
 
----Returns a random table from the list of weighted tables.
+---Get a random table from the list of weighted tables.
 ---@return table
 function WeightedRandomBaseClass:Random()
     local weight_sum = self:TotalWeight()
@@ -78,7 +78,7 @@ function WeightedRandomBaseClass:Random()
     end
 end
 
----Returns a WeightedRandom object with given weights.
+---Create a new WeightedRandom object with given weights.
 ---@param weights table[]|"{\n\t{ weight = 1 },\n}"
 ---@return WeightedRandom
 function WeightedRandom(weights)

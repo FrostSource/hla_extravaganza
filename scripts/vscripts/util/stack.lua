@@ -2,7 +2,7 @@
     v1.0.0
     https://github.com/FrostSource/hla_extravaganza
 
-    Adds stack behaviour for tables with index 1 is the top of the stack.
+    Adds stack behaviour for tables with index 1 as the top of the stack.
 
     -- Create a stack with 3 initial values.
     -- 1 is the top of the stack.
@@ -129,7 +129,7 @@ function StackClass:Contains(value)
 end
 
 
----Creates a new `Stack` object.
+---Create a new `Stack` object.
 ---First value is at the top.
 ---@param ... any
 ---@return Stack

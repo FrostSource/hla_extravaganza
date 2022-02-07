@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code
@@ -24,8 +24,8 @@
 -- Global functions
 ---------------------
 
----Get the file name of the current script. E.g. `util.util`
----@param sep? string # Separator character
+---Get the file name of the current script without folders or extension. E.g. `util.util`
+---@param sep? string # Separator character, default is '.'
 ---@return string
 function GetScriptFile(sep)
     sep = sep or "."
@@ -37,8 +37,31 @@ function GetScriptFile(sep)
     return src
 end
 
+---Get if the given `handle` value is an entity, regardless of if it's still alive.
+---@param handle EntityHandle|any
+---@return boolean
 function IsEntity(handle)
+    ---@diagnostic disable-next-line: undefined-field
     return type(handle) == "table" and handle.__self
+end
+
+---Add an output to a given entity `handle`.
+---@param handle EntityHandle # The entity to add the `output` to.
+---@param output string # The output name to add.
+---@param target EntityHandle|string # The entity the output should target, either handle or targetname.
+---@param input string # The input name on `target`.
+---@param parameter? string # The parameter override for `input`.
+---@param delay? number # Delay for the output in seconds.
+---@param activator? EntityHandle # Activator for the output.
+---@param caller? EntityHandle # Caller for the output.
+---@param fireOnce? boolean # If the output should only fire once.
+function AddOutput(handle, output, target, input, parameter, delay, activator, caller, fireOnce)
+    if IsEntity(target) then target = target:GetName() end
+    parameter = parameter or ""
+    delay = delay or 0
+    if fireOnce then fireOnce = 1 else fireOnce = -1 end
+    local output_str = output..">"..target..">"..input..">"..parameter..">"..delay..">"..fireOnce
+    DoEntFireByInstanceHandle(handle, "AddOutput", output_str, 0, activator or nil, caller or nil)
 end
 
 
@@ -51,40 +74,7 @@ end
 ---@diagnostic disable: lowercase-global
 util = {}
 
----Returns a table to be used with one of the Trace* functions.
----
----**Use vlua_snippets trace snippets instead.**
----@param startPos Vector
----@param endPos Vector
----@param ignore? CBaseEntity
----@param isCollideable? boolean
----@param min? Vector
----@param max? Vector
----@deprecated
----@return table
-function util.TraceTable(startPos, endPos, ignore, isCollideable, min, max)
-    local t
-    if isCollideable then
-        t = {
-            startPos = startPos,
-            endPos = endPos,
-            ent = ignore,
-        }
-        if min then t.mins = min end
-        if max then t.maxs = min end
-    else
-        t = {
-            startPos = startPos,
-            endPos = endPos,
-            ignore = ignore,
-            min = min or Vector(0,0,0),
-            max = max or Vector(0,0,0),
-        }
-    end
-    return t
-end
-
----Converts vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
+---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
 ---@param vr_tip_attachment "1"|"2"
 ---@return "0"|"1"
 function util.GetHandIdFromTip(vr_tip_attachment)
@@ -149,10 +139,6 @@ function util.GetFirstChildWithClassname(handle, classname)
         if child:GetClassname() == classname then
             return child
         end
-        local c = util:GetFirstChildWithClassname(child)
-        if c then
-            return c
-        end
     end
     return nil
 end
@@ -166,10 +152,6 @@ function util.GetFirstChildWithName(handle, name)
     for _, child in ipairs(handle:GetChildren()) do
         if child:GetName() == name then
             return child
-        end
-        local c = util:GetFirstChildWithClassname(child)
-        if c then
-            return c
         end
     end
     return nil
@@ -315,3 +297,11 @@ end
 --------------------
 
 util.math = {}
+
+---Get the sign of a number.
+---@param number number
+---@return "1"|"0"|"-1"
+function util.math.sign(number)
+    return number > 0 and 1 or (number < 0 and -1 or 0)
+end
+

@@ -101,7 +101,7 @@
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
 			"\tignore = $3,",
-			"\t$1",
+			"\t$4",
 			"}",
 			"TraceLine(traceTable)",
 			"if traceTable.hit then",
@@ -122,7 +122,7 @@
 			"\tmin = ${3:Vector(0,0,0),}",
 			"\tmax = ${4:Vector(0,0,0),}",
 			"\tignore = ${5:thisEntity},",
-			"\t$1",
+			"\t$6",
 			"}",
 			"TraceHull(traceTable)",
 			"if traceTable.hit then",
@@ -141,7 +141,7 @@
 			"\tstartpos = $1,",
 			"\tendpos = $2,",
 			"\tent = ${3:thisEntity},",
-			"\t$1",
+			"\t$4",
 			"}",
 			"TraceCollideable(traceTable)",
 			"if traceTable.hit then",
@@ -150,18 +150,4 @@
 		],
 		"description": "Create a trace table snippet for the TraceCollideable function."
 	},
-
-	/*
-		Helper code
-	*/
-
-	"Add Locals To Script Scope":{
-		"scope": "lua",
-		"prefix": ["Add locals to script scope", "localfix"],
-		"body": [
-			"-- Add local functions to private script scope to avoid environment pollution.",
-			"local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end",
-		],
-		"description": "Adds local functions to private script scope to avoid environment pollution."
-	}
 }
