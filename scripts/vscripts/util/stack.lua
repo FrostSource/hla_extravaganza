@@ -4,6 +4,9 @@
 
     Adds stack behaviour for tables with index 1 as the top of the stack.
 
+    ======================================== Basic Usage ==========================================
+
+    ```lua
     -- Create a stack with 3 initial values.
     -- 1 is the top of the stack.
     local stack = Stack(1, 2, 3)
@@ -14,21 +17,34 @@
     -- Pop multiple values
     local a,b = stack:Pop(2)
 
-    --- Prints "2   3"
+    -- Prints "2   3"
     print(a,b)
+
+    -- Push any values
+    stack:Push('a','b','c')
 
     -- To loop over the items, reference stack.items directly:
     for key, value in ipairs(stack.items) do
         print(key, value)
     end
 
-    --
+    -- Or use the `pairs` helper function:
+    for key, value in stack:pairs() do
+        print(key, value)
+    end
+    ```
 
-    To save a stack you should save/load the items member instead of the stack object:
+    =========================================== Notes =============================================
 
-    Storage:SaveTable("stack.items", stack.items)
-    stack.items = Storage:LoadTable("stack.items", {})
+    This class supports `util.storage` with `Storage.Save(stack)` or if encountered when saving
+    a table.
+
+    ```lua
+    Storage:Save("stack", stack)
+    stack = Storage:Load("stack")
+    ```
 ]]
+require "util.storage"
 ---@class Stack
 local StackClass =
 {
@@ -36,6 +52,7 @@ local StackClass =
     items = {}
 }
 StackClass.__index = StackClass
+Storage.RegisterType("util.Stack", StackClass)
 
 ---Push values to the stack.
 ---@param ... any
@@ -126,6 +143,49 @@ end
 ---@return boolean
 function StackClass:Contains(value)
     return vlua.find(self.items, value) ~= nil
+end
+
+---Helper method for looping.
+---@return fun(table: any[], i: integer):integer, any
+---@return any[]
+---@return number i
+function StackClass:pairs()
+    return ipairs(self.items)
+end
+
+---**Static Function**
+---
+---Helper function for saving the `stack`.
+---@param handle EntityHandle # The entity to save on.
+---@param name string # The name to save as.
+---@param stack Stack # The stack to save.
+---@return boolean # If the save was successful.
+function StackClass.__save(handle, name, stack)
+    print("Saving stack", name)
+    Storage.SaveTable(handle, Storage.Join(name, "items"), stack.items)
+    Storage.SaveType(handle, name, "util.Stack")
+    return true
+end
+
+---**Static Function**
+---
+---Helper function for loading the `stack`.
+---@param handle EntityHandle # Entity to load from.
+---@param name string # Name to load.
+---@return Stack|nil
+function StackClass.__load(handle, name)
+    print("Loading stack", name)
+    local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+    if items ~= nil then
+        local _stack = Stack()
+        _stack.items = items
+        return _stack
+    end
+    return nil
+end
+
+function StackClass:__tostring()
+    return "Stack ("..#self.items.." items)"
 end
 
 
