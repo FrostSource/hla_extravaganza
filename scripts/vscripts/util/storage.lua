@@ -60,12 +60,12 @@
 ]]
 
 local debug_allowed = false
----Print a warning message if in developer mode.
+---Show a warning message in the console if debugging is enabled.
 ---@param msg any
 local function Warn(msg)
     -- if debug_allowed and Convars:GetBool( 'developer' ) then
     if debug_allowed then
-        Warning(msg)
+        Warning(msg.."\n")
     end
 end
 
@@ -88,7 +88,7 @@ local function resolveHandle(handle)
     -- Otherwise save on player
     local player = GetListenServerHost()
     if not player then
-        Warn("Trying to save a global value before player has spawned!\n")
+        Warn("Trying to save a global value before player has spawned!")
         return nil
     end
     return player
@@ -123,7 +123,7 @@ else
         --TODO: Break up strings longer than 63 chars. Also update table saving with this.
         handle = resolveHandle(handle)
         if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!")
             return false
         end
         if #value > 62 then
@@ -151,7 +151,7 @@ else
     function Storage.SaveNumber(handle, name, value)
         handle = resolveHandle(handle)
         if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!")
             return false
         end
         handle:SetContextNum(name, value, 0)
@@ -167,7 +167,7 @@ else
     function Storage.SaveBoolean(handle, name, bool)
         handle = resolveHandle(handle)
         if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!")
             return false
         end
         handle:SetContextNum(name, bool and 1 or 0, 0)
@@ -183,7 +183,7 @@ else
     function Storage.SaveVector(handle, name, vector)
         handle = resolveHandle(handle)
         if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!")
             return false
         end
         handle:SetContext(name..separator.."type", "vector", 0)
@@ -201,7 +201,7 @@ else
     function Storage.SaveQAngle(handle, name, qangle)
         handle = resolveHandle(handle)
         if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!")
             return false
         end
         handle:SetContext(name..separator.."type", "qangle", 0)
@@ -223,28 +223,25 @@ else
     function Storage.SaveTable(handle, name, tbl)
         handle = resolveHandle(handle)
         if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
+            Warn("Invalid save handle ("..tostring(handle)..")!")
             return false
         end
-        local index_count = 0
         local key_count = 0
         local name_sep = name..separator
-        local index_concat = name_sep.."index"..separator
         local key_concat = name_sep.."key"..separator
+        local actual_saves = 0
         for key, value in pairs(tbl) do
+            key_count = key_count + 1
             -- Only add the key if the value was successfully saved (up to individual functions).
-            if Storage.Save(handle, name_sep..key, value) then
-                if type(key) == "number" then
-                    index_count = index_count + 1
-                    handle:SetContextNum(index_concat..index_count, key, 0)
-                else
-                    key_count = key_count + 1
-                    Storage.SaveString(handle, key_concat..key_count, key)
-                end
+            -- This might need to changed to use actual_saves instead
+            if Storage.Save(handle, name_sep..key_count, value) then
+                actual_saves = actual_saves + 1
+                Storage.Save(handle, key_concat..key_count, key)
+            else
+                Warn("Failing to save table value ("..tostring(key).."="..tostring(value)..")")
             end
         end
         handle:SetContextNum(name_sep.."key_count", key_count, 0)
-        handle:SetContextNum(name_sep.."index_count", index_count, 0)
         handle:SetContext(name_sep.."type", "table", 0)
         return true
     end
@@ -259,12 +256,20 @@ else
     ---@return boolean # If the save was successful.
     function Storage.SaveEntity(handle, name, entity)
         handle = resolveHandle(handle)
-        if not handle then
-            Warn("Invalid save handle ("..tostring(handle)..")!\n")
-            return false
-        end
-        if not IsValidEntity(entity) then
-            Warn("Trying to save entity ("..tostring(entity)..")["..name.."] that doesn't exist.")
+        -- Silently failing on nil has valid use cases.
+        -- Uncomment to force entity type as required.
+        -- if not handle then
+        --     Warn("Invalid save handle ("..tostring(handle)..")!")
+        --     return false
+        -- end
+        -- if not IsValidEntity(entity) then
+        --     Warn("Trying to save entity ("..tostring(entity)..")["..name.."] that doesn't exist.")
+        --     return false
+        -- end
+        if not entity or not IsValidEntity(entity) then
+            Storage.SaveString(handle, name..separator.."targetname", "")
+            handle:SetContext(name..separator.."unique", "", 0)
+            handle:SetContext(name..separator.."type", "entity", 0)
             return false
         end
         local ent_name = entity:GetName()
@@ -273,9 +278,9 @@ else
             ent_name = uniqueKey
             entity:SetEntityName(ent_name)
         end
-        -- setting attribute on saved entity
+        -- Setting attribute on saved entity
         entity:Attribute_SetIntValue(uniqueKey, 1)
-        -- setting contexts for saving handle
+        -- Setting contexts for saving handle
         Storage.SaveString(handle, name..separator.."targetname", ent_name)
         handle:SetContext(name..separator.."unique", uniqueKey, 0)
         handle:SetContext(name..separator.."type", "entity", 0)
@@ -333,7 +338,7 @@ else
             end
             return str
         end
-        Warn("String " .. name .. " could not be loaded!\n")
+        Warn("String " .. name .. " could not be loaded!")
         return default
     end
 
@@ -347,7 +352,7 @@ else
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
         if not value or t ~= "number" then
-            Warn("Number " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
+            Warn("Number " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")")
             return default
         end
         return value
@@ -363,7 +368,7 @@ else
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
         if not value or t ~= "boolean" then
-            Warn("Boolean " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")\n")
+            Warn("Boolean " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")")
             return default
         end
         return value == 1
@@ -378,7 +383,7 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t ~= "vector" then
-            Warn("Vector " .. name .. " could not be loaded!\n")
+            Warn("Vector " .. name .. " could not be loaded!")
             return default
         end
         local x = handle:GetContext(name .. ".x") or 0
@@ -396,7 +401,7 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t ~= "qangle" then
-            Warn("QAngle " .. name .. " could not be loaded!\n")
+            Warn("QAngle " .. name .. " could not be loaded!")
             return default
         end
         local x = handle:GetContext(name .. ".x") or 0
@@ -414,22 +419,17 @@ else
         local name_sep = name..separator
         local t = handle:GetContext(name_sep.."type")
         local key_count = handle:GetContext(name_sep.."key_count")
-        local index_count = handle:GetContext(name_sep.."index_count")
-        if t ~= "table" or (not key_count and not index_count)  then
-            Warn("Table " .. name .. " could not be loaded!\n")
+        if t ~= "table" or not key_count  then
+            Warn("Table " .. name .. " could not be loaded!")
             return default
         end
 
-        local index_concat = name_sep.."index"..separator
         local key_concat = name_sep.."key"..separator
         local tbl = {}
-        for i = 1, index_count do
-            local index = handle:GetContext(index_concat..i)
-            tbl[index] = Storage.Load(handle, name_sep..index)
-        end
         for i = 1, key_count do
-            local key = handle:LoadString(key_concat..i)
-            tbl[key] = Storage.Load(handle, name_sep..key)
+            local key = Storage.Load(handle, key_concat..i)
+            local value = Storage.Load(handle, name_sep..i)
+            tbl[key] = value
         end
         return tbl
     end
@@ -445,12 +445,12 @@ else
         local uniqueKey = handle:GetContext(name..separator.."unique")
         local ent_name = Storage.LoadString(handle, name..separator.."targetname")
         if t ~= "entity" or not ent_name then
-            Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")\n")
+            Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")")
             return default
         end
         local ents = Entities:FindAllByName(ent_name)
         if not ents then
-            Warn("No entities of '" .. name .. "' found with saved name '" .. ent_name .. "', returning default.\n")
+            Warn("No entities of '" .. name .. "' found with saved name '" .. ent_name .. "', returning default.")
             return default
         end
         for _, ent in ipairs(ents) do
@@ -459,7 +459,7 @@ else
             end
         end
         -- Return default if no entities with saved value.
-        Warn("No entities of '" .. name .. "' have saved attribute! Returning default.\n")
+        Warn("No entities of '" .. name .. "' have saved attribute! Returning default.")
         return default
     end
 
@@ -472,7 +472,7 @@ else
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if not t then
-            Warn("Value " .. name .. " could not be loaded!\n")
+            Warn("Value " .. name .. " could not be loaded!")
             return default
         end
         if t=="string" or t=="splitstring" then return Storage.LoadString(handle, name, default)
@@ -483,7 +483,7 @@ else
         elseif t=="table" then return Storage.LoadTable(handle, name, default)
         elseif t=="entity" then return Storage.LoadEntity(handle, name, default)
         else
-            Warn("Unknown type '"..t.."' for name '"..name.."'\n")
+            Warn("Unknown type '"..t.."' for name '"..name.."'")
             return default
         end
     end
