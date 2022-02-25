@@ -1,9 +1,12 @@
 --[[
-    v1.0.0
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Adds queue behaviour for tables with #queue.items being the front of the queue.
 
+    ======================================== Basic Usage ==========================================
+
+    ```lua
     -- Create a queue with 3 initial values.
     -- 3 is the front of the queue.
     local queue = Queue(1, 2, 3)
@@ -14,20 +17,32 @@
     -- Get multiple values
     local a,b = queue:Dequeue(2)
 
-    --- Prints "2   1"
+    -- Prints "2   1"
     print(a,b)
 
+    -- Queue any values
+    stack:Enqueue('a','b','c')
+
     -- To loop over the items, reference queue.items directly:
-    for key, value in ipairs(queue.items) do
-        print(key, value)
+    for index, value in ipairs(queue.items) do
+        print(index, value)
     end
 
-    --
+    -- Or use the `pairs` helper function:
+    for index, value in queue:pairs() do
+        print(index, value)
+    end
+    ```
 
-    To save a queue you should save/load the items member instead of the queue object:
+    =========================================== Notes =============================================
 
-    Storage:SaveTable("queue.items", queue.items)
-    queue.items = Storage:LoadTable("queue.items", {})
+    This class supports `util.storage` with `Storage.Save(queue)` or if encountered when saving
+    a table.
+
+    ```lua
+    Storage:Save('queue', queue)
+    queue = Storage:Load('queue')
+    ```
 ]]
 ---@class Queue
 local QueueClass =
@@ -36,6 +51,7 @@ local QueueClass =
     items = {}
 }
 QueueClass.__index = QueueClass
+Storage.RegisterType("util.Queue", QueueClass)
 
 ---Add values to the queue in the order they appear.
 ---@param ... any
@@ -55,12 +71,6 @@ function QueueClass:Dequeue(count)
         tbl[#tbl+1] = table.remove(self.items, i)
     end
     return unpack(tbl)
-end
-
----Return the number of items in the queue.
----@return integer
-function QueueClass:Length()
-    return #self.items
 end
 
 ---Peek at a number of items at the end of the queue without removing them.
@@ -121,6 +131,58 @@ end
 ---@return boolean
 function QueueClass:Contains(value)
     return vlua.find(self.items, value) ~= nil
+end
+
+---Return the number of items in the queue.
+---@return integer
+function QueueClass:Length()
+    return #self.items
+end
+
+---Get if the stack is empty.
+function QueueClass:IsEmpty()
+    return #self.items == 0
+end
+
+---Helper method for looping.
+---@return fun(table: any[], i: integer):integer, any
+---@return any[]
+---@return number i
+function QueueClass:pairs()
+    return ipairs(self.items)
+end
+
+function QueueClass:__tostring()
+    return "Queue ("..#self.items.." items)"
+end
+
+---**Static Function**
+---
+---Helper function for saving the `queue`.
+---@param handle EntityHandle # The entity to save on.
+---@param name string # The name to save as.
+---@param queue Queue # The stack to save.
+---@return boolean # If the save was successful.
+function QueueClass.__save(handle, name, queue)
+    Storage.SaveTable(handle, Storage.Join(name, "items"), queue.items)
+    Storage.SaveType(handle, name, "util.Queue")
+    return true
+end
+
+---**Static Function**
+---
+---Helper function for loading the `stack`.
+---@param handle EntityHandle # Entity to load from.
+---@param name string # Name to load.
+---@return Stack|nil
+function QueueClass.__load(handle, name)
+    local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+    if items ~= nil then
+        local _queue = Queue()
+        _queue.items = items
+        return _queue
+    end
+    return nil
 end
 
 

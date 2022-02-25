@@ -1,5 +1,5 @@
 --[[
-    v2.1.0
+    v2.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -329,8 +329,6 @@ else
         for key, value in pairs(tbl) do
             key_count = key_count + 1
             -- Only add the key if the value was successfully saved (up to individual functions).
-            print("\tsaving value", name_sep..actual_saves, "as", value, type(value))
-            print("\tsaving key", key_concat..actual_saves, "as", key, type(key))
             if  Storage.Save(handle, name_sep..actual_saves, value)
             and Storage.Save(handle, key_concat..actual_saves, key)
             then
@@ -532,7 +530,6 @@ else
         for i = 0, key_count do
             local key = Storage.Load(handle, key_concat..i)
             local value = Storage.Load(handle, name_sep..i)
-            if key == nil then print("nil here", key_concat..i, value) end
             tbl[key] = value
         end
         return tbl
@@ -589,7 +586,6 @@ else
         elseif t=="table" then return Storage.LoadTable(handle, name, default)
         elseif t=="entity" then return Storage.LoadEntity(handle, name, default)
         elseif Storage.type_to_class[t] then
-            print("Found registered type on load", t, Storage.type_to_class[t])
             local result = Storage.type_to_class[t].__load(handle, name)
             if result == nil then return default end
             return result

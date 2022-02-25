@@ -5,6 +5,9 @@
     An inventory is a table where each key has an integer value assigned to it.
     When a value hits 0 the key is removed from the table.
 
+    ======================================== Basic Usage ==========================================
+
+    ```lua
     -- Create an inventory with 2 initial keys.
     local inv = Inventory({
         gun = 1,
@@ -28,20 +31,30 @@
         print(key, value)
     end
 
-    --
+    -- Or use the `pairs` helper function:
+    for key, value in inv:pairs() do
+        print(key, value)
+    end
+    ```
 
-    To save an inventory you should save/load the items member instead of the inventory object:
+    =========================================== Notes =============================================
 
-    Storage:SaveTable("inv.items", inv.items)
-    inv.items = Storage:LoadTable("inv.items", {})
+    This class supports `util.storage` with `Storage.Save(inv)` or if encountered when saving
+    a table.
+
+    ```lua
+    Storage:Save('inv', inv)
+    inv = Storage:Load('inv')
+    ```
 ]]
 ---@class Inventory
 local InventoryClass =
 {
-    ---@type any[]
+    ---@type table<any, integer>
     items = {},
 }
 InventoryClass.__index = InventoryClass
+Storage.RegisterType("util.Inventory", InventoryClass)
 
 ---Add a number of values to a key.
 ---@param key any
@@ -128,6 +141,18 @@ function InventoryClass:Contains(key)
     return false
 end
 
+---Return the number of items in the inventory.
+---@return integer key_sum # Total number of keys in the inventory.
+---@return integer value_sum # Total number of values assigned to all keys.
+function InventoryClass:Length()
+    local key_sum,value_sum = 0,0
+    for _,value in pairs(self.items) do
+        key_sum = key_sum + 1
+        value_sum = value_sum + value
+    end
+    return key_sum,value_sum
+end
+
 ---Get if the inventory is empty.
 ---@return boolean
 function InventoryClass:IsEmpty()
@@ -135,6 +160,47 @@ function InventoryClass:IsEmpty()
         return false
     end
     return true
+end
+
+---Helper method for looping.
+---@return fun(table: any[], i: integer):integer, any
+---@return table<any,integer>
+---@return number i
+function InventoryClass:pairs()
+    return pairs(self.items)
+end
+
+function InventoryClass:__tostring()
+    return string.format("Inventory (%d keys, %d values)", self:Length())
+end
+
+---**Static Function**
+---
+---Helper function for saving the `inventory`.
+---@param handle EntityHandle # The entity to save on.
+---@param name string # The name to save as.
+---@param inventory Inventory # The inventory to save.
+---@return boolean # If the save was successful.
+function InventoryClass.__save(handle, name, inventory)
+    Storage.SaveTable(handle, Storage.Join(name, "items"), inventory.items)
+    Storage.SaveType(handle, name, "util.Inventory")
+    return true
+end
+
+---**Static Function**
+---
+---Helper function for loading the `inventory`.
+---@param handle EntityHandle # Entity to load from.
+---@param name string # Name to load.
+---@return Inventory|nil
+function InventoryClass.__load(handle, name)
+    local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+    if items ~= nil then
+        local _inventory = Inventory()
+        _inventory.items = items
+        return _inventory
+    end
+    return nil
 end
 
 

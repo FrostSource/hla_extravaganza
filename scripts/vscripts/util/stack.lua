@@ -1,5 +1,5 @@
 --[[
-    v1.0.0
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Adds stack behaviour for tables with index 1 as the top of the stack.
@@ -24,13 +24,13 @@
     stack:Push('a','b','c')
 
     -- To loop over the items, reference stack.items directly:
-    for key, value in ipairs(stack.items) do
-        print(key, value)
+    for index, value in ipairs(stack.items) do
+        print(index, value)
     end
 
     -- Or use the `pairs` helper function:
-    for key, value in stack:pairs() do
-        print(key, value)
+    for index, value in stack:pairs() do
+        print(index, value)
     end
     ```
 
@@ -40,8 +40,8 @@
     a table.
 
     ```lua
-    Storage:Save("stack", stack)
-    stack = Storage:Load("stack")
+    Storage:Save('stack', stack)
+    stack = Storage:Load('stack')
     ```
 ]]
 require "util.storage"
@@ -127,6 +127,13 @@ function StackClass:MoveToBottom(value)
     return false
 end
 
+---Get if this stack contains a value.
+---@param value any
+---@return boolean
+function StackClass:Contains(value)
+    return vlua.find(self.items, value) ~= nil
+end
+
 ---Return the number of items in the stack.
 ---@return integer
 function StackClass:Length()
@@ -138,19 +145,16 @@ function StackClass:IsEmpty()
     return #self.items == 0
 end
 
----Get if this stack contains a value.
----@param value any
----@return boolean
-function StackClass:Contains(value)
-    return vlua.find(self.items, value) ~= nil
-end
-
 ---Helper method for looping.
 ---@return fun(table: any[], i: integer):integer, any
 ---@return any[]
 ---@return number i
 function StackClass:pairs()
     return ipairs(self.items)
+end
+
+function StackClass:__tostring()
+    return "Stack ("..#self.items.." items)"
 end
 
 ---**Static Function**
@@ -161,7 +165,6 @@ end
 ---@param stack Stack # The stack to save.
 ---@return boolean # If the save was successful.
 function StackClass.__save(handle, name, stack)
-    print("Saving stack", name)
     Storage.SaveTable(handle, Storage.Join(name, "items"), stack.items)
     Storage.SaveType(handle, name, "util.Stack")
     return true
@@ -174,7 +177,6 @@ end
 ---@param name string # Name to load.
 ---@return Stack|nil
 function StackClass.__load(handle, name)
-    print("Loading stack", name)
     local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
     if items ~= nil then
         local _stack = Stack()
@@ -182,10 +184,6 @@ function StackClass.__load(handle, name)
         return _stack
     end
     return nil
-end
-
-function StackClass:__tostring()
-    return "Stack ("..#self.items.." items)"
 end
 
 
