@@ -45,6 +45,7 @@
     ```
 ]]
 require "util.storage"
+
 ---@class Stack
 local StackClass =
 {

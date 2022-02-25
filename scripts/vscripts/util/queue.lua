@@ -44,6 +44,8 @@
     queue = Storage:Load('queue')
     ```
 ]]
+require "util.storage"
+
 ---@class Queue
 local QueueClass =
 {

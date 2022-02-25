@@ -1,5 +1,5 @@
 --[[
-    v1.0.0
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     An inventory is a table where each key has an integer value assigned to it.
@@ -47,6 +47,8 @@
     inv = Storage:Load('inv')
     ```
 ]]
+require "util.storage"
+
 ---@class Inventory
 local InventoryClass =
 {
