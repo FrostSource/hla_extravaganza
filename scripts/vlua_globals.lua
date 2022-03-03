@@ -3415,10 +3415,10 @@ Quaternion = {}
 ---@field __index string
 VectorClass = {}
 ---Creates a new vector with the specified Cartesian coordinates.
-----@param x float
-----@param y float
-----@param z float
-----@return Vector
+---@param x float
+---@param y float
+---@param z float
+---@return Vector
 function Vector(x, y, z) end
 ---Overloaded +. Adds vectors together.
 ---@param vector Vector
