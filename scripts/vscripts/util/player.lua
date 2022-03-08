@@ -1,5 +1,5 @@
 --[[
-    v1.1.1
+    v1.1.2
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -62,7 +62,7 @@ CBasePlayer.HMDAvatar = nil
 CBasePlayer.HMDAnchor = nil
 ---**1 = Left hand, 2 = Right hand.**
 ---@type CPropVRHand[]
-CBasePlayer.Hand = {}
+CBasePlayer.Hands = {}
 ---**Player's left hand.**
 ---@type CPropVRHand
 CBasePlayer.LeftHand = nil
@@ -207,7 +207,7 @@ function CBasePlayer:GrabByHandle(handle, hand)
         -- If no hand provided, find nearest
         if hand == nil then
             local pos = handle:GetOrigin()
-            if VectorDistanceSq(self.Hand[1]:GetOrigin(),pos) < VectorDistanceSq(self.Hand[2]:GetOrigin(),pos) then
+            if VectorDistanceSq(self.Hands[1]:GetOrigin(),pos) < VectorDistanceSq(self.Hands[2]:GetOrigin(),pos) then
                 hand = "0"
             else
                 hand = "1"
@@ -330,7 +330,7 @@ end
 ---@param hide_hand boolean # If the hand should turn invisible after merging.
 function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
     if type(hand) == "number" then
-        hand = self.Hand[hand+1]
+        hand = self.Hands[hand+1]
     end
     hand:MergeProp(prop, hide_hand)
 end
@@ -353,7 +353,7 @@ end
 ---Player has item holder equipped.
 ---@return boolean
 function CBasePlayer:HasItemHolder()
-    for _, hand in ipairs(self.Hand) do
+    for _, hand in ipairs(self.Hands) do
         if hand:GetFirstChildWithClassname("hlvr_hand_item_holder") then
             return true
         end
@@ -411,17 +411,17 @@ local registered_event_callbacks = {
 }
 
 ---Register a callback function with for a player event.
----@param event string|"\"player_activate\""|"\"vr_player_ready\""|"\"item_pickup\""|"\"item_released\""|"\"primary_hand_changed\""|"\"player_drop_ammo_in_backpack\""|"\"player_retrieved_backpack_clip\""|"\"player_stored_item_in_itemholder\""|"\"player_removed_item_from_itemholder\""|"\"weapon_switch\""
+---@param event "\"player_activate\""|"\"vr_player_ready\""|"\"item_pickup\""|"\"item_released\""|"\"primary_hand_changed\""|"\"player_drop_ammo_in_backpack\""|"\"player_retrieved_backpack_clip\""|"\"player_stored_item_in_itemholder\""|"\"player_removed_item_from_itemholder\""|"\"weapon_switch\""
 ---@param callback function
-function RegisterPlayerEventCallback(event, callback)
-    print("Registering player callback", event, callback)
-    registered_event_callbacks[event][callback] = true
+---@param context? table # Optional: The context to pass to the function as `self`. If omitted the context will not passed to the callback.
+function RegisterPlayerEventCallback(event, callback, context)
+    print("Registering callback", event, callback)
+    registered_event_callbacks[event][callback] = context or true
 end
 
----Unregister a callback with a name.
+---Unregisters a callback with a name.
 ---@param callback function
 function UnregisterPlayerEventCallback(callback)
-    print("Unregistering player callback", callback)
     for _, event in pairs(registered_event_callbacks) do
         event[callback] = nil
     end
@@ -506,14 +506,14 @@ local function listenEventPlayerActivate(_, data)
     Player:SetContextThink("global_player_setup_delay", function()
         Player.HMDAvatar = Player:GetHMDAvatar()
         if Player.HMDAvatar then
-            Player.Hand[1] = Player.HMDAvatar:GetVRHand(0)
-            Player.Hand[2] = Player.HMDAvatar:GetVRHand(1)
-            Player.Hand[1].Literal = Player.Hand[1]:GetLiteralHandType()
-            Player.Hand[2].Literal = Player.Hand[2]:GetLiteralHandType()
-            Player.Hand[1]:SetEntityName("player_hand_left")
-            Player.Hand[1]:SetEntityName("player_hand_right")
-            Player.LeftHand = Player.Hand[1]
-            Player.RightHand = Player.Hand[2]
+            Player.Hands[1] = Player.HMDAvatar:GetVRHand(0)
+            Player.Hands[2] = Player.HMDAvatar:GetVRHand(1)
+            Player.Hands[1].Literal = Player.Hands[1]:GetLiteralHandType()
+            Player.Hands[2].Literal = Player.Hands[2]:GetLiteralHandType()
+            Player.Hands[1]:SetEntityName("player_hand_left")
+            Player.Hands[1]:SetEntityName("player_hand_right")
+            Player.LeftHand = Player.Hands[1]
+            Player.RightHand = Player.Hands[2]
             Player.IsLeftHanded = Convars:GetBool("hlvr_left_hand_primary")
             if Player.IsLeftHanded then
                 Player.PrimaryHand = Player.LeftHand
@@ -524,14 +524,27 @@ local function listenEventPlayerActivate(_, data)
             end
             Player.HMDAnchor = Player:GetHMDAnchor()
             -- Registered callback
-            for callback, _ in pairs(registered_event_callbacks["vr_player_ready"]) do
-                callback({player = Player, hmd_avatar = Player.HMDAvatar, game_loaded = player_previously_activated})
+            data.player = Player
+            data.game_loaded = player_previously_activated
+            data.hmd_avatar = Player.HMDAvatar
+            for callback, context in pairs(registered_event_callbacks["vr_player_ready"]) do
+                if context ~= false then
+                    callback(context, data)
+                else
+                    callback(data)
+                end
             end
         end
     end, 0)
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        callback(vlua.tableadd(data, {player = Player, game_loaded = player_previously_activated}))
+    data.player = Player
+    data.game_loaded = player_previously_activated
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
     StopListeningToGameEvent(listenEventPlayerActivateID)
 end
@@ -545,8 +558,8 @@ local function listenEventItemPickup(_, data)
     if data.vr_tip_attachment == nil then return end
     -- 1=primary,2=secondary converted to 0=left,1=right
     local handId = util.GetHandIdFromTip(data.vr_tip_attachment)
-    local hand = Player.Hand[handId + 1]
-    local hand_opposite = Player.Hand[(1 - handId) + 1]
+    local hand = Player.Hands[handId + 1]
+    local hand_opposite = Player.Hands[(1 - handId) + 1]
     local ent_held = util.EstimateNearestEntity(data.item_name, data.item, hand:GetOrigin())
 
     hand.ItemHeld = ent_held
@@ -561,12 +574,16 @@ local function listenEventItemPickup(_, data)
         hand_opposite.ItemHeld = nil
     end
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        data.item = ent_held
-        data.item_class = data.item
-        data.hand = hand
-        data.hand_opposite = hand_opposite
-        callback(data)
+    data.item = ent_held
+    data.item_class = data.item
+    data.hand = hand
+    data.hand_opposite = hand_opposite
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("item_pickup", listenEventItemPickup, _G)
@@ -578,8 +595,8 @@ local function listenEventItemReleased(_, data)
     if data.vr_tip_attachment == nil then return end
     -- 1=primary,2=secondary converted to 0=left,1=right
     local handId = util.GetHandIdFromTip(data.vr_tip_attachment)
-    local hand = Player.Hand[handId + 1]
-    local hand_opposite = Player.Hand[(1 - handId) + 1]
+    local hand = Player.Hands[handId + 1]
+    local hand_opposite = Player.Hands[(1 - handId) + 1]
     -- Hack to get the number of shells dropped
     if data.item == "item_hlvr_clip_shotgun_shellgroup" then
         shellgroup_cache = #hand.ItemHeld:GetChildren()
@@ -590,12 +607,16 @@ local function listenEventItemReleased(_, data)
     hand.LastClassDropped = data.item
     hand.ItemHeld = nil
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        data.item_class = data.item
-        data.item = Player.LastItemDropped
-        data.hand = hand
-        data.hand_opposite = hand_opposite
-        callback(data)
+    data.item_class = data.item
+    data.item = Player.LastItemDropped
+    data.hand = hand
+    data.hand_opposite = hand_opposite
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("item_released", listenEventItemReleased, _G)
@@ -610,8 +631,12 @@ local function listenEventPrimaryHandChanged(_, data)
         Player.SecondaryHand = Player.LeftHand
     end
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        callback(vlua.tableadd(data, {}))
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("primary_hand_changed", listenEventPrimaryHandChanged, _G)
@@ -677,8 +702,14 @@ local function listenEventPlayerDropAmmoInBackpack(_, data)
     end
     savePlayerData()
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+    data.ammotype = ammotype
+    data.ammo_amount = ammo_amount
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("player_drop_ammo_in_backpack", listenEventPlayerDropAmmoInBackpack, _G)
@@ -708,8 +739,14 @@ local function listenEventPlayerRetrievedBackpackClip(_, data)
                 Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - ammo_amount
             end
             -- Registered callback
-            for _, callback in pairs(registered_event_callbacks[data.game_event_name]) do
-                callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+            data.ammotype = ammotype
+            data.ammo_amount = ammo_amount
+            for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+                if context ~= false then
+                    callback(context, data)
+                else
+                    callback(data)
+                end
             end
         end, 0)
     elseif Player.CurrentlyEquipped == PLAYER_WEAPON_GENERIC_PISTOL then
@@ -717,10 +754,16 @@ local function listenEventPlayerRetrievedBackpackClip(_, data)
         ammo_amount = 1
     end
     savePlayerData()
+    -- Registered callback
     if do_callback then
-        -- Registered callback
-        for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-            callback(vlua.tableadd(data, {ammotype = ammotype, ammo_amount = ammo_amount}))
+        data.ammotype = ammotype
+        data.ammo_amount = ammo_amount
+        for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+            if context ~= false then
+                callback(context, data)
+            else
+                callback(data)
+            end
         end
     end
 end
@@ -740,8 +783,12 @@ local function listenEventPlayerStoredItemInItemholder(_, data)
     end
     savePlayerData()
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        callback(vlua.tableadd(data, {}))
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("player_stored_item_in_itemholder", listenEventPlayerStoredItemInItemholder, _G)
@@ -760,8 +807,12 @@ local function listenEventPlayerRemovedItemFromItemholder(_, data)
     end
     savePlayerData()
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        callback(vlua.tableadd(data, {}))
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("player_removed_item_from_itemholder", listenEventPlayerRemovedItemFromItemholder, _G)
@@ -789,8 +840,12 @@ local function listenEventWeaponSwitch(_, data)
     end
 
     -- Registered callback
-    for callback, _ in pairs(registered_event_callbacks[data.game_event_name]) do
-        callback(vlua.tableadd(data, {}))
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= false then
+            callback(context, data)
+        else
+            callback(data)
+        end
     end
 end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, _G)
