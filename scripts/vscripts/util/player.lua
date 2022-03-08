@@ -528,7 +528,7 @@ local function listenEventPlayerActivate(_, data)
             data.game_loaded = player_previously_activated
             data.hmd_avatar = Player.HMDAvatar
             for callback, context in pairs(registered_event_callbacks["vr_player_ready"]) do
-                if context ~= false then
+                if context ~= true then
                     callback(context, data)
                 else
                     callback(data)
@@ -540,7 +540,7 @@ local function listenEventPlayerActivate(_, data)
     data.player = Player
     data.game_loaded = player_previously_activated
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -579,7 +579,7 @@ local function listenEventItemPickup(_, data)
     data.hand = hand
     data.hand_opposite = hand_opposite
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -612,7 +612,7 @@ local function listenEventItemReleased(_, data)
     data.hand = hand
     data.hand_opposite = hand_opposite
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -632,7 +632,7 @@ local function listenEventPrimaryHandChanged(_, data)
     end
     -- Registered callback
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -705,7 +705,7 @@ local function listenEventPlayerDropAmmoInBackpack(_, data)
     data.ammotype = ammotype
     data.ammo_amount = ammo_amount
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -742,7 +742,7 @@ local function listenEventPlayerRetrievedBackpackClip(_, data)
             data.ammotype = ammotype
             data.ammo_amount = ammo_amount
             for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-                if context ~= false then
+                if context ~= true then
                     callback(context, data)
                 else
                     callback(data)
@@ -759,7 +759,7 @@ local function listenEventPlayerRetrievedBackpackClip(_, data)
         data.ammotype = ammotype
         data.ammo_amount = ammo_amount
         for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-            if context ~= false then
+            if context ~= true then
                 callback(context, data)
             else
                 callback(data)
@@ -784,7 +784,7 @@ local function listenEventPlayerStoredItemInItemholder(_, data)
     savePlayerData()
     -- Registered callback
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -808,7 +808,7 @@ local function listenEventPlayerRemovedItemFromItemholder(_, data)
     savePlayerData()
     -- Registered callback
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
@@ -841,7 +841,7 @@ local function listenEventWeaponSwitch(_, data)
 
     -- Registered callback
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= false then
+        if context ~= true then
             callback(context, data)
         else
             callback(data)
