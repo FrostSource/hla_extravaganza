@@ -1,7 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 1.2.2
+    Version 1.2.3
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -394,6 +394,44 @@ thisEntity = nil
 function ItemPickupCallback(_, data)
 end
 ]]
+
+---Global criteria table for CBaseEntity:GatherCriteria.
+---Not all fields will exist for all entities.
+---@class CriteriaTable
+---@field playerhealth number # Health of the player.
+---@field map string # Name of the map file.
+---@field in_combat "0"|"1" # If the NPC is in combat.
+---@field current_crafting_currency number # Amount of resin player has.
+---@field playeractivity string # Unknown if this is applicable in Alyx, returns `"ACT_RESET"`.
+---@field skill.cfg number # Unsure if this changes. Appears to always be `1`.
+---@field playerhealthfrac number # The health fraction (health/maxhealth).
+---@field episodic number # Always `1`.
+---@field playerweapon string|'"none"' # Name of the weapon used in non-vr.
+---@field gordon_precriminal number # Always `0`.
+---@field health number # Health of the entity, can be negative.
+---@field playerspeed number # In VR this appears to be `0` while moving/teleporting, and quickly climbs to ~continous_speed*2 while stationary.
+---@field primaryhand_active_attachment '"hand_use_controller"'|'"hlvr_weapon_energygun"'|'"hlvr_weapon_shotgun"'|'"hlvr_weapon_rapidfire"'|'"hlvr_multitool"' # Classname of the weapon in the player's hand.
+---@field time_since_combat number # Seconds since last in combat.
+---@field name string # Same as CEntityInstance:GetName().
+---@field healthfrac number # The health fraction (health/maxhealth).
+---@field classname string # Same as CBaseEntity:GetClassname().
+---@field randomnum integer # Random integer [0-100].
+---@field npcstate '"[NPCState::None]"'|'"[NPCState::Idle]"'|'"[NPCState::Alert]"'|'"[NPCState::Combat]"'' # Current NPC state.
+---@field speed number # Current speed of the entity.
+---@field num_squad_members number # Number of living NPCs in the squad.
+---@field activity string # Unknown if this changes. Returns `"ACT_IDLE"`.
+---@field weapon string # Name of the weapon the NPC is holding.
+---@field lost_squad_members number # Squad members which have been killed while this entity is alive.
+---@field distancetoplayer number # Distance to player in inches (NPC head to player head?).
+---@field has_officer "0"|"1" # If this squad has at least one officer.
+---@field timesincecombat number|"999999"|"-1" # Seconds since the NPC was last in combat. 999999=never, -1=currently in combat.
+---@field distancetoenemy number|"16384" # Distance to the current enemy that can be seen. 16384 if can't be seen.
+---@field combine_class '"default"'|'"officer"'|'"charger"'|'"suppressor"'' # Combine class name (`default` == grunt).
+---@field seenbyplayer "0"|"1" #
+---@field seeplayer "0"|"1" #
+---@field timesinceseenplayer number|"-1" # Seconds since the NPC last saw the player. This is never 0 while the player is in view. `-1` if never seen.
+---@field enemy string|"nil" # Classname of the current enemy, nil if no enemy.
+
 
 --#endregion
 
@@ -1119,7 +1157,7 @@ function IsInToolsMode() end
 ---Register as a listener for a game event from script.
 ---@param eventname GAME_EVENTS_ALL
 ---@param callback function
----@param context table # Unknown what this is for.
+---@param context table # Context to pass as the first parameter of `callback`.
 ---@return integer # ID used to cancel with StopListeningToGameEvent().
 function ListenToGameEvent(eventname, callback, context) end
 ---Creates a table from the specified keyvalues text file.
@@ -1389,8 +1427,8 @@ function CBaseEntity:FirstMoveChild() end
 ---@param entity EntityHandle|nil
 ---@param boneMerge boolean
 function CBaseEntity:FollowEntity(entity, boneMerge) end
----Returns a table containing the criteria that would be used for response queries on this entity. This is the same as the table that is passed to response rule script function callbacks.
----@param result EntityHandle
+---Gathers into a table, the criteria that would be used for response queries on this entity. This is the same as the table that is passed to response rule script function callbacks.
+---@param result CriteriaTable # The table to gather criteria into.
 function CBaseEntity:GatherCriteria(result) end
 ---Returns the world space origin of the entity.
 ---@return Vector
