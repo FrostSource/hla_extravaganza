@@ -37,6 +37,7 @@ by FrostSource
 || OnPlayerNear | Fires when the player is near the station before it has been hacked and opened.
 || OnHackSuccess | Fires when the hack has been successfully completed.
 || OnHackFailed | Fires when the hack has failed.
+| **Animation Outputs**
 || OnConsoleStartedOpening | The main console has started its opening animation.
 || OnConsoleScreenOpened | The interactive screen has finished opening.
 || OnCradleStartedOpening | Weapon cradle opening animation started.
