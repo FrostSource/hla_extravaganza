@@ -1,3 +1,8 @@
+/*
+	Snippets for quick coding using the built-in VLua functions.
+
+	This file is exactly the same as 'scripts/.vscode/vlua_snippets.code-snippets' minus this comment line.
+*/
 {
 	/*
 		Hooks.
@@ -150,4 +155,14 @@
 		],
 		"description": "Create a trace table snippet for the TraceCollideable function."
 	},
+
+	/*
+	*/
+
+	"Include Script Private Scope":{
+		"scope": "lua",
+		"prefix": "include script",
+		"body": "DoIncludeScript(\"$1\", thisEntity:GetPrivateScriptScope())$0",
+		"description": "Include a script into current entity's private script scope."
+	}
 }
