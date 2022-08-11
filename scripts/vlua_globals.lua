@@ -1,7 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 1.2.3
+    Version 2.0.0
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -58,8 +58,8 @@ thisEntity = nil
 ---@field Seconds number
 
 ---@alias SHAKE_COMMAND
----| "0" # SHAKE_START
----| "1" # SHAKE_STOP
+---| 0 # SHAKE_START
+---| 1 # SHAKE_STOP
 
 ---@class TypeIOInvoke
 ---@field activator EntityHandle
@@ -369,27 +369,249 @@ thisEntity = nil
 ---| "\"clientside_lesson_closed\"" #
 ---| "\"dynamic_shadow_light_changed\"" #
 
+---@alias GAME_EVENTS_ALL GAME_EVENTS_HLVR | GAME_EVENTS_CORE
+
 --#endregion
 
 --#region Game event tables
 
----@alias GAME_EVENTS_ALL GAME_EVENTS_HLVR | GAME_EVENTS_CORE
+---@class GAME_EVENT_BASE
+---@field game_event_name string
+---@field game_event_listener integer
+---@field splitscreenplayer integer
 
--- Consider adding table types to match each event, e.g.
----@class GAME_EVENT_ITEM_PICKUP
----@field item string # Item classname.
----@field item_name string # Item targetname.
----@field wasparentedto string # Unknown if class or targetname.
----@field vr_tip_attachment "1"|"2" # Hand that grabbed, 1 = left, 2 = right (reversed if left handed).
----@field otherhand_vr_tip_attachment "1"|"2" # Other hand that grabbed.
----@field controller_type number # Unknown
+---@class GAME_EVENT_ITEM_PICKUP : GAME_EVENT_BASE
+    ---@field item string # Item classname.
+    ---@field item_name string # Item targetname.
+    ---@field wasparentedto string # Unknown if class or targetname.
+    ---@field vr_tip_attachment 1|2 # Hand that grabbed, 1 = left, 2 = right (reversed if left handed).
+    ---@field otherhand_vr_tip_attachment 1|2 # Other hand that grabbed.
+    ---@field controller_type number # Unknown
+---@class GAME_EVENT_ITEM_RELEASED : GAME_EVENT_BASE
+    ---@field item string # Item classname.
+    ---@field item_name string # Item targetname.
+    ---@field vr_tip_attachment 1|2 # Hand that grabbed, 1 = left, 2 = right (reversed if left handed).
+---@class GAME_EVENT_ITEM_ATTACHMENT : GAME_EVENT_BASE
+    ---@field item string
+---@class GAME_EVENT_WEAPON_SWITCH : GAME_EVENT_BASE
+    ---@field item "hand_use_controller"|"hlvr_weapon_energygun"|"hlvr_weapon_rapidfire"|"hlvr_weapon_shotgun"|"hlvr_multitool"|"hlvr_weapon_generic_pistol"
+---@class GAME_EVENT_GRABBITY_GLOVE_PULL : GAME_EVENT_BASE
+    ---@field item string
+    ---@field item_name string
+    ---@field entindex integer
+    ---@field hand_is_primary boolean
+    ---@field vr_tip_attachment integer
+    ---@field wasparentedto string
+---@class GAME_EVENT_GRABBITY_GLOVE_CATCH : GAME_EVENT_BASE
+    ---@field entindex integer
+    ---@field item string
+    ---@field hand_is_primary boolean
+    ---@field vr_tip_attachment integer
+---@class GAME_EVENT_GRABBITY_HIGHLIGHT_START : GAME_EVENT_BASE
+    ---@field entindex integer
+    ---@field hand_is_primary boolean
+    ---@field vr_tip_attachment integer
+---@class GAME_EVENT_GRABBITY_HIGHLIGHT_STOP : GAME_EVENT_GRABBITY_HIGHLIGHT_START, GAME_EVENT_BASE
+---@class GAME_EVENT_GRABBITY_LOCKED_ON_START : GAME_EVENT_GRABBITY_HIGHLIGHT_START, GAME_EVENT_BASE
+---@class GAME_EVENT_GRABBITY_LOCKED_ON_STOP : GAME_EVENT_GRABBITY_HIGHLIGHT_START, GAME_EVENT_BASE
+    ---@field highlight_active boolean
+---@class GAME_EVENT_PLAYER_GESTURED : GAME_EVENT_BASE
+    ---@field item string
+---@class GAME_EVENT_PLAYER_SHOOT_WEAPON : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_TELEPORT_START : GAME_EVENT_BASE
+    ---@field positionX number
+    ---@field positionY number
+    ---@field positionZ number
+    ---@field map_name string
+---@class GAME_EVENT_PLAYER_TELEPORT_FINISH : GAME_EVENT_PLAYER_TELEPORT_START, GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PICKED_UP_WEAPON_OFF_HAND : GAME_EVENT_BASE
+    ---@field picked_up integer
+---@class GAME_EVENT_PLAYER_PICKED_UP_WEAPON_OFF_HAND_CRAFTING : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_EJECT_CLIP
+    ---@field holding_ammo integer
+---@class GAME_EVENT_PLAYER_ARMED_GRENADE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_HEALTH_PEN_PREPARE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_HEALTH_PEN_RETRACT : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_HEALTH_PEN_USED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_EMPTY_CLIP : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_CLIP_INSERTED : GAME_EVENT_BASE
+    ---@field bullet_count integer
+---@class GAME_EVENT_PLAYER_PISTOL_EMPTY_CHAMBER : GAME_EVENT_PLAYER_PISTOL_CLIP_INSERTED, GAME_EVENT_BASE
+    ---@field controller_type integer
+---@class GAME_EVENT_PLAYER_PISTOL_CHAMBERED_ROUND : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_SLIDE_LOCK : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_BOUGHT_LASERSIGHT : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_TOGGLE_LASERSIGHT : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_BOUGHT_BURSTFIRE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_TOGGLE_BURSTFIRE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_PICKEDUP_CHARGED_CLIP : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_ARMED_CHARGED_CLIP : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PISTOL_CLIP_CHARGE_ENDED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_DROP_AMMO_IN_BACKPACK : GAME_EVENT_BASE
+    ---@field ammotype "Pistol"|"SMG1"|"Buckshot"|"AlyxGun"
+    ---@field ammoType "Pistol"|"SMG1"|"Buckshot"|"AlyxGun" # Sometimes for some reason the key is `ammoType` (capital T), seems to happen when shotgun shell is taken from backpack and put back.
+---@class GAME_EVENT_PLAYER_DROP_RESIN_IN_BACKPACK : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_USING_HEALTHSTATION : GAME_EVENT_BASE
+---@class GAME_EVENT_HEALTH_STATION_OPEN : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_PLAYER_LOOKING_AT_WRISTHUD : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_SHOTGUN_SHELL_LOADED : GAME_EVENT_BASE
+    ---@field shellcount integer
+    ---@field hint_target integer # Entity ID that the hint should display at.
+---@class GAME_EVENT_PLAYER_SHOTGUN_STATE_CHANGED : GAME_EVENT_BASE
+    ---@field shotgun_state integer
+    ---@field ammo_count integer
+    ---@field hint_target integer # Entity ID that the hint should display at.
+---@class GAME_EVENT_PLAYER_SHOTGUN_UPGRADE_GRENADE_LAUNCHER_STATE : GAME_EVENT_BASE
+    ---@field state integer
+    ---@field hint_target integer # Entity ID that the hint should display at.
+---@class GAME_EVENT_PLAYER_SHOTGUN_AUTOLOADER_STATE : GAME_EVENT_BASE
+    ---@field state integer
+    ---@field hint_target integer # Entity ID that the hint should display at.
+---@class GAME_EVENT_PLAYER_SHOTGUN_AUTOLOADER_SHELLS_ADDED : GAME_EVENT_BASE
+    ---@field shellcount integer
+    ---@field hint_target integer # Entity ID that the hint should display at.
+---@class GAME_EVENT_PLAYER_SHOTGUN_UPGRADE_QUICKFIRE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_SHOTGUN_IS_READY : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_SHOTGUN_OPEN : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_SHOTGUN_LOADED_SHELLS : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_SHOTGUN_UPGRADE_GRENADE_LONG : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_CAPSULE_CHAMBER_EMPTY : GAME_EVENT_BASE
+    ---@field hint_target integer
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_CYCLED_CAPSULE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_MAGAZINE_EMPTY : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_OPENED_CASING : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_CLOSED_CASING : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_INSERTED_CAPSULE_IN_CHAMBER : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_INSERTED_CAPSULE_IN_MAGAZINE : GAME_EVENT_BASE
+    ---@field num_capsules_in_magazine integer
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_SELECTOR_CAN_USE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_SELECTOR_USED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_CAN_CHARGE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_CAN_NOT_CHARGE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_FULLY_CHARGED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_NOT_FULLY_CHARGED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_UPGRADE_FIRED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_ENERGY_BALL_CAN_CHARGE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_ENERGY_BALL_FULLY_CHARGED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_ENERGY_BALL_NOT_FULLY_CHARGED : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_ENERGY_BALL_CAN_PICK_UP : GAME_EVENT_BASE
+    ---@field hint_target integer
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_ENERGY_BALL_PICKED_UP : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_STUN_GRENADE_READY : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_STUN_GRENADE_NOT_READY : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_STUN_GRENADE_PICKED_UP : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_EXPLODE_BUTTON_READY : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_EXPLODE_BUTTON_NOT_READY : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RAPIDFIRE_EXPLODE_BUTTON_PRESSED : GAME_EVENT_BASE
+---@class GAME_EVENT_GAME_SAVED : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_PLAYER_ATTEMPTED_INVALID_STORAGE : GAME_EVENT_BASE
+    ---@field vr_tip_attachment integer
+---@class GAME_EVENT_PLAYER_ATTEMPTED_INVALID_PISTOL_CLIP_STORAGE : GAME_EVENT_BASE
+    ---@field vr_tip_attachment integer
+---@class GAME_EVENT_OPENED_WEAPON_SWITCH : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_STARTED_2H_LEVITATE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_STORED_ITEM_IN_ITEMHOLDER : GAME_EVENT_BASE
+    ---@field item string
+    ---@field item_name string
+---@class GAME_EVENT_PLAYER_REMOVED_ITEM_FROM_ITEMHOLDER : GAME_EVENT_BASE
+    ---@field item string
+    ---@field vr_tip_attachment integer
+---@class GAME_EVENT_PLAYER_PICKED_UP_FLASHLIGHT : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PICKED_UP_FLASHLIGHT_SINGLE_CONTROLLER : GAME_EVENT_BASE
+    ---@field entindex integer
+---@class GAME_EVENT_PLAYER_ATTACHED_FLASHLIGHT : GAME_EVENT_BASE
+---@class GAME_EVENT_TWO_HAND_PISTOL_GRAB_START : GAME_EVENT_BASE
+---@class GAME_EVENT_TWO_HAND_PISTOL_GRAB_END : GAME_EVENT_BASE
+---@class GAME_EVENT_TWO_HAND_RAPIDFIRE_GRAB_START : GAME_EVENT_BASE
+---@class GAME_EVENT_TWO_HAND_RAPIDFIRE_GRAB_END : GAME_EVENT_BASE
+---@class GAME_EVENT_TWO_HAND_SHOTGUN_GRAB_START : GAME_EVENT_BASE
+---@class GAME_EVENT_TWO_HAND_SHOTGUN_GRAB_END : GAME_EVENT_BASE
+---@class GAME_EVENT_HEALTH_PEN_TEACH_STORAGE : GAME_EVENT_BASE
+    ---@field vr_tip_attachment integer
+    ---@field hint_target integer # Entity ID that the hint should display at for single controller mode.
+---@class GAME_EVENT_HEALTH_VIAL_TEACH_STORAGE : GAME_EVENT_BASE
+    ---@field vr_tip_attachment integer
+    ---@field hint_target integer # Entity ID that the hint should display at for single controller mode.
+---@class GAME_EVENT_PLAYER_OPENED_GAME_MENU : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_CLOSED_GAME_MENU : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_PICKEDUP_STORABLE_CLIP : GAME_EVENT_BASE
+    ---@field vr_tip_attachment integer
+    ---@field otherhand_vr_tip_attachment integer
+---@class GAME_EVENT_PLAYER_PICKEDUP_INSERTABLE_CLIP : GAME_EVENT_BASE
+    ---@field vr_tip_attachment integer
+    ---@field otherhand_vr_tip_attachment integer
+---@class GAME_EVENT_PLAYER_COVERED_MOUTH : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_UPGRADE_WEAPON : GAME_EVENT_BASE
+    ---@field num_upgrades integer
+---@class GAME_EVENT_SOLDIER_KILLED_BY_GASTANK_EXPLOSION : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_CHARGER_KILLED_WHILE_SHIELD_UP : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_STEAL_XEN_GRENADE : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_TRIPMINE_HACK_STARTED : GAME_EVENT_BASE
+---@class GAME_EVENT_TRIPMINE_HACKED : GAME_EVENT_BASE
+---@class GAME_EVENT_PRIMARY_HAND_CHANGED : GAME_EVENT_BASE
+    ---@field is_primary_left boolean
+---@class GAME_EVENT_CLOSE_TO_BLINDZOMBIE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_GRABBED_BY_BARNACLE : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_RELEASED_BY_BARNACLE : GAME_EVENT_BASE
+---@class GAME_EVENT_SINGLE_CONTROLLER_MODE_CHANGED : GAME_EVENT_BASE
+    ---@field is_single_controller_mode boolean
+    ---@field is_primary_left boolean
+---@class GAME_EVENT_MOVEMENT_HAND_CHANGED : GAME_EVENT_BASE
+    ---@field movement_is_primary_hand boolean
+---@class GAME_EVENT_NPC_RAGDOLL_CREATED : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+    ---@field npc_entindex integer
+    ---@field ragdoll_entindex integer
+---@class GAME_EVENT_FRIENDLY_NPC_SPAWNED : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+    ---@field npc_entindex integer
+    ---@field npc_is_friendly boolean
+---@class GAME_EVENT_COMBINE_TANK_MOVED_BY_PLAYER : GAME_EVENT_BASE
+    ---@field entindex integer
+---@class GAME_EVENT_CHANGE_LEVEL_ACTIVATED : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+    ---@field map_name string
+    ---@field landmark_name string
+    ---@field landmark_height number
+    ---@field landmark_yaw number
+---@class GAME_EVENT_SAVE_GAME_LOADED : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+    ---@field sub_directory string
+---@class GAME_EVENT_PLAYER_QUICK_TURNED : GAME_EVENT_BASE
+    ---@field map_name string
+---@class GAME_EVENT_GAME_OPTION_CHANGED : GAME_EVENT_BASE
+    ---@field game_option_name string
+    ---@field game_option_value string
+    ---@field map_name string
+---@class GAME_EVENT_BARNACLE_GRABBED_ZOMBIE : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_BARNACLE_GRABBED_GRENADE : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_BARNACLE_KILLED_BY_GRENADE : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_ZOMBIE_KILLED_BY_GRENADE : GAME_EVENT_BASE -- doesn't have userid (if adding it)
+---@class GAME_EVENT_PLAYER_CONTINUOUS_JUMP_FINISH : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_CONTINUOUS_MANTLE_FINISH : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_CROUCH_TOGGLE_FINISH : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_STAND_TOGGLE_FINISH : GAME_EVENT_BASE
+---@class GAME_EVENT_PLAYER_GRABBED_LADDER : GAME_EVENT_BASE
+---@class GAME_EVENT_COMMENTARY_STARTED : GAME_EVENT_BASE
+    ---@field title string
+    ---@field speaker string
+    ---@field nodeid integer
+    ---@field nodeidmax integer
+    ---@field start_time number
+    ---@field end_time number
+    ---@field transitioned integer
+---@class GAME_EVENT_COMMENTARY_STOPPED : GAME_EVENT_BASE
+    ---@field nodeid integer
+---@class GAME_EVENT_VR_CONTROLLER_HINT_CREATE : GAME_EVENT_BASE
+    ---@field hint_name string # What to name the hint. Referenced against instructor for the proper lesson.
+    ---@field hint_dominant_hand boolean # True for dominant hand, false for off hand.
 
---[[ Example of using the event table class:
----Callback for an item_pickup game event.
----@param _ unknown
----@param data GAME_EVENT_ITEM_PICKUP # Table containing event related data.
-function ItemPickupCallback(_, data)
-end
+
+
+--[[
+    Example of using the event table class:
+
+    ---Callback for an item_pickup game event.
+    ---@param data GAME_EVENT_ITEM_PICKUP # Table containing event related data.
+    function ItemPickupCallback(data)
+    end
 ]]
 
 ---Global criteria table for CBaseEntity:GatherCriteria.
@@ -397,37 +619,37 @@ end
 ---@class CriteriaTable
 ---@field playerhealth number # Health of the player.
 ---@field map string # Name of the map file.
----@field in_combat "0"|"1" # If the NPC is in combat.
+---@field in_combat 0|1 # If the NPC is in combat.
 ---@field current_crafting_currency number # Amount of resin player has.
 ---@field playeractivity string # Unknown if this is applicable in Alyx, returns `"ACT_RESET"`.
 ---@field skill.cfg number # Unsure if this changes. Appears to always be `1`.
 ---@field playerhealthfrac number # The health fraction (health/maxhealth).
 ---@field episodic number # Always `1`.
----@field playerweapon string|'"none"' # Name of the weapon used in non-vr.
+---@field playerweapon string|"none" # Name of the weapon used in non-vr.
 ---@field gordon_precriminal number # Always `0`.
 ---@field health number # Health of the entity, can be negative.
 ---@field playerspeed number # In VR this appears to be `0` while moving/teleporting, and quickly climbs to ~continous_speed*2 while stationary.
----@field primaryhand_active_attachment '"hand_use_controller"'|'"hlvr_weapon_energygun"'|'"hlvr_weapon_shotgun"'|'"hlvr_weapon_rapidfire"'|'"hlvr_multitool"' # Classname of the weapon in the player's hand.
+---@field primaryhand_active_attachment "hand_use_controller"|"hlvr_weapon_energygun"|"hlvr_weapon_shotgun"|"hlvr_weapon_rapidfire"|"hlvr_multitool" # Classname of the weapon in the player's hand.
 ---@field time_since_combat number # Seconds since last in combat.
 ---@field name string # Same as CEntityInstance:GetName().
 ---@field healthfrac number # The health fraction (health/maxhealth).
 ---@field classname string # Same as CBaseEntity:GetClassname().
 ---@field randomnum integer # Random integer [0-100].
----@field npcstate '"[NPCState::None]"'|'"[NPCState::Idle]"'|'"[NPCState::Alert]"'|'"[NPCState::Combat]"'' # Current NPC state.
+---@field npcstate "[NPCState::None]"|"[NPCState::Idle]"|"[NPCState::Alert]"|"[NPCState::Combat]" # Current NPC state.
 ---@field speed number # Current speed of the entity.
 ---@field num_squad_members number # Number of living NPCs in the squad.
 ---@field activity string # Unknown if this changes. Returns `"ACT_IDLE"`.
 ---@field weapon string # Name of the weapon the NPC is holding.
 ---@field lost_squad_members number # Squad members which have been killed while this entity is alive.
 ---@field distancetoplayer number # Distance to player in inches (NPC head to player head?).
----@field has_officer "0"|"1" # If this squad has at least one officer.
----@field timesincecombat number|"999999"|"-1" # Seconds since the NPC was last in combat. 999999=never, -1=currently in combat.
----@field distancetoenemy number|"16384" # Distance to the current enemy that can be seen. 16384 if can't be seen.
----@field combine_class '"default"'|'"officer"'|'"charger"'|'"suppressor"'' # Combine class name (`default` == grunt).
----@field seenbyplayer "0"|"1" #
----@field seeplayer "0"|"1" #
----@field timesinceseenplayer number|"-1" # Seconds since the NPC last saw the player. This is never 0 while the player is in view. `-1` if never seen.
----@field enemy string|"nil" # Classname of the current enemy, nil if no enemy.
+---@field has_officer 0|1 # If this squad has at least one officer.
+---@field timesincecombat number|999999|-1 # Seconds since the NPC was last in combat. 999999=never, -1=currently in combat.
+---@field distancetoenemy number|16384 # Distance to the current enemy that can be seen. 16384 if can't be seen.
+---@field combine_class "default"|"officer"|"charger"|"suppressor" # Combine class name (`default` == grunt).
+---@field seenbyplayer 0|1 #
+---@field seeplayer 0|1 #
+---@field timesinceseenplayer number|-1 # Seconds since the NPC last saw the player. This is never 0 while the player is in view. `-1` if never seen.
+---@field enemy string|nil # Classname of the current enemy, nil if no enemy.
 
 
 --#endregion
@@ -446,9 +668,9 @@ function DeepPrintTable(tbl) end
 --#region Math
 
 ---Returns the number of degrees difference between two yaw angles
----@param angle1 float
----@param angle2 float
----@return float
+---@param angle1 number
+---@param angle2 number
+---@return number
 function AngleDiff(angle1, angle2) end
 ---Generate a vector given a QAngle
 ---@param angle QAngle
@@ -457,7 +679,7 @@ function AnglesToVector(angle) end
 ---Constructs a quaternion representing a rotation by angle around the specified vector axis.
 ---Bug: The Quaternion class is non-functional
 ---@param axis Vector
----@param angle float
+---@param angle number
 ---@return Quaternion
 ---@deprecated
 function AxisAngleToQuaternion(axis, angle) end
@@ -469,7 +691,7 @@ function CalcClosestPointOnEntityOBB(entity, position) end
 ---Compute the distance between two entity OBB. A negative return value indicates an input error. A return value of zero indicates that the OBBs are overlapping.
 ---@param entity1 EntityHandle
 ---@param entity2 EntityHandle
----@return float
+---@return number
 function CalcDistanceBetweenEntityOBB(entity1, entity2) end
 ---Calculate the cross product between two vectors (also available as a Vector class method).
 ---@param vector1 Vector
@@ -480,24 +702,24 @@ function CrossVectors(vector1, vector2) end
 ---@param P Vector
 ---@param lineA Vector
 ---@param lineB Vector
----@return float
+---@return number
 function CalcDistanceToLineSegment2D(P, lineA, lineB) end
 ---Smooth curve decreasing slower as it approaches zero.
----@param decayTo float
----@param decayTime float
----@param dt float
----@return float
+---@param decayTo number
+---@param decayTime number
+---@param dt number
+---@return number
 function ExponentialDecay(decayTo, decayTime, dt) end
 ---Linear interpolation of vector values over [0,1].
 ---@param vector1 Vector
 ---@param vector2 Vector
----@param t float
+---@param t number
 ---@return Vector
 function LerpVectors(vector1, vector2, t) end
 ---Get a random float within a range.
----@param min float
----@param max float
----@return float
+---@param min number
+---@param max number
+---@return number
 function RandomFloat(min, max) end
 ---Get a random int within a range, inclusive.
 ---@param min integer
@@ -519,7 +741,7 @@ function RotatePosition(rotationOrigin, rotationAngle, vectorToRotate) end
 ---Bug: The Quaternion class is non-functional
 ---@param quat Quaternion
 ---@param axis Vector
----@param angle float
+---@param angle number
 ---@return Quaternion
 ---@deprecated
 function RotateQuaternionByAxisAngle(quat, axis, angle) end
@@ -537,14 +759,14 @@ function RotationDeltaAsAngularVelocity(angle1, angle2) end
 ---Bug: The Quaternion class is non-functional
 ---@param q0 Quaternion
 ---@param q1 Quaternion
----@param t float
+---@param t number
 ---@return Quaternion
 ---@deprecated
 function SplineQuaternions(q0, q1, t) end
 ---Very basic interpolation of two vectors over time t on [0,1].
 ---@param vector1 Vector
 ---@param vector2 Vector
----@param t float
+---@param t number
 ---@return Vector
 function SplineVectors(vector1, vector2, t) end
 ---Get QAngles for a Vector.
@@ -559,38 +781,38 @@ function VectorToAngles(input) end
 -- Functions automatically included from the utilsinit.lua core library.
 
 ---Return value as an absolute value, i.e. Non-negative.
----@param value float
----@return float
+---@param value number
+---@return number
 function abs(value) end
 ---Clamp the value between the min and max.
----@param value float
----@param min float
----@param max float
----@return float
+---@param value number
+---@param min number
+---@param max number
+---@return number
 function Clamp(value, min, max) end
 ---Convert degrees to radians.
----@param deg float
----@return float
+---@param deg number
+---@return number
 function Deg2Rad(deg) end
 ---Convert radians to degrees.
----@param rad float
----@return float
+---@param rad number
+---@return number
 function Deg2Rad(rad) end
 ---Linear interpolation of float values a and b over t [0,1].
----@param t float
----@param a float
----@param b float
----@return float
+---@param t number
+---@param a number
+---@param b number
+---@return number
 function Lerp(t, a, b) end
 ---Returns the largest value of the inputs.
----@param x float
----@param y float
----@return float
+---@param x number
+---@param y number
+---@return number
 function max(x, y) end
 ---Returns the smallest value of the inputs.
----@param x float
----@param y float
----@return float
+---@param x number
+---@param y number
+---@return number
 function min(x, y) end
 ---Returns a new table with `table2` merged into `table1`, with `table1` overwriting any keys in `table2`.
 ---Use vlua.tableadd to concatenate tables.
@@ -599,33 +821,33 @@ function min(x, y) end
 ---@return table
 function Merge(table1, table2) end
 ---Remap a value in the range [a,b] to [c,d].
----@param value float
----@param a float
----@param b float
----@param c float
----@param d float
----@return float
+---@param value number
+---@param a number
+---@param b number
+---@param c number
+---@param d number
+---@return number
 function RemapVal(value, a, b, c, d) end
 ---Remap a value in the range [a,b] to [c,d], clamping the output to the range.
----@param value float
----@param a float
----@param b float
----@param c float
----@param d float
----@return float
+---@param value number
+---@param a number
+---@param b number
+---@param c number
+---@param d number
+---@return number
 function RemapValClamped(value, a, b, c, d) end
 ---Distance between two vectors squared (faster than calculating the plain distance).
 ---@param vector1 Vector
 ---@param vector2 Vector
----@return float
+---@return number
 function VectorDistanceSq(vector1, vector2) end
 ---Distance between two vectors.
 ---@param vector1 Vector
 ---@param vector2 Vector
----@return float
+---@return number
 function VectorDistance(vector1, vector2) end
 ---Linear interpolation of vector values over [0,1]. The native function LerpVectors performs the same task.
----@param t float
+---@param t number
 ---@param vector1 Vector
 ---@param vector2 Vector
 ---@return Vector
@@ -649,11 +871,11 @@ function AppendToLogFile(string_1, string_2) end
 ---@param origin Vector
 ---@param mins Vector
 ---@param maxs Vector
----@param red float
----@param green float
----@param blue float
----@param alpha float
----@param seconds float
+---@param red number
+---@param green number
+---@param blue number
+---@param alpha number
+---@param seconds number
 function DebugDrawBox(origin, mins, maxs, red, green, blue, alpha, seconds) end
 ---Draw box oriented to a Vector direction
 ---@param origin Vector
@@ -661,71 +883,71 @@ function DebugDrawBox(origin, mins, maxs, red, green, blue, alpha, seconds) end
 ---@param maxs Vector
 ---@param orientation Vector
 ---@param rgb Vector
----@param alpha float
----@param seconds float
+---@param alpha number
+---@param seconds number
 function DebugDrawBoxDirection(origin, mins, maxs, orientation, rgb, alpha, seconds) end
 ---Draw a debug circle
 ---@param origin Vector
 ---@param rgb Vector
----@param alpha float
----@param radius float
+---@param alpha number
+---@param radius number
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function DebugDrawCircle(origin, rgb, alpha, radius, noDepthTest, seconds) end
 ---Try to clear all the debug overlay info
 function DebugDrawClear() end
 ---Draw a debug overlay line
 ---@param startPos Vector
 ---@param endPos Vector
----@param red float
----@param green float
----@param blue float
+---@param red number
+---@param green number
+---@param blue number
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function DebugDrawLine(startPos, endPos, red, green, blue, noDepthTest, seconds) end
 ---Draw a debug line using color vec.
 ---@param startPos Vector
 ---@param endPos Vector
 ---@param rgb Vector
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function DebugDrawLine_vCol(startPos, endPos, rgb, noDepthTest, seconds) end
 ---Draw text to the screen with a line offset. Use \n to break to a new line.
 -- Coordinates are in absolute screen pixels.
----@param x float Horizontal screen position.
----@param y float Vertical screen position.
+---@param x number Horizontal screen position.
+---@param y number Vertical screen position.
 ---@param lineOffset integer Number of lines to start offset by.
 ---@param text string
----@param red float
----@param green float
----@param blue float
----@param alpha float
----@param seconds float
+---@param red number
+---@param green number
+---@param blue number
+---@param alpha number
+---@param seconds number
 function DebugDrawScreenTextLine(x, y, lineOffset, text, red, green, blue, alpha, seconds) end
 ---Draw a debug sphere.
 ---@param center Vector
 ---@param rgb Vector
----@param alpha float
----@param radius float
+---@param alpha number
+---@param radius number
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function DebugDrawSphere(center, rgb, alpha, radius, noDepthTest, seconds) end
 ---Draw screen oriented text at an absolute world position.
 ---@param origin Vector
 ---@param text string
 ---@param viewCheck boolean What does this do?
----@param seconds float
+---@param seconds number
 function DebugDrawText(origin, text, viewCheck, seconds) end
 ---Draw pretty debug text.
----@param x float Horizontal screen position.
----@param y float Vertical screen position.
+---@param x number Horizontal screen position.
+---@param y number Vertical screen position.
 ---@param lineOffset integer Number of lines to start offset by.
 ---@param text string
----@param red float
----@param green float
----@param blue float
----@param alpha float
----@param seconds float
+---@param red number
+---@param green number
+---@param blue number
+---@param alpha number
+---@param seconds number
 ---@param font string Name of a system font.
 ---@param size integer
 ---@param bold boolean
@@ -815,7 +1037,7 @@ end
 ---@param attacker EntityHandle
 ---@param force Vector
 ---@param hitPos Vector
----@param damage float
+---@param damage number
 ---@param damageTypes ENUM_DAMAGE_TYPES
 ---@return CTakeDamageInfo
 function CreateDamageInfo(inflictor, attacker, force, hitPos, damage, damageTypes) end
@@ -835,7 +1057,7 @@ function CreateSceneEntity(sceneName) end
 function CreateTrigger(origin, mins, maxs) end
 ---Creates and returns an AABB trigger thats bigger than the radius provided.
 ---@param origin Vector
----@param radius float
+---@param radius number
 ---@return CBaseTrigger
 function CreateTriggerRadiusApproximate(origin, radius) end
 ---Free a CTakeDamageInfo object that was created with CreateDamageInfo().
@@ -845,7 +1067,7 @@ function DestroyDamageInfo(info) end
 ---@param target string
 ---@param action string
 ---@param value string
----@param delay float
+---@param delay number
 ---@param activator EntityHandle
 ---@param caller EntityHandle
 function DoEntFire(target, action, value, delay, activator, caller) end
@@ -853,7 +1075,7 @@ function DoEntFire(target, action, value, delay, activator, caller) end
 ---@param target EntityHandle
 ---@param action string
 ---@param value string
----@param delay float
+---@param delay number
 ---@param activator EntityHandle
 ---@param caller EntityHandle
 function DoEntFireByInstanceHandle(target, action, value, delay, activator, caller) end
@@ -862,7 +1084,7 @@ function DoEntFireByInstanceHandle(target, action, value, delay, activator, call
 ---@param target string
 ---@param action string
 ---@param value? string Default = ""
----@param delay? float Default = 0.0
+---@param delay? number Default = 0.0
 ---@param activator? EntityHandle Default = thisEntity
 function EntFire(scope, target, action, value, delay, activator) end
 ---Generate an entity I/O event on the specified entity. The calling entity should be passed to the first parameter.
@@ -870,7 +1092,7 @@ function EntFire(scope, target, action, value, delay, activator) end
 ---@param target EntityHandle
 ---@param action string
 ---@param value? string # Default = ""
----@param delay? float # Default = 0.0
+---@param delay? number # Default = 0.0
 ---@param activator? EntityHandle # Default = self
 function EntFireByHandle(self, target, action, value, delay, activator) end
 ---Turn an entity index integer to an HScript (entity handle) representing that entity's script instance.
@@ -894,7 +1116,7 @@ function FireEntityIOInputVec(EHANDLE, inputName, value) end
 ---Get the longest delay for all events attached to an output.
 ---@param EHANDLE EHANDLE
 ---@param outputName string
----@return float
+---@return number
 function GetMaxOutputDelay(EHANDLE, outputName) end
 ---Get Angular Velocity for VPHYS or normal object. Returns a vector of the axis of rotation, multiplied by the rotation in radians per second.
 ---@param entity EntityHandle
@@ -927,7 +1149,7 @@ function PrecacheEntityListFromTable(groupSpawnTables, context) end
 ---@param context CScriptPrecacheContext
 function PrecacheModel(modelName, context) end
 ---model_folder|sound|soundfile|particle|particle_folder"
----@param resourceType string|"\"model_folder\""|"\"sound\""|"\"soundfile\""|"\"particle\""|"\"particle_folder\""
+---@param resourceType string|"model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
 ---@param resourcePath string
 ---@param context CScriptPrecacheContext
 function PrecacheResource(resourceType, resourcePath, context) end
@@ -1016,16 +1238,16 @@ function EmitSoundOn(sound, entity) end
 ---@param player CHL2_Player
 function EmitSoundOnClient(sound, player) end
 ---Sets an opvar value for all players.
----@param stackName string|"\"hlvr_global_opvars\""
----@param operatorName string|"\"opvars\""
+---@param stackName string|"hlvr_global_opvars"
+---@param operatorName string|"opvars"
 ---@param opvarName string|COMMON_OPVAR_NAMES
----@param opvarValue float
+---@param opvarValue number
 function SetOpvarFloatAll(stackName, operatorName, opvarName, opvarValue) end
 ---Sets an opvar value for a single player ( szStackName, szOperatorName, szOpvarName, flOpvarValue, hEnt )
----@param stackName string|"\"hlvr_global_opvars\""
----@param operatorName string|"\"opvars\""
+---@param stackName string|"hlvr_global_opvars"
+---@param operatorName string|"opvars"
 ---@param opvarName string|COMMON_OPVAR_NAMES
----@param opvarValue float
+---@param opvarValue number
 ---@param player CHL2_Player
 function SetOpvarFloatPlayer(stackName, operatorName, opvarName, opvarValue, player) end
 ---Start a sound event. Appears to always emit from the player.
@@ -1067,11 +1289,11 @@ function StopSoundOn(sound, playingEntity) end
 
 ---Gets the value of the given Convar, as a float.
 ---@param convar string
----@return float
+---@return number
 function cvar_getf(convar) end
 ---Sets the value of the given Convar, to a float.
 ---@param convar string
----@param value float
+---@param value number
 ---@return boolean # Returns true if successful.
 function cvar_setf(convar, value) end
 ---	Breaks in the debugger.
@@ -1079,7 +1301,7 @@ function cvar_setf(convar, value) end
 function DebugBreak() end
 ---Internal native function for IncludeScript().
 ---@param scriptFileName string
----@param scope ScriptScope|"thisEntity:GetPrivateScriptScope()"
+---@param scope ScriptScope
 ---@return boolean
 function DoIncludeScript(scriptFileName, scope) end
 ---Internal native function for ScriptAssert().
@@ -1100,7 +1322,7 @@ function FireGameEvent(eventName, parameterTable) end
 ---@param parameterTable table # Arbitrary key/value pairs are allowed.
 function FireGameEventLocal(eventName, parameterTable) end
 ---Get the time spent on the server in the last frame.
----@return float
+---@return number
 function FrameTime() end
 ---Returns the currently active spawn group handle.
 ---@return integer
@@ -1117,7 +1339,7 @@ function GetMapName() end
 ---Execute a script file. Included in the current scope by default.
 ---Doesn't appear to exist, use DoIncludeScript instead.
 ---@param scriptFileName string
----@param scope ScriptScope | "nil"
+---@param scope ScriptScope|nil
 ---@return boolean
 ---@deprecated
 function IncludeScript(scriptFileName, scope) end
@@ -1146,7 +1368,7 @@ function IsInToolsMode() end
 ---Register as a listener for a game event from script.
 ---@param eventname GAME_EVENTS_ALL
 ---@param callback function
----@param context table # Context to pass as the first parameter of `callback`.
+---@param context table|nil # Context to pass as the first parameter of `callback`.
 ---@return integer # ID used to cancel with StopListeningToGameEvent().
 function ListenToGameEvent(eventname, callback, context) end
 ---Creates a table from the specified keyvalues text file.
@@ -1197,17 +1419,17 @@ function rr_GetResponseTargets() end
 function rr_QueryBestResponse(ent, query, result) end
 ---Start a screenshake.
 ---@param center Vector
----@param amplitude float
----@param frequency float
----@param duration float
----@param radius float
+---@param amplitude number
+---@param frequency number
+---@param duration number
+---@param radius number
 ---@param command SHAKE_COMMAND
 ---@param airShake boolean
 function ScreenShake(center, amplitude, frequency, duration, radius, command, airShake) end
 ---Asserts the passed in value. Prints out a message and brings up the assert dialog.
 ---Appears to do nothing.
 ---@param assertion boolean
----@param message string | "\"\""
+---@param message string|""
 function ScriptAssert(assertion, message) end
 ---Send a string to the console as a client command.
 ---@param command string # Can send multiple commands with ;
@@ -1229,10 +1451,10 @@ function StopListeningToAllGameEvents(context) end
 ---@return boolean
 function StopListeningToGameEvent(eventlistener) end
 ---Get the current server time.
----@return float
+---@return number
 function Time() end
 ---Generate a string guaranteed to be unique across the life of the script VM, with an optional root string. Useful for adding data to table's when not sure what keys are already in use in that table.
----@param root string | "\"\"" # String that will be added to the end.
+---@param root? string # String that will be added to the end.
 ---@return string
 function UniqueString(root) end
 ---Unload a spawn group by name
@@ -1261,8 +1483,8 @@ function vlua.clear(t) end
 --- < -1
 --- == 0
 --- >  1
----@param a float
----@param b float
+---@param a number
+---@param b number
 ---@return integer
 function vlua.compare(a, b) end
 ---Implements Squirrel in operator.
@@ -1374,17 +1596,17 @@ function CBaseEntity:ApplyAbsVelocityImpulse(impulse) end
 function CBaseEntity:ApplyLocalAngularVelocityImpulse(angImpulse) end
 ---Get float value for an entity attribute.
 ---@param name string
----@param default float
----@return float
+---@param default number
+---@return number
 function CBaseEntity:Attribute_GetFloatValue(name, default) end
 ---Get int value for an entity attribute.
 ---@param name string
 ---@param default integer
----@return float
+---@return number
 function CBaseEntity:Attribute_GetIntValue(name, default) end
 ---Set float value for an entity attribute.
 ---@param name string
----@param value float
+---@param value number
 function CBaseEntity:Attribute_SetFloatValue(name, value) end
 ---Set int value for an entity attribute.
 ---@param name string
@@ -1399,8 +1621,8 @@ function CBaseEntity:EmitSound(soundName) end
 ---Plays/modifies a sound from this entity. changes sound if Pitch and/or Volume or SoundTime is > 0.
 ---@param soundName string
 ---@param pitch integer
----@param volume float
----@param soundTime float
+---@param volume number
+---@param soundTime number
 function CBaseEntity:EmitSoundParams(soundName, pitch, volume, soundTime) end
 ---Get the QAngles that this entity is looking at.
 ---@return QAngle
@@ -1424,7 +1646,7 @@ function CBaseEntity:GatherCriteria(result) end
 function CBaseEntity:GetAbsOrigin() end
 ---Get the absolute entity scale.
 ---To do: How to access non-uniform scale?
----@return float
+---@return number
 function CBaseEntity:GetAbsScale() end
 ---Get the entity pitch, yaw, roll as QAngle
 ---@return QAngle
@@ -1455,7 +1677,7 @@ function CBaseEntity:GetCenter() end
 function CBaseEntity:GetChildren() end
 ---Looks up a context and returns it if available. May return string, float, or nil (if the context isn't found)
 ---@param name string
----@return string|float?
+---@return string|number?
 function CBaseEntity:GetContext(name) end
 ---Get the forward Vector of the entity
 ---@return Vector
@@ -1473,13 +1695,13 @@ function CBaseEntity:GetLocalAngles() end
 ---@return Vector
 function CBaseEntity:GetLocalOrigin() end
 ---	Get the entity scale relative to that of its parent.
----@return float
+---@return number
 function CBaseEntity:GetLocalScale() end
 ---Get Entity relative velocity. Only functional on prop_dynamic entities with the Scripted Movement property set.
 ---@return Vector
 function CBaseEntity:GetLocalVelocity() end
 ---Get the mass of an entity. (returns 0 if it doesn't have a physics object)
----@return float
+---@return number
 function CBaseEntity:GetMass() end
 ---No Description Set
 ---@return integer
@@ -1510,8 +1732,8 @@ function CBaseEntity:GetRootMoveParent() end
 ---Returns float duration of the sound.
 ---Returns 2 for all sounds.
 ---@param soundName string
----@param actormodelname string | "\"\""
----@return float
+---@param actormodelname string|""
+---@return number
 ---@deprecated
 function CBaseEntity:GetSoundDuration(soundName, actormodelname) end
 ---Returns the spawn group handle of this entity.
@@ -1552,8 +1774,8 @@ function CBaseEntity:Kill() end
 function CBaseEntity:NextMovePeer() end
 ---Takes duration, value for a temporary override.
 ---Doesn't seem to work.
----@param duration float
----@param friction float
+---@param duration number
+---@param friction number
 function CBaseEntity:OverrideFriction(duration, friction) end
 ---Precache a sound for later playing.
 ---@param soundname string
@@ -1562,25 +1784,25 @@ function CBaseEntity:PrecacheScriptSound(soundname) end
 ---@param flags integer
 function CBaseEntity:RemoveEffects(flags) end
 ---Set entity world space pitch, yaw, roll by component.
----@param pitch float
----@param yaw float
----@param roll float
+---@param pitch number
+---@param yaw number
+---@param roll number
 function CBaseEntity:SetAbsAngles(pitch, yaw, roll) end
 ---	Sets the world space entity origin.
 ---@param origin Vector
 function CBaseEntity:SetAbsOrigin(origin) end
 ---Set the absolute scale of the entity.
----@param scale float
+---@param scale number
 function CBaseEntity:SetAbsScale(scale) end
 ---Set entity pitch, yaw, roll by component. If parented, this is set relative to the parents local space.
----@param pitch float
----@param yaw float
----@param roll float
+---@param pitch number
+---@param yaw number
+---@param roll number
 function CBaseEntity:SetAngles(pitch, yaw, roll) end
 ---Set the local angular velocity - takes float pitch, yaw, roll velocities. Only functional on prop_dynamic entities with the Scripted Movement property set.
----@param pitch float
----@param yaw float
----@param roll float
+---@param pitch number
+---@param yaw number
+---@param roll number
 function CBaseEntity:SetAngularVelocity(pitch, yaw, roll) end
 ---Set the position of the constraint.
 ---@param pos Vector
@@ -1588,17 +1810,17 @@ function CBaseEntity:SetConstraint(pos) end
 ---Store any key/value pair in this entity's dialog contexts. Value must be a string. Will last for duration (set 0 to mean 'forever').
 ---@param name string
 ---@param value string
----@param duration float
+---@param duration number
 function CBaseEntity:SetContext(name, value, duration) end
 ---Store any key/value pair in this entity's dialog contexts. Value must be a number (int or float). Will last for duration (set 0 to mean 'forever').
 ---@param name string
----@param value float|integer
----@param duration float
+---@param value number|integer
+---@param duration number
 function CBaseEntity:SetContextNum(name, value, duration) end
 ---Set a context think function on this entity.
 ---@param thinkName string
 ---@param thinkFunction function
----@param initialDelay float
+---@param initialDelay number
 function CBaseEntity:SetContextThink(thinkName, thinkFunction, initialDelay) end
 ---Set entity targetname
 ---@param name string
@@ -1607,27 +1829,27 @@ function CBaseEntity:SetEntityName(name) end
 ---@param forwardVec Vector
 function CBaseEntity:SetForwardVector(forwardVec) end
 ---Set PLAYER friction, ignored for objects
----@param friction float
+---@param friction number
 function CBaseEntity:SetFriction(friction) end
 ---Set PLAYER gravity, ignored for objects
----@param gravity float
+---@param gravity number
 function CBaseEntity:SetGravity(gravity) end
 ---Set entity health. Does not respect max health.
 ---@param hp integer
 function CBaseEntity:SetHealth(hp) end
 ---Set the entity pitch, yaw, roll by component, relative to the local space of the entity's parent or attachment point.
----@param pitch float
----@param yaw float
----@param roll float
+---@param pitch number
+---@param yaw number
+---@param roll number
 function CBaseEntity:SetLocalAngles(pitch, yaw, roll) end
 ---Set entity local origin. Relative to the local space of the entity's parent or attachment point.
 ---@param origin Vector
 function CBaseEntity:SetLocalOrigin(origin) end
 ---Set the entity scale relative to the entity's parent.
----@param scale float
+---@param scale number
 function CBaseEntity:SetLocalScale(scale) end
 ---Set the mass of an entity. (does nothing if it doesn't have a physics object)
----@param mass float
+---@param mass number
 function CBaseEntity:SetMass(mass) end
 ---Set entity max health
 ---@param maxHP integer
@@ -1640,7 +1862,7 @@ function CBaseEntity:SetOrigin(origin) end
 function CBaseEntity:SetOwner(owningEntity) end
 ---Set the parent for this entity. The attachment is optional, pass an empty string to not use it.
 ---@param parent EntityHandle
----@param attachmentName string | "\"\""
+---@param attachmentName string|""
 function CBaseEntity:SetParent(parent, attachmentName) end
 ---Set entity team.
 ---@param team integer
@@ -1651,7 +1873,7 @@ function CBaseEntity:SetTeam(team) end
 ---If using a string function name, function must exist in private script scope.
 ---@param thinkFunction function|string # If string, will look up in the calling instance or given `context` to find the function. If binding a local function this must be a direct reference, not a string.
 ---@param thinkName string # Name of the think, used for stopping.
----@param initialDelay float # Initial delay before the function is first called.
+---@param initialDelay number # Initial delay before the function is first called.
 ---@param context? EntityHandle # If `thinkFunction` is a string, use this context to find the function, otherwise ignored.
 function CBaseEntity:SetThink(thinkFunction, thinkName, initialDelay, context) end
 ---Sets the world space velocity of the entity. Only functional on prop_dynamic entities with the Scripted Movement property set.
@@ -1721,8 +1943,8 @@ function CEntityInstance:entindex() end
 ---@param outputName string
 ---@param activator EntityHandle
 ---@param caller EntityHandle
----@param parameter string|"nil" # The parameter override to send with the output.
----@param delay float
+---@param parameter string|nil # The parameter override to send with the output.
+---@param delay number
 function CEntityInstance:FireOutput(outputName, activator, caller, parameter, delay) end
 ---Get the entity classname as a string.
 ---@return string classname
@@ -1857,7 +2079,7 @@ function CBasePlayer:GetHMDAnchor() end
 ---@return CPropHMDAvatar|nil
 function CBasePlayer:GetHMDAvatar() end
 ---Returns the Vector position of the point you ask for. Pass 0-3 to get the four points.
----@param point "0"|"1"|"2"|"3"
+---@param point 0|1|2|3
 ---@return Vector
 function CBasePlayer:GetPlayArea(point) end
 ---Returns the player's user ID.
@@ -1939,7 +2161,7 @@ function CHL2_Player:PlayerCounter_GetValue(name) end
 ---@class CBaseAnimating : CBaseModelEntity
 CBaseAnimating = {}
 ---Returns the duration in seconds of the active sequence.
----@return float
+---@return number
 function CBaseAnimating:ActiveSequenceDuration() end
 ---Get the attachment id's angles as a p,y,r vector
 ---@param iAttachment integer
@@ -1954,14 +2176,14 @@ function CBaseAnimating:GetAttachmentForward(iAttachment) end
 ---@return Vector
 function CBaseAnimating:GetAttachmentOrigin(iAttachment) end
 ---Get the cycle of the animation, a [0-1] range.
----@return float
+---@return number
 function CBaseAnimating:GetCycle() end
 ---Get the value of the given animGraph parameter.
 ---@param pszParam string
 ---@return table
 function CBaseAnimating:GetGraphParameter(pszParam) end
 ---Get scale of entity's model.
----@return float
+---@return number
 function CBaseAnimating:GetModelScale() end
 ---Returns the name of the active sequence.
 ---@return string
@@ -1981,7 +2203,7 @@ function CBaseAnimating:ResetSequence(pSequenceName) end
 function CBaseAnimating:ScriptLookupAttachment(pAttachmentName) end
 ---Returns the duration in seconds of the given sequence name.
 ---@param pSequenceName string
----@return float
+---@return number
 function CBaseAnimating:SequenceDuration(pSequenceName) end
 ---Pass the desired look target in world space to the graph.
 ---@param vValue Vector
@@ -2000,7 +2222,7 @@ function CBaseAnimating:SetGraphParameterBool(szName, bValue) end
 function CBaseAnimating:SetGraphParameterEnum(szName, nValue) end
 ---Pass the float value to the specified parameter.
 ---@param szName string
----@param flValue float
+---@param flValue number
 function CBaseAnimating:SetGraphParameterFloat(szName, flValue) end
 ---Pass the int value to the specified param.
 ---@param szName string
@@ -2011,12 +2233,12 @@ function CBaseAnimating:SetGraphParameterInt(szName, nValue) end
 ---@param vValue Vector
 function CBaseAnimating:SetGraphParameterVector(szName, vValue) end
 ---Sets the model's scale to scale, so if a unit had its model scale at 1, and you use SetModelScale(10.0), it would set the scale to 10.0.
----@param scale float
+---@param scale number
 function CBaseAnimating:SetModelScale(scale) end
 ---Set the specified pose parameter to the specified value.
 ---@param szName string
----@param fValue float
----@return float
+---@param fValue number
+---@return number
 function CBaseAnimating:SetPoseParameter(szName, fValue) end
 ---Sets the active sequence by name, keeping the current cycle.
 ---@param pSequenceName string
@@ -2047,12 +2269,12 @@ function CBaseFlex:GetCurrentScene() end
 function CBaseFlex:GetFlexWeight(flexControllerIndex) end
 ---	Play the specified .vcd file.
 ---@param sceneFile string
----@param delay float
----@return float
+---@param delay number
+---@return number
 function CBaseFlex:ScriptPlayScene(sceneFile, delay) end
 ---Sets the weight of a flex controller specified by index, use FindFlexController to get the index of a flex controller by name.
 ---@param flexControllerIndex integer
----@param weight float
+---@param weight number
 function CBaseFlex:SetFlexWeight(flexControllerIndex, weight) end
 
 --#endregion
@@ -2113,7 +2335,7 @@ function CBodyComponent:IsAttachedToParent() end
 function CBodyComponent:LookupSequence(string_1) end
 ---Returns the duration in seconds of the specified sequence
 ---@param string_1 string
----@return float
+---@return number
 ---@deprecated
 function CBodyComponent:SequenceDuration(string_1) end
 ---No Description Set
@@ -2157,7 +2379,7 @@ function Entities:FindAllByClassname(className) end
 ---Find entities by class name within a radius. Returns an array containing all the found entities.
 ---@param className string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle[]
 function Entities:FindAllByClassnameWithin(className, origin, maxRadius) end
 ---Find entities by model name. Returns an array containing all the found entities.
@@ -2171,7 +2393,7 @@ function Entities:FindAllByName(name) end
 ---Find all entities by name within a radius. Returns an array containing all the found entities.
 ---@param name string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle[]
 function Entities:FindAllByNameWithin(name, origin, maxRadius) end
 ---Find all entities with this target set. Returns an array containing all the found entities.
@@ -2181,67 +2403,67 @@ function Entities:FindAllByNameWithin(name, origin, maxRadius) end
 function Entities:FindAllByTarget(targetSet) end
 ---Find all entities within a radius. Returns an array containing all the found entities.
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle[]
 function Entities:FindAllInSphere(origin, maxRadius) end
 ---Find entities by class name. Pass nil to start an iteration, or reference to a previously found entity to continue a search.
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param className string
 ---@return EntityHandle
 function Entities:FindByClassname(startFrom, className) end
 ---Find the entity by class name nearest to a point.
 ---@param className string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle
 function Entities:FindByClassnameNearest(className, origin, maxRadius) end
 ---Find entities by class name within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param className string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle
 function Entities:FindByClassnameWithin(startFrom, className, origin, maxRadius) end
 ---Find entities by model name. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param modelName string
 ---@return EntityHandle
 function Entities:FindByModel(startFrom, modelName) end
 ---Find entities by model name within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param modelName string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle
 function Entities:FindByModelWithin(startFrom, modelName, origin, maxRadius) end
 ---Find entities by name. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param lastEnt EntityHandle|"nil"
+---@param lastEnt EntityHandle|nil
 ---@param searchString string
 ---@return EntityHandle
 function Entities:FindByName(lastEnt, searchString) end
 ---Find entity by name nearest to a point.
 ---@param name string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle
 function Entities:FindByNameNearest(name, origin, maxRadius) end
 ---Find entities by name within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param name string
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle
 function Entities:FindByNameWithin(startFrom, name, origin, maxRadius) end
 ---Find entities by targetname. Pass nil to start an iteration, or reference to a previously found entity to continue a search
 ---How does this work?
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param targetName string
 ---@return EntityHandle
 function Entities:FindByTarget(startFrom, targetName) end
 ---Find entities within a radius. Pass nil to start an iteration, or reference to a previously found entity to continue a search
----@param startFrom EntityHandle|"nil"
+---@param startFrom EntityHandle|nil
 ---@param origin Vector
----@param maxRadius float
+---@param maxRadius number
 ---@return EntityHandle
 function Entities:FindInSphere(startFrom, origin, maxRadius) end
 ---Begin an iteration over the list of entities
@@ -2269,7 +2491,7 @@ function CAI_BaseNPC:GetSquad() end
 ---Set a position goal and start moving.
 ---@param vPos Vector
 ---@param bRun boolean
----@param flSuccessTolerance float
+---@param flSuccessTolerance number
 function CAI_BaseNPC:NpcForceGoPosition(vPos, bRun, flSuccessTolerance) end
 ---Removes the NPC's current goal.
 function CAI_BaseNPC:NpcNavClearGoal() end
@@ -2305,12 +2527,12 @@ function CBaseTrigger:IsTouching(entity) end
 CEnvTimeOfDay2 = {}
 ---Lookup dynamic time-of-day float value.
 ---@param unknown string
----@param unknown2 float
----@return float
+---@param unknown2 number
+---@return number
 function CEnvTimeOfDay2:GetFloat(unknown, unknown2) end
 ---Lookup dynamic time-of-day vector value.
 ---@param unknown string
----@param unknown2 float
+---@param unknown2 number
 ---@return Vector
 function CEnvTimeOfDay2:GetVector(unknown, unknown2) end
 
@@ -2435,23 +2657,23 @@ function CNativeOutputs:Init(numOutputs) end
 ---@class CEnvProjectedTexture : CBaseEntity
 CEnvProjectedTexture = {}
 ---Set light maximum range
----@param range float
+---@param range number
 function CEnvProjectedTexture:SetFarRange(range) end
 ---Set light linear attenuation value
----@param atten float
+---@param atten number
 function CEnvProjectedTexture:SetLinearAttenuation(atten) end
 ---Set light minimum range
----@param range float
+---@param range number
 function CEnvProjectedTexture:SetNearRange(range) end
 ---Set light quadratic attenuation value
----@param atten float
+---@param atten number
 function CEnvProjectedTexture:SetQuadraticAttenuation(atten) end
 ---Turn on/off light volumetrics.
 ---@param on boolean
----@param intensity float
----@param noise float
+---@param intensity number
+---@param noise number
 ---@param planes integer
----@param planeOffset float
+---@param planeOffset number
 function CEnvProjectedTexture:SetVolumetrics(on, intensity, noise, planes, planeOffset) end
 
 --#endregion
@@ -2468,8 +2690,8 @@ CInfoData = {}
 function CInfoData:QueryColor(tok, default) end
 ---Query float data for this key
 ---@param tok string
----@param default float
----@return float
+---@param default number
+---@return number
 function CInfoData:QueryFloat(tok, default) end
 ---Query int data for this key
 ---@param tok string
@@ -2478,8 +2700,8 @@ function CInfoData:QueryFloat(tok, default) end
 function CInfoData:QueryInt(tok, default) end
 ---Query number data for this key
 ---@param tok string
----@param default float
----@return float
+---@param default number
+---@return number
 function CInfoData:QueryNumber(tok, default) end
 ---Query string data for this key
 ---@param tok string
@@ -2517,9 +2739,9 @@ debugoverlay = {}
 ---Draws an axis. Specify origin + orientation in world space.
 ---@param Vector_1 Vector
 ---@param Quaternion_2 Quaternion
----@param float_3 float
+---@param float_3 number
 ---@param bool_4 boolean
----@param float_5 float
+---@param float_5 number
 ---@deprecated
 function debugoverlay:Axis(Vector_1, Quaternion_2, float_3, bool_4, float_5) end
 ---Draws a world-space axis-aligned wireframe box. Specify bounds in world space.
@@ -2530,7 +2752,7 @@ function debugoverlay:Axis(Vector_1, Quaternion_2, float_3, bool_4, float_5) end
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Box(min, max, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws an oriented box at the origin. Specify bounds in local space.
 ---@param Vector_1 Vector
@@ -2542,110 +2764,110 @@ function debugoverlay:Box(min, max, red, green, blue, alpha, noDepthTest, second
 ---@param int_7 integer
 ---@param int_8 integer
 ---@param bool_9 boolean
----@param float_10 float
+---@param float_10 number
 ---@deprecated
 function debugoverlay:BoxAngles(Vector_1, Vector_2, Vector_3, Quaternion_4, int_5, int_6, int_7, int_8, bool_9, float_10) end
 ---Draws a capsule. Specify base in world space.
 ---@param Vector_1 Vector
 ---@param Quaternion_2 Quaternion
----@param float_3 float
----@param float_4 float
+---@param float_3 number
+---@param float_4 number
 ---@param int_5 integer
 ---@param int_6 integer
 ---@param int_7 integer
 ---@param int_8 integer
 ---@param bool_9 integer
----@param float_10 float
+---@param float_10 number
 ---@deprecated
 function debugoverlay:Capsule(Vector_1, Quaternion_2, float_3, float_4, int_5, int_6, int_7, int_8, bool_9, float_10) end
 ---Draws a circle. Specify center in world space.
 ---@param Vector_1 Vector
 ---@param Quaternion_2 Quaternion
----@param float_3 float
+---@param float_3 number
 ---@param int_4 integer
 ---@param int_5 integer
 ---@param int_6 integer
 ---@param int_7 integer
 ---@param bool_8 boolean
----@param float_9 float
+---@param float_9 number
 ---@deprecated
 function debugoverlay:Circle(Vector_1, Quaternion_2, float_3, int_4, int_5, int_6, int_7, bool_8, float_9) end
 ---Draws a circle oriented to the screen. Specify center in world space.
 ---@param origin Vector
----@param radius float
+---@param radius number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:CircleScreenOriented(origin, radius, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a wireframe cone.
 ---@param pos Vector # Starting tip for the cone.
 ---@param axis Vector # Normalized direction the cone faces.
----@param radius float # Radius of the cone.
----@param distance float # How far the cone will draw.
+---@param radius number # Radius of the cone.
+---@param distance number # How far the cone will draw.
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Cone(pos, axis, radius, distance, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a screen-aligned cross. Specify origin in world space.
 ---@param origin Vector
----@param radius float
+---@param radius number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Cross(origin, radius, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a world-aligned cross. Specify origin in world space.
 ---@param origin Vector
----@param radius float
+---@param radius number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Cross3D(origin, radius, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws an oriented cross. Specify origin in world space.
 ---@param Vector_1 Vector
 ---@param Quaternion_2 Quaternion
----@param float_3 float
+---@param float_3 number
 ---@param int_4 integer
 ---@param int_5 integer
 ---@param int_6 integer
 ---@param int_7 integer
 ---@param bool_8 boolean
----@param float_9 float
+---@param float_9 number
 ---@deprecated
 function debugoverlay:Cross3DOriented(Vector_1, Quaternion_2, float_3, int_4, int_5, int_6, int_7, bool_8, float_9) end
 ---Draws a dashed line. Specify endpoint's in world space.
 ---@param startPos Vector
 ---@param endPos Vector
----@param distanceBetweenTicks float
+---@param distanceBetweenTicks number
 ---@param tickHighlightOffset integer
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:DrawTickMarkedLine(startPos, endPos, distanceBetweenTicks, tickHighlightOffset, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws the attachments of the entity
 ---@param ehandle EHANDLE
----@param size float # Seems to be size? But only works [2-19].
----@param seconds float
+---@param size number # Seems to be size? But only works [2-19].
+---@param seconds number
 function debugoverlay:EntityAttachments(ehandle, size, seconds) end
 ---Draws the axis of the entity origin
 ---@param ehandle EHANDLE
----@param size float
+---@param size number
 ---@param unknown boolean # False made it draw
----@param seconds float
+---@param seconds number
 function debugoverlay:EntityAxis(ehandle, size, unknown, seconds) end
 ---Draws bounds of an entity.
 ---How does this work?
@@ -2655,11 +2877,11 @@ function debugoverlay:EntityAxis(ehandle, size, unknown, seconds) end
 ---@param int_4 integer
 ---@param int_5 integer
 ---@param bool_6 boolean
----@param float_7 float
+---@param float_7 number
 function debugoverlay:EntityBounds(ehandle_1, int_2, int_3, int_4, int_5, bool_6, float_7) end
 ---Draws the skeleton of the entity
 ---@param ehandle EHANDLE
----@param seconds float
+---@param seconds number
 function debugoverlay:EntitySkeleton(ehandle, seconds) end
 ---Draws text on an entity
 ---@param ehandle EHANDLE
@@ -2669,7 +2891,7 @@ function debugoverlay:EntitySkeleton(ehandle, seconds) end
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
----@param seconds float
+---@param seconds number
 function debugoverlay:EntityText(ehandle, heightOffset, text, red, green, blue, alpha, seconds) end
 ---Draws a screen-space filled 2D rectangle. Coordinates are in pixels.
 ---Vector2D class doesn't exist?
@@ -2679,19 +2901,19 @@ function debugoverlay:EntityText(ehandle, heightOffset, text, red, green, blue, 
 ---@param int_4 integer
 ---@param int_5 integer
 ---@param int_6 integer
----@param float_7 float
+---@param float_7 number
 ---@deprecated
 function debugoverlay:FilledRect2D(Vector2D_1, Vector2D_2, int_3, int_4, int_5, int_6, float_7) end
 ---Draws a horizontal arrow. Specify endpoint's in world space.
 ---@param startPos Vector
 ---@param endPos Vector
----@param width float
+---@param width number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:HorzArrow(startPos, endPos, width, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a line between two points
 ---@param startPos Vector
@@ -2701,7 +2923,7 @@ function debugoverlay:HorzArrow(startPos, endPos, width, red, green, blue, alpha
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Line(startPos, endPos, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a line between two point's in screenspace
 ---Vector2D class doesn't exist?
@@ -2711,7 +2933,7 @@ function debugoverlay:Line(startPos, endPos, red, green, blue, alpha, noDepthTes
 ---@param int_4 integer
 ---@param int_5 integer
 ---@param int_6 integer
----@param float_7 float
+---@param float_7 number
 ---@deprecated
 function debugoverlay:Line2D(Vector2D_1, Vector2D_2, int_3, int_4, int_5, int_6, float_7) end
 ---Pops the identifier used to group overlays. Overlays marked with this identifier can be deleted in a big batch.
@@ -2728,24 +2950,24 @@ function debugoverlay:RemoveAllInScope(utlstringtoken_1) end
 ---Draws a solid cone. Specify endpoint and direction in world space.
 ---@param startPos Vector
 ---@param endPos Vector
----@param unknown_1 float
----@param unknown_2 float
+---@param unknown_1 number
+---@param unknown_2 number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:SolidCone(startPos, endPos, unknown_1, unknown_2, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a wireframe sphere. Specify center in world space.
 ---@param position Vector
----@param radius float
+---@param radius number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Sphere(position, radius, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a swept box. Specify endpoint's in world space and the bounds in local space.
 ---@param Vector_1 Vector
@@ -2757,19 +2979,19 @@ function debugoverlay:Sphere(position, radius, red, green, blue, alpha, noDepthT
 ---@param int_7 integer
 ---@param int_8 integer
 ---@param int_9 integer
----@param float_10 float
+---@param float_10 number
 ---@deprecated
 function debugoverlay:SweptBox(Vector_1, Vector_2, Vector_3, Vector_4, Quaternion_5, int_6, int_7, int_8, int_9, float_10) end
 ---Draws 2D text. Specify origin in world space.
 ---@param position Vector
 ---@param heightOffset integer
 ---@param text string
----@param unknown float
+---@param unknown number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
----@param seconds float
+---@param seconds number
 function debugoverlay:Text(position, heightOffset, text, unknown, red, green, blue, alpha, seconds) end
 ---Draws a screen-space texture. Coordinates are in pixels.
 ---Vector2D class doesn't exist?
@@ -2782,7 +3004,7 @@ function debugoverlay:Text(position, heightOffset, text, unknown, red, green, bl
 ---@param int_7 integer
 ---@param Vector2D_8 Vector2D
 ---@param Vector2D_9 Vector2D
----@param float_10 float
+---@param float_10 number
 ---@deprecated
 function debugoverlay:Texture(string_1, Vector2D_2, Vector2D_3, int_4, int_5, int_6, int_7, Vector2D_8, Vector2D_9, float_10) end
 ---Draws a filled triangle in world space for the specific amount of seconds (-1 means forever).
@@ -2794,7 +3016,7 @@ function debugoverlay:Texture(string_1, Vector2D_2, Vector2D_3, int_4, int_5, in
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:Triangle(point1, point2, point3, red, green, blue, alpha, noDepthTest, seconds) end
 ---Toggles the overlay render type, for unit tests
 function debugoverlay:UnitTestCycleOverlayRenderType() end
@@ -2807,31 +3029,31 @@ function debugoverlay:UnitTestCycleOverlayRenderType() end
 ---@param int_6 integer
 ---@param int_7 integer
 ---@param bool_8 boolean
----@param float_9 float
+---@param float_9 number
 ---@deprecated
 function debugoverlay:VectorText3D(Vector_1, Quaternion_2, string_3, int_4, int_5, int_6, int_7, bool_8, float_9) end
 ---Draws a vertical arrow. Specify endpoint's in world space.
 ---@param startPos Vector
 ---@param endPos Vector
----@param width float
+---@param width number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:VertArrow(startPos, endPos, width, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a arrow associated with a specific yaw. Specify endpoint's in world space.
 ---@param startPos Vector
----@param yaw float
----@param length float
----@param width float
+---@param yaw number
+---@param length number
+---@param width number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
----@param seconds float
+---@param seconds number
 function debugoverlay:YawArrow(startPos, yaw, length, width, red, green, blue, alpha, noDepthTest, seconds) end
 
 --#endregion
@@ -2847,7 +3069,7 @@ function CSceneEntity:AddBroadcastTeamTarget(int_1) end
 ---Cancel scene playback
 function CSceneEntity:Cancel() end
 ---Returns length of this scene in seconds.
----@return float
+---@return number
 function CSceneEntity:EstimateLength() end
 ---Get the camera
 ---@return handle
@@ -2968,7 +3190,7 @@ function CPointWorldText:SetMessage(pMessage) end
 ---@class CPropHMDAvatar : CBaseAnimating
 CPropHMDAvatar = {}
 ---Get VR hand by ID (0 and 1).
----@param nHandID "0"|"1"
+---@param nHandID 0|1
 ---@return CPropVRHand
 function CPropHMDAvatar:GetVRHand(nHandID) end
 
@@ -2990,7 +3212,7 @@ function CPropVRHand:AddHandModelOverride(modelName) end
 ---@return EntityHandle
 function CPropVRHand:FindHandModelOverride(modelName) end
 ---Fire a haptic pulse on this hand. Integer range [0, 1, 2] for strength.
----@param strength "0"|"1"|"2"
+---@param strength 0|1|2
 function CPropVRHand:FireHapticPulse(strength) end
 ---Fire a haptic pulse on this hand. Specify the duration in micro seconds.
 ---@param pulseDuration integer
@@ -2999,10 +3221,10 @@ function CPropVRHand:FireHapticPulsePrecise(pulseDuration) end
 ---@return EntityHandle
 function CPropVRHand:GetHandAttachment() end
 ---Get the players hand ID for this hand.
----@return "0"|"1" # 0 - Left hand, 1 - Right hand
+---@return 0|1 # 0 - Left hand, 1 - Right hand
 function CPropVRHand:GetHandID() end
 ---Get literal type for this hand.
----@return "0"|"1" # 0 - Right hand, 1 - Left hand
+---@return 0|1 # 0 - Right hand, 1 - Left hand
 function CPropVRHand:GetLiteralHandType() end
 ---Get the player for this hand.
 ---@return CHL2_Player
@@ -3117,7 +3339,7 @@ function IsPublicUniverse() end
 ---@class CTakeDamageInfo
 CTakeDamageInfo = {}
 ---Adds to the damage value.
----@param addAmount float
+---@param addAmount number
 function CTakeDamageInfo:AddDamage(addAmount) end
 ---Adds damage type bit flags.
 ---@param bitsDamageType ENUM_DAMAGE_TYPES
@@ -3138,10 +3360,10 @@ function CTakeDamageInfo:GetAmmoType() end
 ---@return EntityHandle
 function CTakeDamageInfo:GetAttacker() end
 ---
----@return float
+---@return number
 function CTakeDamageInfo:GetBaseDamage() end
 ---Returns the damage value.
----@return float
+---@return number
 function CTakeDamageInfo:GetDamage() end
 ---
 ---@return integer
@@ -3153,7 +3375,7 @@ function CTakeDamageInfo:GetDamageForce() end
 ---@return integer
 function CTakeDamageInfo:GetDamagePosition() end
 ---
----@return float
+---@return number
 function CTakeDamageInfo:GetDamageTaken() end
 ---Returns the damage type bitfield.
 ---@return integer
@@ -3162,26 +3384,26 @@ function CTakeDamageInfo:GetDamageType() end
 ---@return EntityHandle
 function CTakeDamageInfo:GetInflictor() end
 ---
----@return float
+---@return number
 function CTakeDamageInfo:GetMaxDamage() end
 ---
----@return float
+---@return number
 function CTakeDamageInfo:GetOriginalDamage() end
 ---
----@return float
+---@return number
 function CTakeDamageInfo:GetRadius() end
 ---
 ---@return Vector
 function CTakeDamageInfo:GetReportedPosition() end
 ---
----@return float
+---@return number
 function CTakeDamageInfo:GetStabilityDamage() end
 ---
 ---@param bitsToTest ENUM_DAMAGE_TYPES
 ---@return boolean
 function CTakeDamageInfo:HasDamageType(bitsToTest) end
 ---
----@param scaleAmount float
+---@param scaleAmount number
 function CTakeDamageInfo:ScaleDamage(scaleAmount) end
 ---
 ---@param allow boolean
@@ -3196,7 +3418,7 @@ function CTakeDamageInfo:SetAttacker(attacker) end
 ---@param block boolean
 function CTakeDamageInfo:SetCanBeBlocked(block) end
 ---Set new damage value.
----@param damage float
+---@param damage number
 function CTakeDamageInfo:SetDamage(damage) end
 ---
 ---@param damageCustom integer
@@ -3214,19 +3436,19 @@ function CTakeDamageInfo:SetDamageTaken(damageTaken) end
 ---@param bitsDamageType ENUM_DAMAGE_TYPES
 function CTakeDamageInfo:SetDamageType(bitsDamageType) end
 ---
----@param maxDamage float
+---@param maxDamage number
 function CTakeDamageInfo:SetMaxDamage(maxDamage) end
 ---
----@param originalDamage float
+---@param originalDamage number
 function CTakeDamageInfo:SetOriginalDamage(originalDamage) end
 ---
----@param radius float
+---@param radius number
 function CTakeDamageInfo:SetRadius(radius) end
 ---
 ---@param reportedPosition Vector
 function CTakeDamageInfo:SetReportedPosition(reportedPosition) end
 ---
----@param stabilityDamage float
+---@param stabilityDamage number
 function CTakeDamageInfo:SetStabilityDamage(stabilityDamage) end
 
 --#endregion
@@ -3239,22 +3461,22 @@ function CTakeDamageInfo:SetStabilityDamage(stabilityDamage) end
 Convars = {}
 ---GetBool(name) : returns the convar as a boolean flag.
 ---@param name string
----@return table
+---@return boolean|nil
 function Convars:GetBool(name) end
 ---GetCommandClient() : returns the player who issued this console command.
 ---@return CHL2_Player
 function Convars:GetCommandClient() end
 ---GetFloat(name) : returns the convar as a float. May return nil if no such convar.
 ---@param name string
----@return table|nil
+---@return float|nil
 function Convars:GetFloat(name) end
 ---GetInt(name) : returns the convar as an int. May return nil if no such convar.
 ---@param name string
----@return table|nil
+---@return integer|nil
 function Convars:GetInt(name) end
 ---GetStr(name) : returns the convar as a string. May return nil if no such convar.
 ---@param name string
----@return table|nil
+---@return string|nil
 function Convars:GetStr(name) end
 ---RegisterCommand(name, fn, helpString, flags) : register a console command.
 ---@param name string
@@ -3274,7 +3496,7 @@ function Convars:RegisterConvar(name, defaultValue, helpText, flags) end
 function Convars:SetBool(name, value) end
 ---SetFloat(name, val) : sets the value of the convar to the float.
 ---@param name string
----@param value float
+---@param value number
 function Convars:SetFloat(name, value) end
 ---SetInt(name, val) : sets the value of the convar to the int.
 ---@param name string
@@ -3298,7 +3520,7 @@ Decider = {}
 function Decider:AddRule(rule) end
 ---Returns an array of all matching responses. If leeway is nonzero, all results scoring within 'leeway' of the best score return.
 ---@param query handle
----@param leeway float
+---@param leeway number
 ---@return handle
 function Decider:FindAllMatches(query, leeway) end
 ---Query the database and return the best result found. If multiple of equal score found, an arbitrary one returns.
@@ -3320,8 +3542,8 @@ GlobalSys = {}
 function GlobalSys:CommandLineCheck(name) end
 ---Returns the command line param as a float.
 ---@param name string
----@param default float
----@return float
+---@param default number
+---@return number
 function GlobalSys:CommandLineFloat(name, default) end
 ---Returns the command line param as an int.
 ---@param name string
@@ -3391,9 +3613,9 @@ function Uint64:ToHexString() end
 ---@field __index string
 QAngleClass = {}
 ---Creates a new QAngle.
----@param pitch float
----@param yaw float
----@param roll float
+---@param pitch? number
+---@param yaw? number
+---@param roll? number
 ---@return QAngle
 function QAngle(pitch, yaw, roll) end
 ---Overloaded +. Adds angles together.
@@ -3440,59 +3662,47 @@ Quaternion = {}
 ---@field y number Y-axis
 ---@field z number Z-axis
 ---@field __index string
+---@operator add(Vector|number): Vector Overloaded +. Adds vectors together.
+---@operator div(Vector|number): Vector Overloaded /. Divides vectors.
+---@operator len(Vector): number Overloaded # returns the length of the vector.
+---@operator mul(Vector|number): Vector Overloaded * returns the vectors multiplied together. can also be used to multiply with scalars.
+---@operator sub(Vector|number): Vector
+---@operator unm: Vector
+
 VectorClass = {}
 ---Creates a new vector with the specified Cartesian coordinates.
----@param x float
----@param y float
----@param z float
+---Can pass zero arguments for a zeroed Vector.
+---@param x? number
+---@param y? number
+---@param z? number
 ---@return Vector
 function Vector(x, y, z) end
----Overloaded +. Adds vectors together.
----@param vector Vector
----@return Vector
-function Vector:__add(vector) end
----Overloaded /. Divides vectors.
----@param vector Vector
----@return Vector
-function VectorClass:__div(vector) end
 ---Overloaded ==. Tests for Equality.
 ---@param vector Vector
 ---@return boolean
 function VectorClass:__eq(vector) end
----Overloaded # returns the length of the vector.
----@return float
-function VectorClass:__len() end
----Overloaded * returns the vectors multiplied together. can also be used to multiply with scalars.
----@param vector Vector
----@return Vector
-function VectorClass:__mul(vector) end
----Overloaded -. Subtracts vectors
----@param vector Vector
----@return Vector
-function VectorClass:__sub(vector) end
 ---Overloaded .. Converts vectors to strings
+---Does not appear to work.
 ---@return string
+---@deprecated
 function VectorClass:__tostring() end
----Overloaded unary - operator. Reverses the vector.
----@return Vector
-function VectorClass:__unm() end
 ---Cross product of two vectors.
 ---@param vector Vector
 ---@return Vector
 function VectorClass:Cross(vector) end
 ---Dot product of two vectors.
 ---@param vector Vector
----@return float
+---@return number
 function VectorClass:Dot(vector) end
 ---Length of the Vector.
----@return float
+---@return number
 function VectorClass:Length() end
 ---Length of the Vector in the XY plane.
----@return float
+---@return number
 function VectorClass:Length2D() end
 ---Linear interpolation between the vector and the passed in target over t = [0,1].
 ---@param target Vector
----@param t float
+---@param t number
 ---@return Vector
 function VectorClass:Lerp(target, t) end
 ---Returns the vector normalized.

@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     An inventory is a table where each key has an integer value assigned to it.
@@ -47,7 +47,6 @@
     inv = Storage:Load('inv')
     ```
 ]]
-require "util.storage"
 
 ---@class Inventory
 local InventoryClass =
@@ -56,7 +55,38 @@ local InventoryClass =
     items = {},
 }
 InventoryClass.__index = InventoryClass
-Storage.RegisterType("util.Inventory", InventoryClass)
+
+if pcall(require, "util.storage") then
+    Storage.RegisterType("util.Inventory", InventoryClass)
+    ---**Static Function**
+    ---
+    ---Helper function for saving the `inventory`.
+    ---@param handle EntityHandle # The entity to save on.
+    ---@param name string # The name to save as.
+    ---@param inventory Inventory # The inventory to save.
+    ---@return boolean # If the save was successful.
+    function InventoryClass.__save(handle, name, inventory)
+        Storage.SaveTable(handle, Storage.Join(name, "items"), inventory.items)
+        Storage.SaveType(handle, name, "util.Inventory")
+        return true
+    end
+
+    ---**Static Function**
+    ---
+    ---Helper function for loading the `inventory`.
+    ---@param handle EntityHandle # Entity to load from.
+    ---@param name string # Name to load.
+    ---@return Inventory|nil
+    function InventoryClass.__load(handle, name)
+        local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+        if items ~= nil then
+            local _inventory = Inventory()
+            _inventory.items = items
+            return _inventory
+        end
+        return nil
+    end
+end
 
 ---Add a number of values to a key.
 ---@param key any
@@ -167,7 +197,6 @@ end
 ---Helper method for looping.
 ---@return fun(table: any[], i: integer):integer, any
 ---@return table<any,integer>
----@return number i
 function InventoryClass:pairs()
     return pairs(self.items)
 end
@@ -176,39 +205,10 @@ function InventoryClass:__tostring()
     return string.format("Inventory (%d keys, %d values)", self:Length())
 end
 
----**Static Function**
----
----Helper function for saving the `inventory`.
----@param handle EntityHandle # The entity to save on.
----@param name string # The name to save as.
----@param inventory Inventory # The inventory to save.
----@return boolean # If the save was successful.
-function InventoryClass.__save(handle, name, inventory)
-    Storage.SaveTable(handle, Storage.Join(name, "items"), inventory.items)
-    Storage.SaveType(handle, name, "util.Inventory")
-    return true
-end
-
----**Static Function**
----
----Helper function for loading the `inventory`.
----@param handle EntityHandle # Entity to load from.
----@param name string # Name to load.
----@return Inventory|nil
-function InventoryClass.__load(handle, name)
-    local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
-    if items ~= nil then
-        local _inventory = Inventory()
-        _inventory.items = items
-        return _inventory
-    end
-    return nil
-end
-
 
 ---Create a new `Inventory` object.
 ---First value is at the top.
----@param starting_inventory table<any,integer>
+---@param starting_inventory? table<any,integer>
 ---@return Inventory
 function Inventory(starting_inventory)
     return setmetatable({

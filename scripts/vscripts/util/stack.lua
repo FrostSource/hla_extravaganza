@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Adds stack behaviour for tables with index 1 as the top of the stack.
@@ -44,7 +44,6 @@
     stack = Storage:Load('stack')
     ```
 ]]
-require "util.storage"
 
 ---@class Stack
 local StackClass =
@@ -53,7 +52,39 @@ local StackClass =
     items = {}
 }
 StackClass.__index = StackClass
-Storage.RegisterType("util.Stack", StackClass)
+
+if pcall(require, "util.storage") then
+    Storage.RegisterType("util.Stack", StackClass)
+    ---**Static Function**
+    ---
+    ---Helper function for saving the `stack`.
+    ---@param handle EntityHandle # The entity to save on.
+    ---@param name string # The name to save as.
+    ---@param stack Stack # The stack to save.
+    ---@return boolean # If the save was successful.
+    function StackClass.__save(handle, name, stack)
+        Storage.SaveTable(handle, Storage.Join(name, "items"), stack.items)
+        Storage.SaveType(handle, name, "util.Stack")
+        return true
+    end
+
+    ---**Static Function**
+    ---
+    ---Helper function for loading the `stack`.
+    ---@param handle EntityHandle # Entity to load from.
+    ---@param name string # Name to load.
+    ---@return Stack|nil
+    function StackClass.__load(handle, name)
+        local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+        if items ~= nil then
+            local _stack = Stack()
+            _stack.items = items
+            return _stack
+        end
+        return nil
+    end
+end
+
 
 ---Push values to the stack.
 ---@param ... any
@@ -158,34 +189,7 @@ function StackClass:__tostring()
     return "Stack ("..#self.items.." items)"
 end
 
----**Static Function**
----
----Helper function for saving the `stack`.
----@param handle EntityHandle # The entity to save on.
----@param name string # The name to save as.
----@param stack Stack # The stack to save.
----@return boolean # If the save was successful.
-function StackClass.__save(handle, name, stack)
-    Storage.SaveTable(handle, Storage.Join(name, "items"), stack.items)
-    Storage.SaveType(handle, name, "util.Stack")
-    return true
-end
 
----**Static Function**
----
----Helper function for loading the `stack`.
----@param handle EntityHandle # Entity to load from.
----@param name string # Name to load.
----@return Stack|nil
-function StackClass.__load(handle, name)
-    local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
-    if items ~= nil then
-        local _stack = Stack()
-        _stack.items = items
-        return _stack
-    end
-    return nil
-end
 
 
 ---Create a new `Stack` object.

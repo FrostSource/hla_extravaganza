@@ -1,5 +1,5 @@
 --[[
-    v2.1.1
+    v2.1.2
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -429,6 +429,7 @@ else
         local t = handle:GetContext(name..separator.."type")
         if t == "string" then
             local value = handle:GetContext(name)
+            if value == nil then return default or "" end
             return value:sub(2)
         elseif t == "splitstring" then
             local splits = handle:GetContext(name..separator.."splits")
@@ -439,7 +440,7 @@ else
             return str
         end
         Warn("String " .. name .. " could not be loaded!")
-        return default
+        return default or ""
     end
 
     ---Load a number.
@@ -453,9 +454,10 @@ else
         local value = handle:GetContext(name)
         if not value or t ~= "number" then
             Warn("Number " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")")
-            return default
+            return default or 0
         end
-        return value
+        if type(value) == "number" then return value end
+        return default or 0
     end
 
     ---Load a boolean value.
@@ -469,7 +471,7 @@ else
         local value = handle:GetContext(name)
         if not value or t ~= "boolean" then
             Warn("Boolean " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")")
-            return default
+            return default or false
         end
         return value == 1
     end
@@ -484,11 +486,12 @@ else
         local t = handle:GetContext(name..separator.."type")
         if t ~= "vector" then
             Warn("Vector " .. name .. " could not be loaded!")
-            return default
+            return default or Vector()
         end
         local x = handle:GetContext(name .. ".x") or 0
         local y = handle:GetContext(name .. ".y") or 0
         local z = handle:GetContext(name .. ".z") or 0
+        ---@diagnostic disable-next-line: param-type-mismatch
         return Vector(x, y, z)
     end
 
@@ -502,18 +505,20 @@ else
         local t = handle:GetContext(name..separator.."type")
         if t ~= "qangle" then
             Warn("QAngle " .. name .. " could not be loaded!")
-            return default
+            return default or QAngle()
         end
         local x = handle:GetContext(name .. ".x") or 0
         local y = handle:GetContext(name .. ".y") or 0
         local z = handle:GetContext(name .. ".z") or 0
+        ---@diagnostic disable-next-line: param-type-mismatch
         return QAngle(x, y, z)
     end
 
     ---Load a table.
     ---@param handle EntityHandle
     ---@param name string
-    ---@param default table<any,any>
+    ---@param default? table<any,any>
+    ---@return table
     function Storage.LoadTable(handle, name, default)
         handle = resolveHandle(handle)
         local name_sep = name..separator
@@ -521,7 +526,7 @@ else
         local key_count = handle:GetContext(name_sep.."key_count")
         if t ~= "table" or not key_count  then
             Warn("Table " .. name .. " could not be loaded!")
-            return default
+            return default or {}
         end
         key_count = key_count - 1
 
@@ -543,7 +548,7 @@ else
     function Storage.LoadEntity(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
-        local uniqueKey = handle:GetContext(name..separator.."unique")
+        local uniqueKey = handle:GetContext(name..separator.."unique") ---@cast uniqueKey string
         local ent_name = Storage.LoadString(handle, name..separator.."targetname")
         if t ~= "entity" or not ent_name then
             Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")")
@@ -614,3 +619,5 @@ else
     CBaseEntity.LoadEntity  = Storage.LoadEntity
     CBaseEntity.Load        = Storage.Load
 end
+
+return "sdf"

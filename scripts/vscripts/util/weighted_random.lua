@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     Weighted random allows you to assign chances to tables.
 
     Should be loaded into global scope for using the following line:
@@ -76,6 +76,8 @@ function WeightedRandomBaseClass:Random()
             return item
         end
     end
+    -- Return to last item just in case (should never reach here.)
+    return self.ItemPool[#self.ItemPool]
 end
 
 ---Create a new WeightedRandom object with given weights.
