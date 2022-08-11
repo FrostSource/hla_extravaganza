@@ -42,9 +42,6 @@
 
 --#region Aliases/Types
 
--- Consider removing this and changing all float to number
----@alias float number
-
 ---Combined entity handle type.
 ---@alias EntityHandle CBaseEntity|CEntityInstance|CBaseModelEntity|CBasePlayer|CHL2_Player|CBaseAnimating|CBaseFlex|CBaseCombatCharacter|CBodyComponent|CAI_BaseNPC|CBaseTrigger|CEnvEntityMaker|CInfoWorldLayer|CLogicRelay|CMarkupVolumeTagged|CEnvProjectedTexture|CPhysicsProp|CSceneEntity|CPointClientUIWorldPanel|CPointTemplate|CPointWorldText|CPropHMDAvatar|CPropVRHand
 
@@ -80,7 +77,7 @@ thisEntity = nil
 ---@field startpos Vector # Global vector where to start the trace.
 ---@field endpos Vector # Global vector where to end the trace.
 ---@field pos Vector # Global vector where the trace hit.
----@field fraction float # Fraction from the start to end where the trace hit.
+---@field fraction number # Fraction from the start to end where the trace hit.
 ---@field hit boolean # Whether the trace hit something. Always present.
 ---@field startsolid boolean # Whether the trace started inside the entity. This parameter is set to nil if it is false.
 ---@field normal Vector # Global normal vector of the surface hit.
@@ -608,11 +605,7 @@ function Merge(table1, table2) end
 ---@param c float
 ---@param d float
 ---@return float
-function RemapVal(value, a, b, c, d)
-    RemapVal(5, 0, 10, 50, 100) -- 75
-    RemapVal(1, 0, 100, 0, 10) -- 0.1
-    RemapVal(50, 20, 40, 0, 1) -- 1.5
-end
+function RemapVal(value, a, b, c, d) end
 ---Remap a value in the range [a,b] to [c,d], clamping the output to the range.
 ---@param value float
 ---@param a float
@@ -620,11 +613,7 @@ end
 ---@param c float
 ---@param d float
 ---@return float
-function RemapValClamped(value, a, b, c, d)
-    RemapVal(5, 0, 10, 50, 100) -- 75
-    RemapVal(1, 0, 100, 0, 10) -- 0.1
-    RemapVal(50, 20, 40, 0, 1) -- 1
-end
+function RemapValClamped(value, a, b, c, d) end
 ---Distance between two vectors squared (faster than calculating the plain distance).
 ---@param vector1 Vector
 ---@param vector2 Vector
