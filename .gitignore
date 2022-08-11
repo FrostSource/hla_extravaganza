@@ -2,6 +2,5 @@
 /_bakeresourcecache/
 *bakeresourcecache.vpk
 __test*
-/.vscode/
 /release/
 __pycache__
