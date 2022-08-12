@@ -3668,7 +3668,6 @@ Quaternion = {}
 ---@operator mul(Vector|number): Vector Overloaded * returns the vectors multiplied together. can also be used to multiply with scalars.
 ---@operator sub(Vector|number): Vector
 ---@operator unm: Vector
-
 VectorClass = {}
 ---Creates a new vector with the specified Cartesian coordinates.
 ---Can pass zero arguments for a zeroed Vector.
