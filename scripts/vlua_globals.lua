@@ -1,7 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.0
+    Version 2.0.1
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -3720,11 +3720,11 @@ function VectorClass:Normalized() end
 
 -- Actions for CBasePlayer:GetAnalogActionPositionForHand. These map to the actions in the SteamVR binding menu.
 ---@alias ENUM_ANALOG_INPUT_ACTIONS
----| "0" # Hand | Hand Curl | X Axis
----| "1" # Hand | Trigger Pull | X Axis
----| "2" # Interact | Squeeze Xen Grenade | X Axis
----| "3" # Move | Teleport Turn | Required X, Y Axis
----| "4" # Move | Continuous Turn | X, Y Axis
+---|0 # Hand | Hand Curl | X Axis
+---|1 # Hand | Trigger Pull | X Axis
+---|2 # Interact | Squeeze Xen Grenade | X Axis
+---|3 # Move | Teleport Turn | Required X, Y Axis
+---|4 # Move | Continuous Turn | X, Y Axis
 
 --#endregion
 
@@ -3733,17 +3733,17 @@ function VectorClass:Normalized() end
 -- Player VR controller types returned by CBasePlayer::GetVRControllerType()
 -- Warning: The enumerations are missing from the scripting environment.
 ---@alias ENUM_CONTROLLER_TYPES
----| "0" # VR_CONTROLLER_TYPE_UNKNOWN
----| "1" # VR_CONTROLLER_TYPE_X360
----| "2" # VR_CONTROLLER_TYPE_VIVE
----| "3" # VR_CONTROLLER_TYPE_TOUCH
----| "4" # VR_CONTROLLER_TYPE_RIFT_S
----| "5" # UNKNOWN
----| "6" # VR_CONTROLLER_TYPE_KNUCKLES
----| "7" # VR_CONTROLLER_TYPE_WINDOWSMR
----| "8" # VR_CONTROLLER_TYPE_WINDOWSMR_SAMSUNG
----| "9" # VR_CONTROLLER_TYPE_GENERIC_TRACKED
----| "10" # VR_CONTROLLER_TYPE_COSMOS
+---|0 # VR_CONTROLLER_TYPE_UNKNOWN
+---|1 # VR_CONTROLLER_TYPE_X360
+---|2 # VR_CONTROLLER_TYPE_VIVE
+---|3 # VR_CONTROLLER_TYPE_TOUCH
+---|4 # VR_CONTROLLER_TYPE_RIFT_S
+---|5 # UNKNOWN
+---|6 # VR_CONTROLLER_TYPE_KNUCKLES
+---|7 # VR_CONTROLLER_TYPE_WINDOWSMR
+---|8 # VR_CONTROLLER_TYPE_WINDOWSMR_SAMSUNG
+---|9 # VR_CONTROLLER_TYPE_GENERIC_TRACKED
+---|10 # VR_CONTROLLER_TYPE_COSMOS
 
 --#endregion
 
@@ -3752,34 +3752,34 @@ function VectorClass:Normalized() end
 -- Actions for CBasePlayer:IsDigitalActionOnForHand. These map to the actions in the SteamVR binding menu.
 -- Note: No enumerations exist in the game for these yet.
 ---@alias ENUM_DIGITAL_INPUT_ACTIONS
----| "0" # Menu > Toggle Menu
----| "1" # Menu > Menu Interact
----| "2" # Menu > Menu Dismiss
----| "3" # Interact > Use
----| "4" # Interact > Use Grip
----| "5" # Weapon > Show inventory
----| "6" # Interact > Grav Glove Lock
----| "7" # Weapon > Fire
----| "8" # Weapon > Alt Fire
----| "9" # Weapon > Reload
----| "10" # Weapon > Eject Magazine
----| "11" # Weapon > Slide Release
----| "12" # Weapon > Open Chamber
----| "13" # Weapon > Toggle Laser Sight
----| "14" # Weapon > Toggle Burst Fire
----| "15" # Interact > Toggle Health Pen
----| "16" # Interact > Arm Grenade
----| "17" # Interact > Arm Xen Grenade
----| "18" # Move > Teleport
----| "19" # Move > Turn Left
----| "20" # Move > Turn Right
----| "21" # Move > Move Back
----| "22" # Move > Walk
----| "23" # Move > Jump
----| "24" # Move > Mantle
----| "25" # Move > Crouch Toggle
----| "26" # Move > Stand toggle
----| "27" # Move > Adjust Height
+---|0 # Menu > Toggle Menu
+---|1 # Menu > Menu Interact
+---|2 # Menu > Menu Dismiss
+---|3 # Interact > Use
+---|4 # Interact > Use Grip
+---|5 # Weapon > Show inventory
+---|6 # Interact > Grav Glove Lock
+---|7 # Weapon > Fire
+---|8 # Weapon > Alt Fire
+---|9 # Weapon > Reload
+---|10 # Weapon > Eject Magazine
+---|11 # Weapon > Slide Release
+---|12 # Weapon > Open Chamber
+---|13 # Weapon > Toggle Laser Sight
+---|14 # Weapon > Toggle Burst Fire
+---|15 # Interact > Toggle Health Pen
+---|16 # Interact > Arm Grenade
+---|17 # Interact > Arm Xen Grenade
+---|18 # Move > Teleport
+---|19 # Move > Turn Left
+---|20 # Move > Turn Right
+---|21 # Move > Move Back
+---|22 # Move > Walk
+---|23 # Move > Jump
+---|24 # Move > Mantle
+---|25 # Move > Crouch Toggle
+---|26 # Move > Stand toggle
+---|27 # Move > Adjust Height
 
 --#endregion
 
@@ -3790,9 +3790,9 @@ ACTIVATE_TYPE_INITIAL_CREATION    = 0
 ACTIVATE_TYPE_DATAUPDATE_CREATION = 1
 ACTIVATE_TYPE_ONRESTORE           = 2
 ---@alias ENUM_ACTIVATION_TYPES
----| "0" # When the function is called after entity creation.
----| "1" # Unknown.
----| "2" # When the function is called after the entity has been restored from a saved game.
+---|0 # When the function is called after entity creation.
+---|1 # Unknown.
+---|2 # When the function is called after the entity has been restored from a saved game.
 
 --#endregion
 
@@ -3830,37 +3830,37 @@ DMG_BLAST_SURFACE           =	134217728
 DMG_DIRECT                  =   268435456
 DMG_BUCKSHOT                =   536870912 -- Shotgun damage. Gibs headcrabs.
 ---@alias ENUM_DAMAGE_TYPES
----| "0" # DMG_GENERIC
----| "1" # DMG_CRUSH
----| "2" # DMG_BULLET
----| "4" # DMG_SLASH
----| "8" # DMG_BURN
----| "16" # DMG_VEHICLE
----| "32" # DMG_FALL
----| "64" # DMG_BLAST
----| "128" # DMG_CLUB
----| "256" # DMG_SHOCK
----| "512" # DMG_SONIC
----| "1024" # DMG_ENERGYBEAM
----| "2048" # DMG_PREVENT_PHYSICS_FORCE
----| "4096" # DMG_NEVERGIB
----| "8192" # DMG_ALWAYSGIB
----| "16384" # DMG_DROWN
----| "32768" # DMG_PARALYZE
----| "65536" # DMG_NERVEGAS
----| "131072" # DMG_POISON
----| "262144" # DMG_RADIATION
----| "524288" # DMG_DROWNRECOVER
----| "1048576" # DMG_ACID
----| "2097152" # DMG_SLOWBURN
----| "4194304" # DMG_REMOVENORAGDOLL
----| "8388608" # DMG_PHYSGUN
----| "16777216" # DMG_PLASMA
----| "33554432" # DMG_AIRBOAT
----| "67108864" # DMG_DISSOLVE
----| "134217728" # DMG_BLAST_SURFACE
----| "268435456" # DMG_DIRECT
----| "536870912" # DMG_BUCKSHOT
+---|0 # DMG_GENERIC
+---|1 # DMG_CRUSH
+---|2 # DMG_BULLET
+---|4 # DMG_SLASH
+---|8 # DMG_BURN
+---|16 # DMG_VEHICLE
+---|32 # DMG_FALL
+---|64 # DMG_BLAST
+---|128 # DMG_CLUB
+---|256 # DMG_SHOCK
+---|512 # DMG_SONIC
+---|1024 # DMG_ENERGYBEAM
+---|2048 # DMG_PREVENT_PHYSICS_FORCE
+---|4096 # DMG_NEVERGIB
+---|8192 # DMG_ALWAYSGIB
+---|16384 # DMG_DROWN
+---|32768 # DMG_PARALYZE
+---|65536 # DMG_NERVEGAS
+---|131072 # DMG_POISON
+---|262144 # DMG_RADIATION
+---|524288 # DMG_DROWNRECOVER
+---|1048576 # DMG_ACID
+---|2097152 # DMG_SLOWBURN
+---|4194304 # DMG_REMOVENORAGDOLL
+---|8388608 # DMG_PHYSGUN
+---|16777216 # DMG_PLASMA
+---|33554432 # DMG_AIRBOAT
+---|67108864 # DMG_DISSOLVE
+---|134217728 # DMG_BLAST_SURFACE
+---|268435456 # DMG_DIRECT
+---|536870912 # DMG_BUCKSHOT
 
 --#endregion
 
@@ -3885,23 +3885,23 @@ PATTACH_RENDERORIGIN_FOLLOW = 10
 --PATTACH_CUSTOM_GAME_STATE_1 = 14
 MAX_PATTACH_TYPES           = 15
 ---@alias ENUM_PATTACH
----| "-1" # PATTACH_INVALID
----| "0" # PATTACH_ABSORIGIN
----| "1" # PATTACH_ABSORIGIN_FOLLOW
----| "2" # PATTACH_CUSTOMORIGIN
----| "3" # PATTACH_CUSTOMORIGIN_FOLLOW
----| "4" # PATTACH_POINT
----| "5" # PATTACH_POINT_FOLLOW
----| "6" # PATTACH_EYES_FOLLOW
----| "7" # PATTACH_OVERHEAD_FOLLOW
----| "8" # PATTACH_WORLDORIGIN
----| "9" # PATTACH_ROOTBONE_FOLLOW
----| "10" # PATTACH_RENDERORIGIN_FOLLOW
----| "11" # PATTACH_MAIN_VIEW
----| "12" # PATTACH_WATERWAKE
----| "13" # PATTACH_CENTER_FOLLOW
----| "14" # PATTACH_CUSTOM_GAME_STATE_1
----| "15" # MAX_PATTACH_TYPES
+---|-1 # PATTACH_INVALID
+---|0 # PATTACH_ABSORIGIN
+---|1 # PATTACH_ABSORIGIN_FOLLOW
+---|2 # PATTACH_CUSTOMORIGIN
+---|3 # PATTACH_CUSTOMORIGIN_FOLLOW
+---|4 # PATTACH_POINT
+---|5 # PATTACH_POINT_FOLLOW
+---|6 # PATTACH_EYES_FOLLOW
+---|7 # PATTACH_OVERHEAD_FOLLOW
+---|8 # PATTACH_WORLDORIGIN
+---|9 # PATTACH_ROOTBONE_FOLLOW
+---|10 # PATTACH_RENDERORIGIN_FOLLOW
+---|11 # PATTACH_MAIN_VIEW
+---|12 # PATTACH_WATERWAKE
+---|13 # PATTACH_CENTER_FOLLOW
+---|14 # PATTACH_CUSTOM_GAME_STATE_1
+---|15 # MAX_PATTACH_TYPES
 
 --#endregion
 
@@ -3910,17 +3910,17 @@ MAX_PATTACH_TYPES           = 15
 -- Enumerations used by Entity:AddEffects, Entity:RemoveEffects and Entity:IsEffectActive.
 -- Names don't exist.
 ---@alias ENUM_EFFECT_FLAGS
----| "1" # EF_BONEMERGE Performs bone merge on client side
----| "2" # EF_BRIGHTLIGHT DLIGHT centered at entity origin
----| "4" # EF_DIMLIGHT Player flashlight
----| "8" # EF_NOINTERP Don't interpolate the next frame
----| "16" # EF_NOSHADOW Disables shadow
----| "32" # EF_NODRAW Prevents the entity from drawing and networking.
----| "64" # EF_NORECEIVESHADOW Don't receive shadows
----| "128" # EF_BONEMERGE_FASTCULL For use with EF_BONEMERGE. If this is set, then it places this ents origin at its parent and uses the parent's bbox + the max extents of the aiment. Otherwise, it sets up the parent's bones every frame to figure out where to place the aiment, which is inefficient because it'll setup the parent's bones even if the parent is not in the PVS.
----| "256" # EF_ITEM_BLINK Makes the entity blink
----| "512" # EF_PARENT_ANIMATES Always assume that the parent entity is animating
----| "1024" # EF_FOLLOWBONE Internal flag that is set by Entity:FollowBone
+---|1 # EF_BONEMERGE Performs bone merge on client side
+---|2 # EF_BRIGHTLIGHT DLIGHT centered at entity origin
+---|4 # EF_DIMLIGHT Player flashlight
+---|8 # EF_NOINTERP Don't interpolate the next frame
+---|16 # EF_NOSHADOW Disables shadow
+---|32 # EF_NODRAW Prevents the entity from drawing and networking.
+---|64 # EF_NORECEIVESHADOW Don't receive shadows
+---|128 # EF_BONEMERGE_FASTCULL For use with EF_BONEMERGE. If this is set, then it places this ents origin at its parent and uses the parent's bbox + the max extents of the aiment. Otherwise, it sets up the parent's bones every frame to figure out where to place the aiment, which is inefficient because it'll setup the parent's bones even if the parent is not in the PVS.
+---|256 # EF_ITEM_BLINK Makes the entity blink
+---|512 # EF_PARENT_ANIMATES Always assume that the parent entity is animating
+---|1024 # EF_FOLLOWBONE Internal flag that is set by Entity:FollowBone
 
 --#endregion
 
