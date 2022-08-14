@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -149,7 +149,7 @@ CPropVRHand.LastItemGrabbed = nil
 ---@type string
 CPropVRHand.LastClassGrabbed = ""
 ---**The literal type of this hand.**
----@type integer|"0"|"1"
+---@type integer|0|1
 CPropVRHand.Literal = nil
 
 
@@ -333,7 +333,7 @@ function CBasePlayer:AddResin(amount)
 end
 
 ---Marges an existing prop with a given hand.
----@param hand CPropVRHand|"0"|"1" # The hand handle or index.
+---@param hand CPropVRHand|0|1 # The hand handle or index.
 ---@param prop EntityHandle|string # The prop handle or targetname.
 ---@param hide_hand boolean # If the hand should turn invisible after merging.
 function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
@@ -481,6 +481,13 @@ function CPropVRHand:GetGrabbityGlove()
     return self:GetFirstChildWithClassname("prop_grabbity_gloves")
 end
 
+---Returns true if the digital action is on for this. See `ENUM_DIGITAL_INPUT_ACTIONS` for action index values.
+---Note: Only reports input when headset is awake. Will still transmit input when controller loses tracking.
+---@param digitalAction ENUM_DIGITAL_INPUT_ACTIONS
+---@return boolean
+function CPropVRHand:IsButtonPressed(digitalAction)
+    return Player:IsDigitalActionOnForHand(self.Literal, digitalAction)
+end
 
 ---Forces the player to drop this entity if held.
 ---@param self CBaseEntity
@@ -489,9 +496,11 @@ function CBaseEntity:Drop()
 end
 util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
 
----Force the player to grab this entity with the nearest hand.
-function CBaseEntity:Grab()
-    Player:GrabByHandle(self, nil)
+---Force the player to grab this entity with a hand.
+---If no hand is supplied then the nearest hand will be used.
+---@param hand? CPropVRHand|0|1
+function CBaseEntity:Grab(hand)
+    Player:GrabByHandle(self, hand)
 end
 util.SanitizeFunctionForHammer(CBaseEntity.Grab, "Grab", CBaseEntity)
 
