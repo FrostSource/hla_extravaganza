@@ -2,8 +2,8 @@
     v2.0.1
     Prefab specific functions for maps/prefabs/logic/logic_weighted_random/logic_weighted_random.vmap
 ]]
-require "util.storage"
-require "util.weighted_random"
+require "storage"
+require "math.weighted_random"
 
 ---@type WeightedRandom
 local wr
@@ -39,7 +39,7 @@ if thisEntity:GetPrivateScriptScope().savewasloaded then
     thisEntity:SetContextThink("init", function() ready(true) end, 0)
 end
 
----@param activateType "0"|"1"|"2"
+---@param activateType 0|1|2
 function Activate(activateType)
     -- If game is being restored then set the script scope ready for next execution.
     if activateType == 2 then

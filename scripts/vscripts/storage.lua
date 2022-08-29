@@ -1,5 +1,5 @@
 --[[
-    v2.1.3
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.

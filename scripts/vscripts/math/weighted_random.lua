@@ -86,3 +86,4 @@ end
 function WeightedRandom(weights)
     return setmetatable({ItemPool = weights or {}}, WeightedRandomBaseClass)
 end
+

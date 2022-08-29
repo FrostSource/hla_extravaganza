@@ -69,7 +69,7 @@
 
 ]]
 require "util.util"
-require "util.storage"
+require "storage"
 
 --- Properties relating directly to the Hammer entity.
 
@@ -113,6 +113,7 @@ local function SetLookFromClass(class)
     look_from_class = class or look_from_class
     thisEntity:SaveString("script.LookFromClass", look_from_class)
 end
+Expose(SetLookFromClass)
 
 ---Set the targetname to test looking from.
 ---This takes precedence over `look_from_class`.
@@ -122,6 +123,7 @@ local function SetLookFromName(targetname)
     look_from_name = targetname or look_from_name
     thisEntity:SaveString("script.LookFromName", look_from_name)
 end
+Expose(SetLookFromName)
 
 ---Set the attachment on the model to test looking from.
 ---Both origin and forward of the attachment are used.
@@ -131,6 +133,7 @@ local function SetLookFromAttachment(attachment_name)
     look_from_attachment_name = attachment_name or look_from_attachment_name
     thisEntity:SaveString("script.LookFromAttachment", look_from_attachment_name)
 end
+Expose(SetLookFromAttachment)
 
 ---Set if the script should check all named targets or only one.
 ---@param check_all boolean
@@ -138,18 +141,20 @@ local function SetCheckAllTargets(check_all)
     check_all_targets = check_all
     thisEntity:SaveBoolean("script.CheckAllTargets", check_all_targets)
 end
+Expose(SetCheckAllTargets)
 
 ---Toggles debug state. This is not saved between sessions.
 local function ToggleDebug()
     debug_enabled = not debug_enabled
 end
+Expose(ToggleDebug)
 
 
 ---Get if the look from entity can see a given `handle`.
 ---@param look_origin Vector
 ---@param look_forward Vector
 ---@param handle EntityHandle
----@return boolean
+---@return boolean, number
 local function IsLookingAtHandle(look_origin, look_forward, handle)
     local pos = (handle:GetOrigin() - look_origin):Normalized()
     if use_2d then
@@ -184,7 +189,7 @@ local function IsLookingAtHandle(look_origin, look_forward, handle)
 end
 
 ---Main think for trigger.
----@return number # Update interval
+---@return number? # Update interval
 local function ThinkFlashlightAim()
     if not target or not IsValidEntity(target) then
         target = Entities:FindByName(nil, target_name)
@@ -222,7 +227,7 @@ local function ThinkFlashlightAim()
         if can_see then
             can_see_target = true
         end
-        --Debug the look from vectors in-game, currently only for one target
+        --Debug the look-from vectors in-game, currently only for one target
         if debug_enabled then
             debugoverlay:Sphere(look_origin, 3, 255, 0, 0, 255, false, 0)
             debugoverlay:Sphere(target:GetOrigin(), 3, 0, 0, 255, 255, false, 0)
@@ -280,6 +285,7 @@ local function OnStartTouchAll(input)
         if not look_from_handle then Warning("trigger_look_arbitrary.lua Could not find look from entity!\n") end
     end
 end
+Expose(OnStartTouchAll)
 
 ---Output redirected here.
 ---@param input TypeIOInvoke
@@ -288,12 +294,13 @@ local function OnEndTouchAll(input)
     looked_at_target = false
     thisEntity:StopThink("ThinkFlashlightAim")
 end
+Expose(OnEndTouchAll)
 
 ---@param spawnkeys CScriptKeyValues
 function Spawn(spawnkeys)
     thisEntity:SaveString("script.target", spawnkeys:GetValue("target") or target_name)
-    thisEntity:SaveNumber("script.LookTime", tonumber(spawnkeys:GetValue("LookTime")))
-    thisEntity:SaveNumber("script.FieldOfView", tonumber(spawnkeys:GetValue("FieldOfView")))
+    thisEntity:SaveNumber("script.LookTime", tonumber(spawnkeys:GetValue("LookTime")) or 0.5)
+    thisEntity:SaveNumber("script.FieldOfView", tonumber(spawnkeys:GetValue("FieldOfView")) or 0.9)
     thisEntity:SaveBoolean("script.FOV2D", spawnkeys:GetValue("FOV2D"))
     thisEntity:SaveBoolean("script.test_occlusion", spawnkeys:GetValue("test_occlusion"))
     thisEntity:SaveString("script.LookFromClass", spawnkeys:GetValue("LookFromClass") or look_from_class)
@@ -326,7 +333,7 @@ if thisEntity:GetPrivateScriptScope().savewasloaded then
     thisEntity:SetContextThink("init", function() ready(true) end, 0)
 end
 
----@param activateType "0"|"1"|"2"
+---@param activateType 0|1|2
 function Activate(activateType)
     -- If game is being restored then set the script scope ready for next execution.
     if activateType == 2 then
@@ -336,6 +343,3 @@ function Activate(activateType)
     -- Otherwise just run the ready function after "instant" delay (player will be ready).
     thisEntity:SetContextThink("init", function() ready(false) end, 0)
 end
-
--- Add local functions to private script scope to avoid environment pollution.
-local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end

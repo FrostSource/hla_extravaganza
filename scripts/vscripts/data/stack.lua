@@ -53,8 +53,8 @@ local StackClass =
 }
 StackClass.__index = StackClass
 
-if pcall(require, "util.storage") then
-    Storage.RegisterType("util.Stack", StackClass)
+if pcall(require, "storage") then
+    Storage.RegisterType("Stack", StackClass)
     ---**Static Function**
     ---
     ---Helper function for saving the `stack`.

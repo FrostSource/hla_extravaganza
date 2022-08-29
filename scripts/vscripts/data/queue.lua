@@ -44,7 +44,7 @@
     queue = Storage:Load('queue')
     ```
 ]]
-require "util.storage"
+require "storage"
 
 ---@class Queue
 local QueueClass =
@@ -53,7 +53,40 @@ local QueueClass =
     items = {}
 }
 QueueClass.__index = QueueClass
-Storage.RegisterType("util.Queue", QueueClass)
+
+if pcall(require, "storage") then
+    Storage.RegisterType("Queue", QueueClass)
+    ---**Static Function**
+    ---
+    ---Helper function for saving the `queue`.
+    ---@param handle EntityHandle # The entity to save on.
+    ---@param name string # The name to save as.
+    ---@param queue Queue # The stack to save.
+    ---@return boolean # If the save was successful.
+    function QueueClass.__save(handle, name, queue)
+        Storage.SaveTable(handle, Storage.Join(name, "items"), queue.items)
+        Storage.SaveType(handle, name, "util.Queue")
+        return true
+    end
+
+    ---**Static Function**
+    ---
+    ---Helper function for loading the `stack`.
+    ---@param handle EntityHandle # Entity to load from.
+    ---@param name string # Name to load.
+    ---@return Queue|nil
+    function QueueClass.__load(handle, name)
+        local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+        if items ~= nil then
+            local _queue = Queue()
+            _queue.items = items
+            return _queue
+        end
+        return nil
+    end
+end
+
+
 
 ---Add values to the queue in the order they appear.
 ---@param ... any
@@ -156,35 +189,6 @@ end
 
 function QueueClass:__tostring()
     return "Queue ("..#self.items.." items)"
-end
-
----**Static Function**
----
----Helper function for saving the `queue`.
----@param handle EntityHandle # The entity to save on.
----@param name string # The name to save as.
----@param queue Queue # The stack to save.
----@return boolean # If the save was successful.
-function QueueClass.__save(handle, name, queue)
-    Storage.SaveTable(handle, Storage.Join(name, "items"), queue.items)
-    Storage.SaveType(handle, name, "util.Queue")
-    return true
-end
-
----**Static Function**
----
----Helper function for loading the `stack`.
----@param handle EntityHandle # Entity to load from.
----@param name string # Name to load.
----@return Stack|nil
-function QueueClass.__load(handle, name)
-    local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
-    if items ~= nil then
-        local _queue = Queue()
-        _queue.items = items
-        return _queue
-    end
-    return nil
 end
 
 

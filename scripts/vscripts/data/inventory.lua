@@ -56,8 +56,8 @@ local InventoryClass =
 }
 InventoryClass.__index = InventoryClass
 
-if pcall(require, "util.storage") then
-    Storage.RegisterType("util.Inventory", InventoryClass)
+if pcall(require, "storage") then
+    Storage.RegisterType("Inventory", InventoryClass)
     ---**Static Function**
     ---
     ---Helper function for saving the `inventory`.
