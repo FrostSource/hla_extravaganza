@@ -460,7 +460,7 @@ function CPropVRHand:MergeProp(prop, hide_hand)
         prop = Entities:FindByName(nil, prop)
     end
     if IsValidEntity(prop) then
-        local glove = util.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
+        local glove = self:GetGlove()
         -- don't use FollowEntity
         prop:SetParent(glove, "!bonemerge")
         if hide_hand then glove:SetRenderAlpha(0) end
@@ -475,7 +475,13 @@ function CPropVRHand:IsHoldingItem()
     return IsValidEntity(self.ItemHeld)
 end
 
----Get the entity for this hands grabbity glove.
+---Get the rendered glove entity for this hand.
+---@return EntityHandle
+function CPropVRHand:GetGlove()
+    return util.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
+end
+
+---Get the entity for this hands grabbity glove (the animated part on the glove).
 ---@return EntityHandle
 function CPropVRHand:GetGrabbityGlove()
     return self:GetFirstChildWithClassname("prop_grabbity_gloves")

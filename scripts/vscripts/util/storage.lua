@@ -1,5 +1,5 @@
 --[[
-    v2.1.2
+    v2.1.3
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -121,7 +121,7 @@
     This limit does not apply to names.
 ]]
 
-local debug_allowed = true
+local debug_allowed = false
 ---Show a warning message in the console if debugging is enabled.
 ---@param msg any
 local function Warn(msg)
@@ -543,8 +543,8 @@ else
     ---Load an entity.
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
-    ---@param default EntityHandle # Optional default value.
-    ---@return EntityHandle
+    ---@param default? EntityHandle # Optional default value.
+    ---@return EntityHandle?
     function Storage.LoadEntity(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")

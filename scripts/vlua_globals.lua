@@ -1,7 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.1
+    Version 2.0.2
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -1368,7 +1368,7 @@ function IsInToolsMode() end
 ---Register as a listener for a game event from script.
 ---@param eventname GAME_EVENTS_ALL
 ---@param callback function
----@param context table|nil # Context to pass as the first parameter of `callback`.
+---@param context nil|table # Context to pass as the first parameter of `callback`.
 ---@return integer # ID used to cancel with StopListeningToGameEvent().
 function ListenToGameEvent(eventname, callback, context) end
 ---Creates a table from the specified keyvalues text file.
@@ -1666,8 +1666,13 @@ function CBaseEntity:GetBoundingMaxs() end
 ---Get a vector containing min bounds, centered on object
 ---@return Vector
 function CBaseEntity:GetBoundingMins() end
+
+---@class BoundsTable
+---@field Mins Vector
+---@field Maxs Vector
+
 ---Get a table containing the 'Mins' & 'Maxs' vector bounds, centered on object
----@return table
+---@return BoundsTable
 function CBaseEntity:GetBounds() end
 ---Get vector to center of object - absolute coords
 ---@return Vector
