@@ -19,6 +19,8 @@ by FrostSource
 | Hide Spawn 1-10 | Hacking spawn spots can be individually enabled/disabled.
 | HackDifficultyName | The difficulty name for the hack:<br>First<br>Easy<br>Medium<br>Hard<br>VeryHard<br><br>Other names exist in `pak01_dir.vpk/scripts/holo_hacking_difficulty.txt`.
 | Puzzle Type | The type of puzzle the player must complete to open up the crafting station.
+| DisableAnimationOutputs | The last 9 outputs listed below will not fire. Avoids any performance cost that may occur on map start (unlikely to ever be noticed).
+| Starts Hacked | Station will open when the player is near without needing a hack.
 
 ---
 
@@ -35,5 +37,15 @@ by FrostSource
 || OnPlayerNear | Fires when the player is near the station before it has been hacked and opened.
 || OnHackSuccess | Fires when the hack has been successfully completed.
 || OnHackFailed | Fires when the hack has failed.
+| **Animation Outputs**
+|| OnConsoleStartedOpening | The main console has started its opening animation.
+|| OnConsoleScreenOpened | The interactive screen has finished opening.
+|| OnCradleStartedOpening | Weapon cradle opening animation started.
+|| OnCradleFinishedOpening | Weapon cradle opening animation finished.
+|| OnTrayInteraction | Player placed or retrieved resin from the tray.
+|| OnResinFinished | Player finished placing resin and tray is closing.
+|| OnUpgradeStarted | Weapon upgrade animation has started.
+|| OnUpgradeFinished | Weapon upgrade animation has finished but weapon is still enclosed.
+|| OnWeaponReady | Upgrading has finished completely and weapon can be taken.
 
 ---
