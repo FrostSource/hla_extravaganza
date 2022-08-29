@@ -3007,7 +3007,7 @@ metadata
 	input AddContext(string) : "Adds context (context1:value1,context2:value2)."
 	input RemoveContext(string) : "Remove context (contextname)."
 	input ClearContext(void) : "Clear all context."
-	input SilencePlayer(bool) : "Silence the player with 0 or allow the player to speak with 1. Will also silence Russell speaking through headset."
+	input SilencePlayer(bool) : "Silence the player with 1 or allow the player to speak with 0. Will also silence Russell speaking through headset."
 ]
 
 @PointClass base(Targetname) = point_training_gravity_gloves : "An entity that helps with the gravity glove training"
