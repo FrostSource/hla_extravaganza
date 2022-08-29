@@ -5,6 +5,8 @@
     This script fires outputs to a logic_case based on animation tags.
     It is not directly attached to any entity because it is minified
     first and embedded in the prefab to make prefab sharing easier.
+
+    This script is just for debug purposes and does not need to be copied!
 ]]
 local n = Entities:FindByName(nil,thisEntity:GetName()..'_outputs')
 local function AnimTagListener( sTagName, nStatus )
