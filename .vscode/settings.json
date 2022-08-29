@@ -1,14 +1,8 @@
 {
-    /*
-        Recommended settings for working with VLua files using the Lua Language Server by sumneko:
-        https://marketplace.visualstudio.com/items?itemName=sumneko.lua
-    */
     "Lua.completion.autoRequire": false,
     "Lua.diagnostics.ignoredFiles": "Enable",
-    // vlua_globals.lua needs a large preload size.
     "Lua.workspace.preloadFileSize": 300,
     "Lua.hover.enumsLimit": 1,
-    // Version Alyx uses.
     "Lua.runtime.version": "LuaJIT",
     "Lua.runtime.builtin": {
         "coroutine": "enable",

@@ -1,5 +1,5 @@
 --[[
-    v1.1.1
+    v1.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code
@@ -39,10 +39,10 @@ end
 
 ---Get if the given `handle` value is an entity, regardless of if it's still alive.
 ---@param handle EntityHandle|any
+---@param checkValidity? boolean # Optionally check validity with IsValidEntity.
 ---@return boolean
-function IsEntity(handle)
-    ---@diagnostic disable-next-line: undefined-field
-    return type(handle) == "table" and handle.__self
+function IsEntity(handle, checkValidity)
+    return (type(handle) == "table" and handle.__self) and (not checkValidity or IsValidEntity(handle))
 end
 
 ---Add an output to a given entity `handle`.
@@ -59,9 +59,32 @@ function AddOutput(handle, output, target, input, parameter, delay, activator, c
     if IsEntity(target) then target = target:GetName() end
     parameter = parameter or ""
     delay = delay or 0
-    if fireOnce then fireOnce = 1 else fireOnce = -1 end
-    local output_str = output..">"..target..">"..input..">"..parameter..">"..delay..">"..fireOnce
+    local output_str = output..">"..target..">"..input..">"..parameter..">"..delay..">"..(fireOnce and 1 or -1)
     DoEntFireByInstanceHandle(handle, "AddOutput", output_str, 0, activator or nil, caller or nil)
+end
+
+---Loads the given module, returns any value returned by the given module(true when nil).
+---Then runs the given callback function.
+---If the module fails to load then the callback is not executed and no error is thrown.
+---@param modname string
+---@param callback fun(mod_result: unknown)
+---@return unknown
+---@diagnostic disable-next-line: lowercase-global
+function ifrequire(modname, callback)
+    local success, result = pcall(require, modname)
+    if success then
+        callback(result)
+        return result
+    end
+    return nil
+end
+
+---Execute a script file. Included in the current scope by default.
+---@param scriptFileName string
+---@param scope? ScriptScope
+---@return boolean
+function IncludeScript(scriptFileName, scope)
+    return DoIncludeScript(scriptFileName, scope or getfenv(2))
 end
 
 
@@ -75,8 +98,8 @@ end
 util = {}
 
 ---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
----@param vr_tip_attachment "1"|"2"
----@return "0"|"1"
+---@param vr_tip_attachment 1|2
+---@return 0|1
 function util.GetHandIdFromTip(vr_tip_attachment)
     local handId = vr_tip_attachment - 1
     if not Convars:GetBool("hlvr_left_hand_primary") then
@@ -89,7 +112,7 @@ end
 ---(or classname `class` if the name is blank).
 ---@param name string
 ---@param class string
----@param position CBaseEntity
+---@param position Vector
 ---@param radius? number # Default is 128
 ---@return EntityHandle
 function util.EstimateNearestEntity(name, class, position, radius)
@@ -161,7 +184,7 @@ CBaseEntity.GetFirstChildWithName = util.GetFirstChildWithName
 ---Attempt to find a key in `tbl` pointing to `value`.
 ---@param tbl table # The table to search.
 ---@param value any # The value to search for.
----@return string # Returns nil if no key found.
+---@return unknown|nil # The key in `tbl` or nil if no `value` was found.
 function util.FindKeyFromValue(tbl, value)
     for key, val in pairs(tbl) do
         if val == value then
@@ -175,7 +198,7 @@ end
 ---@param tbl table # The table to search.
 ---@param value any # The value to search for.
 ---@param seen? table[] # List of tables that have already been searched.
----@return string # Returns nil if no key found.
+---@return unknown|nil # The key in `tbl` or nil if no `value` was found.
 local function _FindKeyFromValueDeep(tbl, value, seen)
     seen = seen or {}
     for key, val in pairs(tbl) do
@@ -193,7 +216,7 @@ end
 ---Attempt to find a key in `tbl` pointing to `value` by recursively searching nested tables.
 ---@param tbl table # The table to search.
 ---@param value any # The value to search for.
----@return string # Returns nil if no key found.
+---@return unknown|nil # The key in `tbl` or nil if no `value` was found.
 function util.FindKeyFromValueDeep(tbl, value)
     return _FindKeyFromValueDeep(tbl, value)
 end
@@ -204,11 +227,11 @@ end
 ---@param name? string # Optionally the name of the function for faster processing. Is required if using a local function.
 ---@param scope? table # Optionally the explicit scope to put the sanitized functions in.
 function util.SanitizeFunctionForHammer(func, name, scope)
-    -- if name is nil then find the name
     local fenv = getfenv(func)
+    -- if name is empty then find the name
     if name == "" or name == nil then
         name = util.FindKeyFromValueDeep(fenv, func)
-        -- if name is still after search environment, search locals
+        -- if name is still empty after searching environment, search locals
         if name == nil then
             -- locals get put in global scope
             fenv = _G
@@ -300,7 +323,7 @@ util.math = {}
 
 ---Get the sign of a number.
 ---@param number number
----@return "1"|"0"|"-1"
+---@return 1|0|-1
 function util.math.sign(number)
     return number > 0 and 1 or (number < 0 and -1 or 0)
 end
