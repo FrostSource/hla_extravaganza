@@ -1,8 +1,12 @@
+*NOTE: This repository is going through heavy behind-the-scenes changes and might not be up-to-date with the latest assets.*
+
 A collection of scripts and resources to improve functionality of Half-Life: Alyx for mappers.
 
 Still in early development.
 
 # Downloads
+
+*Downloads might be out-of-date while repository is undergoing changes.*
 
 Navigate to the release section to download zips of the latest assets: https://github.com/FrostSource/hla_extravaganza/releases
 
