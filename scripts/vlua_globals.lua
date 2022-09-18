@@ -1,7 +1,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.2
+    Version 2.0.3
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -44,6 +44,10 @@
 
 ---Combined entity handle type.
 ---@alias EntityHandle CBaseEntity|CEntityInstance|CBaseModelEntity|CBasePlayer|CHL2_Player|CBaseAnimating|CBaseFlex|CBaseCombatCharacter|CBodyComponent|CAI_BaseNPC|CBaseTrigger|CEnvEntityMaker|CInfoWorldLayer|CLogicRelay|CMarkupVolumeTagged|CEnvProjectedTexture|CPhysicsProp|CSceneEntity|CPointClientUIWorldPanel|CPointTemplate|CPointWorldText|CPropHMDAvatar|CPropVRHand
+
+---Class that inherits all entity classes. Mostly used when creating entity classes.
+---`EntityHandle` should still be used when handling and passing entity types.
+---@class EntityClass : CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CBodyComponent,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
 
 ---@class EHANDLE
 ---@alias ScriptScope table
@@ -1068,32 +1072,32 @@ function DestroyDamageInfo(info) end
 ---@param action string
 ---@param value string
 ---@param delay number
----@param activator EntityHandle
----@param caller EntityHandle
+---@param activator EntityHandle?
+---@param caller EntityHandle?
 function DoEntFire(target, action, value, delay, activator, caller) end
 ---Internal native function for EntFireByHandle().
 ---@param target EntityHandle
 ---@param action string
 ---@param value string
 ---@param delay number
----@param activator EntityHandle
----@param caller EntityHandle
+---@param activator EntityHandle?
+---@param caller EntityHandle?
 function DoEntFireByInstanceHandle(target, action, value, delay, activator, caller) end
 ---Generate an entity I/O event on all entities matching the specified target name. The script scope of the calling entity should be passed to the first parameter.
 ---@param scope ScriptScope
 ---@param target string
 ---@param action string
----@param value? string Default = ""
----@param delay? number Default = 0.0
----@param activator? EntityHandle Default = thisEntity
+---@param value string? Default = ""
+---@param delay number? Default = 0.0
+---@param activator EntityHandle? Default = thisEntity
 function EntFire(scope, target, action, value, delay, activator) end
 ---Generate an entity I/O event on the specified entity. The calling entity should be passed to the first parameter.
 ---@param self EntityHandle
 ---@param target EntityHandle
 ---@param action string
----@param value? string # Default = ""
----@param delay? number # Default = 0.0
----@param activator? EntityHandle # Default = self
+---@param value string? # Default = ""
+---@param delay number? # Default = 0.0
+---@param activator EntityHandle? # Default = self
 function EntFireByHandle(self, target, action, value, delay, activator) end
 ---Turn an entity index integer to an HScript (entity handle) representing that entity's script instance.
 ---@param entindex integer
@@ -1454,7 +1458,7 @@ function StopListeningToGameEvent(eventlistener) end
 ---@return number
 function Time() end
 ---Generate a string guaranteed to be unique across the life of the script VM, with an optional root string. Useful for adding data to table's when not sure what keys are already in use in that table.
----@param root? string # String that will be added to the end.
+---@param root string? # String that will be added to the end.
 ---@return string
 function UniqueString(root) end
 ---Unload a spawn group by name
@@ -1516,7 +1520,7 @@ function vlua.rawin(t, key) end
 ---@param tbl table
 ---@param value any|string
 ---@return any
----@overload fun(str: string, substr: string, startIndex: integer): string|nil
+---@overload fun(str: string, substr: string, startIndex: integer?): string|nil
 function vlua.find(tbl, value) end
 ---Implements Squirrel slice method for tables and strings.
 ---@param tbl table
@@ -1824,7 +1828,7 @@ function CBaseEntity:SetContext(name, value, duration) end
 function CBaseEntity:SetContextNum(name, value, duration) end
 ---Set a context think function on this entity.
 ---@param thinkName string
----@param thinkFunction function
+---@param thinkFunction function?
 ---@param initialDelay number
 function CBaseEntity:SetContextThink(thinkName, thinkFunction, initialDelay) end
 ---Set entity targetname
@@ -1879,7 +1883,7 @@ function CBaseEntity:SetTeam(team) end
 ---@param thinkFunction function|string # If string, will look up in the calling instance or given `context` to find the function. If binding a local function this must be a direct reference, not a string.
 ---@param thinkName string # Name of the think, used for stopping.
 ---@param initialDelay number # Initial delay before the function is first called.
----@param context? EntityHandle # If `thinkFunction` is a string, use this context to find the function, otherwise ignored.
+---@param context EntityHandle? # If `thinkFunction` is a string, use this context to find the function, otherwise ignored.
 function CBaseEntity:SetThink(thinkFunction, thinkName, initialDelay, context) end
 ---Sets the world space velocity of the entity. Only functional on prop_dynamic entities with the Scripted Movement property set.
 ---@param velocity Vector
@@ -2118,7 +2122,7 @@ function CBasePlayer:IsVRDashboardShowing() end
 
 --#region CHL2_Player
 
----Half-life player subclass SHOULD RETURN THIS INSTEAD OF CBasePlayer ??
+---Half-life player subclass
 ---@class CHL2_Player : CBasePlayer
 CHL2_Player = {}
 ---
@@ -3377,7 +3381,7 @@ function CTakeDamageInfo:GetDamageCustom() end
 ---@return Vector
 function CTakeDamageInfo:GetDamageForce() end
 ---Returns the damage position.
----@return integer
+---@return Vector
 function CTakeDamageInfo:GetDamagePosition() end
 ---
 ---@return number
@@ -3618,9 +3622,9 @@ function Uint64:ToHexString() end
 ---@field __index string
 QAngleClass = {}
 ---Creates a new QAngle.
----@param pitch? number
----@param yaw? number
----@param roll? number
+---@param pitch number?
+---@param yaw number?
+---@param roll number?
 ---@return QAngle
 function QAngle(pitch, yaw, roll) end
 ---Overloaded +. Adds angles together.
@@ -3676,9 +3680,9 @@ Quaternion = {}
 VectorClass = {}
 ---Creates a new vector with the specified Cartesian coordinates.
 ---Can pass zero arguments for a zeroed Vector.
----@param x? number
----@param y? number
----@param z? number
+---@param x number?
+---@param y number?
+---@param z number?
 ---@return Vector
 function Vector(x, y, z) end
 ---Overloaded ==. Tests for Equality.

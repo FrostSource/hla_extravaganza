@@ -20,4 +20,5 @@
     },
     "Lua.semantic.keyword": false,
     "Lua.hover.expandAlias": false,
+    "Lua.hover.previewFields": 1,
 }
