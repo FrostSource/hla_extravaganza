@@ -179,7 +179,7 @@
 @exclude path_corner_crash
 @exclude physics_cannister
 @exclude player_loadsaved
-@exclude player_speedmod
+//@exclude player_speedmod
 @exclude player_weaponstrip
 @exclude point_antlion_repellant
 @exclude point_apc_controller
