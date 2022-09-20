@@ -148,23 +148,6 @@ function Util.RemoveFromTable(tbl, value)
     return nil
 end
 
----Split an input string using a separator string.
----
----Found at https://stackoverflow.com/a/7615129
----@param inputstr string # String to split.
----@param sep string # String to split by.
----@return string[]
-function Util.SplitString(inputstr, sep)
-    if sep == nil then
-        sep = '%s'
-    end
-    local t = {}
-    for str in string.gmatch(inputstr, '([^'..sep..']+)') do
-        table.insert(t, str)
-    end
-    return t
-end
-
 ---Appends `array2` onto `array1` as a new array.
 ---Safe extend function alternative to `vlua.extend`.
 ---@param array1 any[]
@@ -179,7 +162,8 @@ end
 
 ---Delay some code.
 ---@param func function
+---@param delay number?
 function Util.Delay(func, delay)
-    Player:SetContextThink(DoUniqueString("delay"), func, delay)
+    GetListenServerHost():SetContextThink(DoUniqueString("delay"), func, delay or 0)
 end
 

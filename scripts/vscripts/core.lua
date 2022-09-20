@@ -123,10 +123,17 @@ end
 ifrequire 'debug.core'
 ifrequire 'util.util'
 ifrequire 'util.enums'
-ifrequire 'extensions.base'
+ifrequire 'extensions.entity'
+ifrequire 'extensions.string'
 ifrequire 'math.core'
 
+---Add a function to the global scope with alternate casing styles.
+---Makes a function easier to call from Hammer through I/O.
+---@param func function # The function to sanitize.
+---@param name? string # Optionally the name of the function for faster processing.
+---@param scope? table # Optionally the explicit scope to put the sanitized functions in.
 Expose = function(func, name, scope)
+    --Consider extracting `SanitizeFunctionForHammer` directly to core
     Warning("Cannot expose "..tostring(func).." because Util class is not defined!")
 end
 if Util then
