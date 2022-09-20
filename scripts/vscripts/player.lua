@@ -45,6 +45,7 @@
 
 ]]
 require "util.util"
+require "extensions.entity"
 require "storage"
 
 -----------------------------
@@ -91,6 +92,12 @@ CBasePlayer.LastItemGrabbed = nil
 ---@type string
 CBasePlayer.LastClassGrabbed = ""
 
+---@alias PLAYER_WEAPON_HAND           "hand"
+---@alias PLAYER_WEAPON_ENERGYGUN      "energygun"
+---@alias PLAYER_WEAPON_RAPIDFIRE      "rapidfire"
+---@alias PLAYER_WEAPON_SHOTGUN        "shotgun"
+---@alias PLAYER_WEAPON_MULTITOOL      "multitool"
+---@alias PLAYER_WEAPON_GENERIC_PISTOL "generic_pistol"
 PLAYER_WEAPON_HAND           = "hand"
 PLAYER_WEAPON_ENERGYGUN      = "energygun"
 PLAYER_WEAPON_RAPIDFIRE      = "rapidfire"
@@ -99,10 +106,10 @@ PLAYER_WEAPON_MULTITOOL      = "multitool"
 PLAYER_WEAPON_GENERIC_PISTOL = "generic_pistol"
 
 ---**The classname of the weapon/item attached to hand.
----@type string|"PLAYER_WEAPON_HAND"|"PLAYER_WEAPON_ENERGYGUN"|"PLAYER_WEAPON_RAPIDFIRE"|"PLAYER_WEAPON_SHOTGUN"|"PLAYER_WEAPON_MULTITOOL"|"PLAYER_WEAPON_GENERIC_PISTOL"
+---@type string|PLAYER_WEAPON_HAND|PLAYER_WEAPON_ENERGYGUN|PLAYER_WEAPON_RAPIDFIRE|PLAYER_WEAPON_SHOTGUN|PLAYER_WEAPON_MULTITOOL|PLAYER_WEAPON_GENERIC_PISTOL
 CBasePlayer.CurrentlyEquipped = PLAYER_WEAPON_HAND
 ---**The classname of the weapon/item previously attached to hand.
----@type string|"PLAYER_WEAPON_HAND"|"PLAYER_WEAPON_ENERGYGUN"|"PLAYER_WEAPON_RAPIDFIRE"|"PLAYER_WEAPON_SHOTGUN"|"PLAYER_WEAPON_MULTITOOL"|"PLAYER_WEAPON_GENERIC_PISTOL"
+---@type string|PLAYER_WEAPON_HAND|PLAYER_WEAPON_ENERGYGUN|PLAYER_WEAPON_RAPIDFIRE|PLAYER_WEAPON_SHOTGUN|PLAYER_WEAPON_MULTITOOL|PLAYER_WEAPON_GENERIC_PISTOL
 CBasePlayer.PreviouslyEquipped = PLAYER_WEAPON_HAND
 
 ---**Table of items player currently has possession of.**
@@ -171,39 +178,39 @@ end
 function CBasePlayer:DropLeftHand()
     self:DropByHandle(self.LeftHand.ItemHeld)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DropLeftHand, "DropLeftHand", CBasePlayer)
+Expose(CBasePlayer.DropLeftHand, "DropLeftHand", CBasePlayer)
 
 ---Force the player to drop any item held in their right hand.
 function CBasePlayer:DropRightHand()
     self:DropByHandle(self.RightHand.ItemHeld)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DropRightHand, "DropRightHand", CBasePlayer)
+Expose(CBasePlayer.DropRightHand, "DropRightHand", CBasePlayer)
 
 ---Force the player to drop any item held in their primary hand.
 function CBasePlayer:DropPrimaryHand()
     self:DropByHandle(self.PrimaryHand.ItemHeld)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DropPrimaryHand, "DropPrimaryHand", CBasePlayer)
+Expose(CBasePlayer.DropPrimaryHand, "DropPrimaryHand", CBasePlayer)
 
 ---Force the player to drop any item held in their secondary/off hand.
 function CBasePlayer:DropSecondaryHand()
     self:DropByHandle(self.SecondaryHand.ItemHeld)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DropSecondaryHand, "DropSecondaryHand", CBasePlayer)
+Expose(CBasePlayer.DropSecondaryHand, "DropSecondaryHand", CBasePlayer)
 
 ---Force the player to drop the caller entity if held.
 ---@param data TypeIOInvoke
 function CBasePlayer:DropCaller(data)
     self:DropByHandle(data.caller)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DropCaller, "DropCaller", CBasePlayer)
+Expose(CBasePlayer.DropCaller, "DropCaller", CBasePlayer)
 
 ---Force the player to drop the activator entity if held.
 ---@param data TypeIOInvoke
 function CBasePlayer:DropActivator(data)
     self:DropByHandle(data.activator)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
+Expose(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
 
 ---Force the player to grab `handle` with `hand`.
 ---@param handle EntityHandle
@@ -230,14 +237,14 @@ end
 function CBasePlayer:GrabCaller(data)
     self:GrabByHandle(data.caller)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.GrabCaller, "GrabCaller", CBasePlayer)
+Expose(CBasePlayer.GrabCaller, "GrabCaller", CBasePlayer)
 
 ---Force the player to grab the activator entity.
 ---@param data TypeIOInvoke
 function CBasePlayer:GrabActivator(data)
     self:GrabByHandle(data.activator)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.GrabActivator, "GrabActivator", CBasePlayer)
+Expose(CBasePlayer.GrabActivator, "GrabActivator", CBasePlayer)
 
 ---@enum PLAYER_MOVETYPE
 PLAYER_MOVETYPE = {
@@ -280,7 +287,7 @@ function CBasePlayer:DisableFallDamage()
     })
     DoEntFireByInstanceHandle(self, "SetDamageFilter", name, 0, self, self)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.DisableFallDamage, "DisableFallDamage", CBasePlayer)
+Expose(CBasePlayer.DisableFallDamage, "DisableFallDamage", CBasePlayer)
 
 ---Enables fall damage for the player.
 function CBasePlayer:EnableFallDamage()
@@ -292,7 +299,7 @@ function CBasePlayer:EnableFallDamage()
     end
     DoEntFireByInstanceHandle(self, "SetDamageFilter", "", 0, self, self)
 end
-Util.SanitizeFunctionForHammer(CBasePlayer.EnableFallDamage, "EnableFallDamage", CBasePlayer)
+Expose(CBasePlayer.EnableFallDamage, "EnableFallDamage", CBasePlayer)
 
 ---Adds resources to the player.
 ---@param pistol_ammo? number
@@ -421,14 +428,35 @@ function CBasePlayer:GetResin()
 end
 
 ---Gets if player is holding an entity in either hand.	
----@param entity EntityHandle	
+---@param entity EntityHandle
 ---@return boolean	
 function CBasePlayer:IsHolding(entity)
     return self.PrimaryHand.ItemHeld == entity or self.SecondaryHand.ItemHeld == entity	
 end
 
+---Get the entity handle of the currently equipped weapon/item.
+---If nothing is equipped this will return the primary hand entity.
+---@return EntityHandle
+function CBasePlayer:GetWeapon()
+    -- print('getting gun')
+    if self.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN then
+        return Entities:FindByClassnameNearest("hlvr_weapon_energygun", self.PrimaryHand:GetOrigin(), 128)--[[@as EntityHandle]]
+    elseif self.CurrentlyEquipped == PLAYER_WEAPON_RAPIDFIRE then
+        return Entities:FindByClassnameNearest("hlvr_weapon_rapidfire", self.PrimaryHand:GetOrigin(), 128)--[[@as EntityHandle]]
+    elseif self.CurrentlyEquipped == PLAYER_WEAPON_SHOTGUN then
+        return Entities:FindByClassnameNearest("hlvr_weapon_shotgun", self.PrimaryHand:GetOrigin(), 128)--[[@as EntityHandle]]
+    elseif self.CurrentlyEquipped == PLAYER_WEAPON_GENERIC_PISTOL then
+        return Entities:FindByClassnameNearest("hlvr_weapon_generic_pistol", self.PrimaryHand:GetOrigin(), 128)--[[@as EntityHandle]]
+    elseif self.CurrentlyEquipped == PLAYER_WEAPON_MULTITOOL then
+        return Entities:FindByClassnameNearest("hlvr_multitool", self.PrimaryHand:GetOrigin(), 128)--[[@as EntityHandle]]
+    else
+        return self.PrimaryHand
+    end
+end
+
 ---@type table<function,table|boolean>[]
 local registered_event_callbacks = {
+    novr_player = {},
     player_activate = {},
     vr_player_ready = {},
     item_pickup = {},
@@ -442,7 +470,7 @@ local registered_event_callbacks = {
 }
 
 ---Register a callback function with for a player event.
----@param event "player_activate"|"vr_player_ready"|"item_pickup"|"item_released"|"primary_hand_changed"|"player_drop_ammo_in_backpack"|"player_retrieved_backpack_clip"|"player_stored_item_in_itemholder"|"player_removed_item_from_itemholder"|"weapon_switch"
+---@param event "novr_player"|"player_activate"|"vr_player_ready"|"item_pickup"|"item_released"|"primary_hand_changed"|"player_drop_ammo_in_backpack"|"player_retrieved_backpack_clip"|"player_stored_item_in_itemholder"|"player_removed_item_from_itemholder"|"weapon_switch"
 ---@param callback function
 ---@param context? table # Optional: The context to pass to the function as `self`. If omitted the context will not passed to the callback.
 function RegisterPlayerEventCallback(event, callback, context)
@@ -468,6 +496,10 @@ function CPropVRHand:MergeProp(prop, hide_hand)
     end
     if IsValidEntity(prop) then
         local glove = self:GetGlove()
+        if not glove then
+            Warning("Trying to merge prop with glove but glove was not found!\n")
+            return
+        end
         -- don't use FollowEntity
         prop:SetParent(glove, "!bonemerge")
         if hide_hand then glove:SetRenderAlpha(0) end
@@ -479,17 +511,17 @@ end
 ---Return true if this hand is currently holding a prop.
 ---@return boolean
 function CPropVRHand:IsHoldingItem()
-    return IsValidEntity(self.ItemHeld)
+    return IsEntity(self.ItemHeld, true)
 end
 
 ---Get the rendered glove entity for this hand.
----@return EntityHandle
+---@return EntityHandle|nil
 function CPropVRHand:GetGlove()
-    return Util.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
+    return self.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")
 end
 
 ---Get the entity for this hands grabbity glove (the animated part on the glove).
----@return EntityHandle
+---@return EntityHandle|nil
 function CPropVRHand:GetGrabbityGlove()
     return self:GetFirstChildWithClassname("prop_grabbity_gloves")
 end
@@ -507,7 +539,7 @@ end
 function CBaseEntity:Drop()
     Player:DropByHandle(self)
 end
-Util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
+Expose(CBaseEntity.Drop, "Drop", CBaseEntity)
 
 ---Force the player to grab this entity with a hand.
 ---If no hand is supplied then the nearest hand will be used.
@@ -515,7 +547,7 @@ Util.SanitizeFunctionForHammer(CBaseEntity.Drop, "Drop", CBaseEntity)
 function CBaseEntity:Grab(hand)
     Player:GrabByHandle(self, hand)
 end
-Util.SanitizeFunctionForHammer(CBaseEntity.Grab, "Grab", CBaseEntity)
+Expose(CBaseEntity.Grab, "Grab", CBaseEntity)
 
 
 -----------------
@@ -588,6 +620,15 @@ local function listenEventPlayerActivate(data)
                 end, 0.5)
             end
             for callback, context in pairs(registered_event_callbacks["vr_player_ready"]) do
+                if context ~= true then
+                    callback(context, data)
+                else
+                    callback(data)
+                end
+            end
+        -- Callback for novr player if HMD not found
+        else
+            for callback, context in pairs(registered_event_callbacks["novr_player"]) do
                 if context ~= true then
                     callback(context, data)
                 else
@@ -989,3 +1030,6 @@ local function listenEventWeaponSwitch(data)
     end
 end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, nil)
+
+
+print("player.lua initialized...")
