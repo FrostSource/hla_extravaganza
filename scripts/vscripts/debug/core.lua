@@ -50,9 +50,33 @@ function Debug.PrintTable(tbl, prefix)
     for key, value in pairs(tbl) do
         print( string.format( "\t%s%-32s %s", prefix, key, "= " .. (type(value) == "string" and ("\"" .. tostring(value) .. "\"") or tostring(value)) .. " ("..type(value)..")" ) )
         if type(value) == "table" and not vlua.find(visited, value) then
-            Util.PrintTable(value, prefix.."\t")
+            Debug.PrintTable(value, prefix.."\t")
             visited[#visited+1] = value
         end
     end
     print(prefix.."}")
 end
+
+---Draws a debug line to an entity in game.
+---@param ent EntityHandle|string # Handle or targetname of the entity(s) to find.
+---@param duration number?
+function Debug.FindEntity(ent, duration)
+    duration = duration or 20
+    if type(ent) == "string" then
+        local ents = Entities:FindAllByName(ent)
+        for _,e in ipairs(ents) do
+            Debug.FindEntity(e)
+        end
+        return
+    end
+    DebugDrawLine(Entities:GetLocalPlayer():EyePosition(), ent:GetOrigin(), 255, 0, 0, true, duration)
+    local radius = ent:GetBiggestBounding()/2
+    print(radius)
+    if radius == 0 then radius = 16 end
+    DebugDrawCircle(ent:GetOrigin(), Vector(255), 128, radius, true, duration)
+    DebugDrawSphere(ent:GetCenter(), Vector(255), 128, radius, true, duration)
+end
+function CBaseEntity:DebugFind(duration)
+    Debug.FindEntity(self, duration)
+end
+
