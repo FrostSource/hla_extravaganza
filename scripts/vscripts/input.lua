@@ -241,8 +241,8 @@ end
 ---@param kind "press"|"release" # If the callback is registered for press or release.
 ---@param hand CPropVRHand|-1|0|1 # The ID of the hand to register for (-1 means both).
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS # The button to check.
----@param presses integer|nil # Number of time the button must be pressed in quick succession. E.g. 2 for double click.
----@param callback function # The function that will be called on a successfull button press.
+---@param presses integer|nil # Number of times the button must be pressed in quick succession. E.g. 2 for double click.
+---@param callback function # The function that will be called when conditions are met.
 function Input:RegisterCallback(kind, hand, button, presses, callback)
 
     -- Quick way to register both hands.
