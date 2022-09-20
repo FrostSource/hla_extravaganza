@@ -52,6 +52,25 @@ function AddOutput(handle, output, target, input, parameter, delay, activator, c
 end
 CBaseEntity.AddOutput = AddOutput
 
+---Checks if the module/script exists.
+---@param name string
+---@return boolean
+---@diagnostic disable-next-line: lowercase-global
+function module_exists(name)
+    if package.loaded[name] then
+        return true
+    else
+        for _, searcher in ipairs(package.loaders) do
+            local loader = searcher(name)
+            if type(loader) == 'function' then
+                -- package.preload[name] = loader
+                return true
+            end
+        end
+        return false
+    end
+end
+
 ---Loads the given module, returns any value returned by the given module(true when nil).
 ---Then runs the given callback function.
 ---If the module fails to load then the callback is not executed and no error is thrown.
@@ -60,6 +79,7 @@ CBaseEntity.AddOutput = AddOutput
 ---@return unknown
 ---@diagnostic disable-next-line: lowercase-global
 function ifrequire(modname, callback)
+    --TODO: Consider using module_exists
     local success, result = pcall(require, modname)
     if success and callback then
         callback(result)
@@ -111,9 +131,6 @@ end
 function CEntityInstance:FindInPrefab(name)
     return Entities:FindInPrefab(self, name)
 end
-
-
-
 
 
 -------------
