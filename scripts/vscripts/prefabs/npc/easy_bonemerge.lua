@@ -15,12 +15,8 @@ function NpcRagdollCreated(_, data)
         for _, child in ipairs(npc:GetChildren()) do
             if vlua.find(child:GetName(), "bonemerge", 1) then
                 --print("Found bonemerge", child:GetModelName())
-                -- Spawning the new prop to merge with the new ragdoll
-                local prop = SpawnEntityFromTableSynchronous("prop_dynamic", {
-                    model = child:GetModelName(),
-                    solid = "0"
-                })
-                prop:SetParent(ragdoll, "!bonemerge")
+                -- Attaching the model to the new ragdoll
+                child:SetParent(ragdoll, "!bonemerge")
                 ragdoll:SetRenderAlpha(0)
             end
         end
