@@ -48,6 +48,13 @@
 ---Class that inherits all entity classes. Mostly used when creating entity classes.
 ---`EntityHandle` should still be used when handling and passing entity types.
 ---@class EntityClass : CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CBodyComponent,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
+local EntityClass = {}
+---Save all entity data
+function EntityClass:Save()
+end
+---Called automatically if defined
+function EntityClass:Ready()
+end
 
 ---@class EHANDLE
 ---@alias ScriptScope table

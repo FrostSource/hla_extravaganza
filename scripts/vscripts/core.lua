@@ -53,10 +53,11 @@ end
 CBaseEntity.AddOutput = AddOutput
 
 ---Checks if the module/script exists.
----@param name string
+---@param name string?
 ---@return boolean
 ---@diagnostic disable-next-line: lowercase-global
 function module_exists(name)
+    if name == nil then return false end
     if package.loaded[name] then
         return true
     else
@@ -102,6 +103,19 @@ function IsVREnabled()
     return GlobalSys:CommandLineCheck('-vr')
 end
 
+function prints(...)
+    local args = {...}
+    local argsn = #args
+    local t = ""
+    for i,v in ipairs(args) do
+        t = t .. tostring(v)
+        if i < argsn then
+            t = t .. " "
+        end
+    end
+    print(t)
+end
+
 
 ---------------
 -- Extensions
@@ -130,6 +144,145 @@ end
 ---@return EntityHandle?
 function CEntityInstance:FindInPrefab(name)
     return Entities:FindInPrefab(self, name)
+end
+
+
+-------------------
+-- Custom classes
+-------------------
+
+---@type table<string, table>
+EntityClassNameMap = {}
+
+-- look up for `k' in list of tables `plist'
+local function search (k, plist)
+    -- print("\nCPhysicsProp", CPhysicsProp)
+    for i=1, #plist do
+      local v = plist[i][k]     -- try `i'-th superclass
+        -- print("current table", plist[i])
+      if not v and type(plist[i].__index) == "table" then
+        -- print("HERE",plist[i].__index)
+        v = plist[i].__index[k]
+      end
+      if v then return v end
+    end
+  end
+
+---@generic T
+---@param name `T` # Internal class name
+---@param ... string|table
+---@return T # Base class
+---@return T # Self instance
+---@return table # Super class
+function entity(name, ...)
+
+    local inherits = {...}
+
+    -- Name is optional and might be inherit script
+    if type(name) == "table" or module_exists(name) then
+        table.insert(inherits, 1, name)
+        name = nil
+    end
+    if name == nil then
+        name = DoUniqueString("CustomEntityClass")
+    end
+
+    -- Execute any script inherits to get the class table
+    for index, inherit in ipairs(inherits) do
+        if type(inherit) == "string" then
+            -- string is name
+            if EntityClassNameMap[inherit] then
+                inherits[index] = EntityClassNameMap[inherit]
+            -- string is script
+            else
+                local base = require(inherit)
+                inherits[index] = base
+            end
+        end
+    end
+    ---@cast inherits table[]
+
+    -- fenv is the private script scope
+    local fenv = getfenv(2)
+    ---@type EntityClass?
+    local self = fenv.thisEntity
+
+    -- if self == nil then
+    --     error("`entity` function must be called from a script attached to an entity!")
+    -- end
+
+    -- Try to retrieve cached class
+    local base = EntityClassNameMap[name]
+    if not base then
+        base = {
+            name = name,
+            script_file = GetScriptFile(nil, 3),
+            inherits = inherits
+        }
+        -- Meta table to search all inherits
+        setmetatable(base, {
+            __index = function(t,k)
+                -- prints("Trying access",k,"in",t,"from base metatable __index")
+                return search(k, base.inherits)
+            end
+        })
+        -- 
+        base.__index = base
+        -- function(t,k)
+        --     prints("Trying access",k,"in",t,"from base.__index")
+        --     -- print("but first showing all inherits")
+        --     -- Debug.PrintTable(base.inherits)
+        --     -- if base[k] then return base[k] end
+        --     -- return search(k, base.inherits)
+        -- end
+        EntityClassNameMap[name] = base
+    end
+
+    -- Add base as middleman metatable if script is attached to entity
+    local super = inherits[1]
+    if self then
+        -- super = getmetatable(self)
+        -- if inherits[1] then
+        --     super = inherits[1]
+        --     setmetatable(base, {__index = super})
+        -- else
+        --     setmetatable(base, super)
+        -- end
+        -- setmetatable(self, {__index = base})
+
+        -- local valve_meta = getmetatable(self)
+        -- -- Debug.PrintTable(valve_meta)
+        -- print(valve_meta.__index.DisableMotion)
+        -- print(valve_meta.__index.GetName)
+        -- print(getmetatable(valve_meta))
+        -- table.insert(base.inherits, valve_meta)
+        -- local meta = getmetatable(self)
+        -- print(meta)
+        -- print(getmetatable(meta.__index))
+        -- while meta do
+        --     print(meta)
+        --     meta = getmetatable(meta)
+        -- end
+
+        -- Add this entity's metatable as an inherit
+        local valve_meta = getmetatable(self)
+        table.insert(base.inherits, valve_meta)
+
+        setmetatable(self, base)
+
+        fenv.Activate = function(activateType)
+            if type(self.Ready) == "function" then
+                self.Ready(self--[[@as EntityClass]])
+            end
+        end
+
+        -- TODO: Replace with pre defined function
+        self.Save = function(s)
+            print("Saving...")
+        end
+    end
+
+    return base, self, super
 end
 
 
