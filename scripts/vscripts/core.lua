@@ -155,18 +155,15 @@ end
 EntityClassNameMap = {}
 
 -- look up for `k' in list of tables `plist'
-local function search (k, plist)
-    -- print("\nCPhysicsProp", CPhysicsProp)
-    for i=1, #plist do
-      local v = plist[i][k]     -- try `i'-th superclass
-        -- print("current table", plist[i])
-      if not v and type(plist[i].__index) == "table" then
-        -- print("HERE",plist[i].__index)
-        v = plist[i].__index[k]
-      end
-      if v then return v end
+local function search(k, plist)
+    for i = 1, #plist do
+        local v = plist[i][k]
+        if not v and type(plist[i].__index) == "table" then
+            v = plist[i].__index[k]
+        end
+        if v then return v end
     end
-  end
+end
 
 ---@generic T
 ---@param name `T` # Internal class name
@@ -190,7 +187,7 @@ function entity(name, ...)
     -- Execute any script inherits to get the class table
     for index, inherit in ipairs(inherits) do
         if type(inherit) == "string" then
-            -- string is name
+            -- string is defined name
             if EntityClassNameMap[inherit] then
                 inherits[index] = EntityClassNameMap[inherit]
             -- string is script
@@ -226,44 +223,14 @@ function entity(name, ...)
                 return search(k, base.inherits)
             end
         })
-        -- 
+        -- Base will search itself and then its metatable
         base.__index = base
-        -- function(t,k)
-        --     prints("Trying access",k,"in",t,"from base.__index")
-        --     -- print("but first showing all inherits")
-        --     -- Debug.PrintTable(base.inherits)
-        --     -- if base[k] then return base[k] end
-        --     -- return search(k, base.inherits)
-        -- end
         EntityClassNameMap[name] = base
     end
 
     -- Add base as middleman metatable if script is attached to entity
     local super = inherits[1]
     if self then
-        -- super = getmetatable(self)
-        -- if inherits[1] then
-        --     super = inherits[1]
-        --     setmetatable(base, {__index = super})
-        -- else
-        --     setmetatable(base, super)
-        -- end
-        -- setmetatable(self, {__index = base})
-
-        -- local valve_meta = getmetatable(self)
-        -- -- Debug.PrintTable(valve_meta)
-        -- print(valve_meta.__index.DisableMotion)
-        -- print(valve_meta.__index.GetName)
-        -- print(getmetatable(valve_meta))
-        -- table.insert(base.inherits, valve_meta)
-        -- local meta = getmetatable(self)
-        -- print(meta)
-        -- print(getmetatable(meta.__index))
-        -- while meta do
-        --     print(meta)
-        --     meta = getmetatable(meta)
-        -- end
-
         -- Add this entity's metatable as an inherit
         local valve_meta = getmetatable(self)
         table.insert(base.inherits, valve_meta)
@@ -272,7 +239,7 @@ function entity(name, ...)
 
         fenv.Activate = function(activateType)
             if type(self.Ready) == "function" then
-                self.Ready(self--[[@as EntityClass]])
+                self.Ready(self)
             end
         end
 
