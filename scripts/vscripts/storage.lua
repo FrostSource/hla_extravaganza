@@ -1,5 +1,5 @@
 --[[
-    v2.2.0
+    v2.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -464,14 +464,14 @@ else
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the boolean was saved as.
     ---@param default? boolean # Optional default value.
-    ---@return boolean
+    ---@return boolean|nil
     function Storage.LoadBoolean(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
-        if not value or t ~= "boolean" then
+        if t ~= "boolean" or value == nil then
             Warn("Boolean " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")")
-            return default or false
+            return default
         end
         return value == 1
     end
