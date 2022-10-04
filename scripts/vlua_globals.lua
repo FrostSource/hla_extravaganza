@@ -54,8 +54,26 @@ local EntityClass = {}
 function EntityClass:Save()
 end
 ---Called automatically if defined
-function EntityClass:Ready()
+---@param loaded boolean
+function EntityClass:OnReady(loaded)
 end
+---Called automatically if defined
+---@param spawnkeys CScriptKeyValues
+function EntityClass:OnSpawn(spawnkeys)
+end
+---Called automatically if defined
+function EntityClass:Think()
+end
+---Called automatically if defined
+function EntityClass:ResumeThink()
+end
+---Called automatically if defined
+function EntityClass:PauseThink()
+end
+---@type boolean
+EntityClass.Initiated = false
+---@type boolean
+EntityClass.IsThinking = false
 
 ---@class EHANDLE
 ---@alias ScriptScope table

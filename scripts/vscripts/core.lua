@@ -173,6 +173,54 @@ function CEntityInstance:FindInPrefab(name)
     return Entities:FindInPrefab(self, name)
 end
 
+local base_vector = Vector()
+---
+---Get if a value is a `Vector`
+---
+---@param value any
+---@return boolean
+function IsVector(value)
+    return type(value) == "userdata" and value.__index==base_vector.__index
+end
+
+local base_qangle = QAngle()
+---
+---Get if a value is a `QAngle`
+---
+---@param value any
+---@return boolean
+function IsQAngle(value)
+    return type(value) == "userdata" and value.__index==base_qangle.__index
+end
+
+---
+---Copy all keys from `tbl` and any nested tables into a brand new table and return it.
+---This is a good way to get a unique reference with matching data.
+---
+---Any functions and userdata will be copied by reference, except for:
+---`Vector`,
+---`QAngle`
+---
+---@param tbl table
+---@return table
+function DeepCopyTable(tbl)
+    -- print("Deep copy inside", tbl)
+    local t = {}
+    for key, value in pairs(tbl) do
+        if type(value) == "table" then
+            -- print("Delving deeper into", key, value)
+            t[key] = DeepCopyTable(value)
+        elseif IsVector(value) then
+            t[key] = Vector(value.x, value.y, value.z)
+        elseif IsQAngle(value) then
+            t[key] = QAngle(value.x, value.y, value.z)
+        else
+            t[key] = value
+        end
+    end
+    return t
+end
+
 
 -------------------
 -- Custom classes
@@ -191,6 +239,30 @@ local function search(k, plist)
         if v then return v end
     end
 end
+
+local function save_entity_data(self)
+    for key, value in pairs(self) do
+        if not key:startswith("__") and type(value) ~= "function" then
+            -- print("Saving "..key, value)
+            Storage.Save(self, key, value)
+        end
+    end
+end
+
+local function load_entity_data(self)
+    for key, value in pairs(self) do
+        if not key:startswith("__") and type(value) ~= "function" then
+            -- print("Loading "..key, "default "..tostring(value))
+            self[key] = Storage.Load(self, key, value)
+            -- print("Loaded "..key, self[key])
+        end
+    end
+end
+-- for key, value in pairs(self) do
+--     print("Loading "..key, "default "..tostring(value))
+--     self[key] = Storage.Load(self, key, value)
+--     print("Loaded "..key, self[key])
+-- end
 
 ---
 ---Creates a new entity class.
@@ -249,15 +321,15 @@ function entity(name, ...)
     local base = EntityClassNameMap[name]
     if not base then
         base = {
-            name = name,
-            script_file = GetScriptFile(nil, 3),
-            inherits = inherits
+            __name = name,
+            __script_file = GetScriptFile(nil, 3),
+            __inherits = inherits
         }
         -- Meta table to search all inherits
         setmetatable(base, {
             __index = function(t,k)
                 -- prints("Trying access",k,"in",t,"from base metatable __index")
-                return search(k, base.inherits)
+                return search(k, base.__inherits)
             end
         })
         -- Base will search itself and then its metatable
@@ -270,20 +342,69 @@ function entity(name, ...)
     if self then
         -- Add this entity's metatable as an inherit
         local valve_meta = getmetatable(self)
-        table.insert(base.inherits, valve_meta)
+        table.insert(base.__inherits, valve_meta)
 
         setmetatable(self, base)
 
-        fenv.Activate = function(activateType)
-            if type(self.Ready) == "function" then
-                self.Ready(self)
+        -- Special functions --
+
+        fenv.Spawn = function(spawnkeys)
+            if type(self.OnSpawn) == "function" then
+                self:OnSpawn(spawnkeys)
             end
         end
 
-        -- TODO: Replace with pre defined function
-        self.Save = function(s)
-            print("Saving...")
+        fenv.Activate = function(activateType)
+
+            -- Copy base reference data into self
+            -- TODO: Copy inherited references too
+            for key, value in pairs(base) do
+                if not key:startswith("__") and type(value) == "table" then
+                    -- print("Deep copying", key, value)
+                    self[key] = DeepCopyTable(value)
+                end
+            end
+
+            if activateType == 2 then
+                -- Load all saved entity data
+                load_entity_data(self)
+            end
+
+            -- Fire custom ready function
+            if type(self.OnReady) == "function" then
+                self:OnReady(activateType == 2)
+            end
+
+            if self.IsThinking then
+                self:ResumeThink()
+            end
+
+            self.Initiated = true
+            self:Save()
+
         end
+
+        function self:ResumeThink()
+            if type(self.Think) == "function" then
+                self:SetContextThink("__EntityThink", function() return self:Think() end, 0)
+                self.IsThinking = true
+                self:Save()
+            else
+                Warning("Entity does not have self:Think function defined!")
+            end
+        end
+
+        function self:PauseThink()
+            self:SetContextThink("__EntityThink", nil, 0)
+            self.IsThinking = false
+            self:Save()
+        end
+
+        -- Define function to save all entity data
+        self.Save = save_entity_data
+
+        self.Initiated = false
+        self.IsThinking = false
     end
 
     return base, self, super
