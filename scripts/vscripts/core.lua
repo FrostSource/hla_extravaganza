@@ -7,8 +7,10 @@
 -- Global functions
 ---------------------
 
+---
 ---Get the file name of the current script without folders or extension. E.g. `util.util`
----@param sep string? # Separator character, default is '.'
+---
+---@param sep?  string # Separator character, default is '.'
 ---@param level (integer|function)? # Function level, [View documents](command:extension.lua.doc?["en-us/51/manual.html/pdf-debug.getinfo"])
 ---@return string
 function GetScriptFile(sep, level)
@@ -21,24 +23,28 @@ function GetScriptFile(sep, level)
     return src
 end
 
+---
 ---Get if the given `handle` value is an entity, regardless of if it's still alive.
+---
 ---@param handle EntityHandle|any
----@param checkValidity boolean? # Optionally check validity with IsValidEntity.
+---@param checkValidity? boolean # Optionally check validity with IsValidEntity.
 ---@return boolean
 function IsEntity(handle, checkValidity)
     return (type(handle) == "table" and handle.__self) and (not checkValidity or IsValidEntity(handle))
 end
 
+---
 ---Add an output to a given entity `handle`.
----@param handle EntityHandle|string # The entity to add the `output` to.
----@param output string # The output name to add.
----@param target EntityHandle|string # The entity the output should target, either handle or targetname.
----@param input string # The input name on `target`.
----@param parameter string? # The parameter override for `input`.
----@param delay number? # Delay for the output in seconds.
----@param activator EntityHandle? # Activator for the output.
----@param caller EntityHandle? # Caller for the output.
----@param fireOnce boolean? # If the output should only fire once.
+---
+---@param handle     EntityHandle|string # The entity to add the `output` to.
+---@param output     string # The output name to add.
+---@param target     EntityHandle|string # The entity the output should target, either handle or targetname.
+---@param input      string # The input name on `target`.
+---@param parameter? string # The parameter override for `input`.
+---@param delay?     number # Delay for the output in seconds.
+---@param activator? EntityHandle # Activator for the output.
+---@param caller?    EntityHandle # Caller for the output.
+---@param fireOnce?  boolean # If the output should only fire once.
 function AddOutput(handle, output, target, input, parameter, delay, activator, caller, fireOnce)
     if IsEntity(target) then target = target:GetName() end
     parameter = parameter or ""
@@ -52,8 +58,10 @@ function AddOutput(handle, output, target, input, parameter, delay, activator, c
 end
 CBaseEntity.AddOutput = AddOutput
 
+---
 ---Checks if the module/script exists.
----@param name string?
+---
+---@param name? string
 ---@return boolean
 ---@diagnostic disable-next-line: lowercase-global
 function module_exists(name)
@@ -72,9 +80,13 @@ function module_exists(name)
     end
 end
 
----Loads the given module, returns any value returned by the given module(true when nil).
+---
+---Loads the given module, returns any value returned by the given module(`true` when `nil`).
+---
 ---Then runs the given callback function.
+---
 ---If the module fails to load then the callback is not executed and no error is thrown.
+---
 ---@param modname string
 ---@param callback fun(mod_result: unknown)?
 ---@return unknown
@@ -89,20 +101,29 @@ function ifrequire(modname, callback)
     return nil
 end
 
+---
 ---Execute a script file. Included in the current scope by default.
+---
 ---@param scriptFileName string
----@param scope ScriptScope?
+---@param scope?         ScriptScope
 ---@return boolean
 function IncludeScript(scriptFileName, scope)
     return DoIncludeScript(scriptFileName, scope or getfenv(2))
 end
 
+---
 ---Gets if the game was started in VR mode.
+---
 ---@return boolean
 function IsVREnabled()
     return GlobalSys:CommandLineCheck('-vr')
 end
 
+---
+---Prints all arguments with spaces between instead of tabs.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
 function prints(...)
     local args = {...}
     local argsn = #args
@@ -122,8 +143,11 @@ end
 ---------------
 -- Consider separate extension script
 
+---
 ---Find an entity within the same prefab as another entity.
+---
 ---Will have issues in nested prefabs.
+---
 ---@param entity EntityHandle
 ---@param name string
 ---@return EntityHandle?
@@ -138,8 +162,11 @@ function Entities:FindInPrefab(entity, name)
     return nil
 end
 
+---
 ---Find an entity within the same prefab as this entity.
+---
 ---Will have issues in nested prefabs.
+---
 ---@param name string
 ---@return EntityHandle?
 function CEntityInstance:FindInPrefab(name)
@@ -165,17 +192,27 @@ local function search(k, plist)
     end
 end
 
----@generic T
----@param name `T` # Internal class name
----@param ... string|table
----@return T # Base class
----@return T # Self instance
----@return table # Super class
+---
+---Creates a new entity class.
+---
+---If this is called in an entity attached script then the entity automatically
+---inherits the class and the class inherits the entity's metatable.
+---
+---The class is only created once so this can be called in entity attached scripts
+---multiple times and all subsequent calls will return the already created class.
+---
+---@generic      T
+---@param name? `T` # Internal class name
+---@param ...    string|table # Any inherit classes or scripts.
+---@return T # Base class, the newly created class.
+---@return T # Self instance, the entity inheriting `base`.
+---@return table # Super class, the first inheritance of `base`.
+---@diagnostic disable-next-line: lowercase-global
 function entity(name, ...)
 
     local inherits = {...}
 
-    -- Name is optional and might be inherit script
+    -- Check if name is actually inherit
     if type(name) == "table" or module_exists(name) then
         table.insert(inherits, 1, name)
         name = nil
@@ -187,11 +224,11 @@ function entity(name, ...)
     -- Execute any script inherits to get the class table
     for index, inherit in ipairs(inherits) do
         if type(inherit) == "string" then
-            -- string is defined name
             if EntityClassNameMap[inherit] then
+                -- string is defined name
                 inherits[index] = EntityClassNameMap[inherit]
-            -- string is script
             else
+                -- string is script
                 local base = require(inherit)
                 inherits[index] = base
             end
