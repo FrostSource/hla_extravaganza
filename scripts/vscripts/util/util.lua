@@ -101,8 +101,6 @@ function Util.SanitizeFunctionForHammer(func, name, scope)
         name = Util.FindKeyFromValueDeep(fenv, func)
         -- if name is still empty after searching environment, search locals
         if name == nil then
-            -- locals get put in global scope
-            fenv = _G
             local i = 1
             while true do
                 local val
