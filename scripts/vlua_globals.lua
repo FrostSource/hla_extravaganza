@@ -1,3 +1,4 @@
+---@meta
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
