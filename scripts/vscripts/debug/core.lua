@@ -69,7 +69,11 @@ function Debug.FindEntity(ent, duration)
         end
         return
     end
-    DebugDrawLine(Entities:GetLocalPlayer():EyePosition(), ent:GetOrigin(), 255, 0, 0, true, duration)
+    local from = Vector()
+    if Entities:GetLocalPlayer() then
+        from = Entities:GetLocalPlayer():EyePosition()
+    end
+    DebugDrawLine(from, ent:GetOrigin(), 255, 0, 0, true, duration)
     local radius = ent:GetBiggestBounding()/2
     print(radius)
     if radius == 0 then radius = 16 end
@@ -78,5 +82,16 @@ function Debug.FindEntity(ent, duration)
 end
 function CBaseEntity:DebugFind(duration)
     Debug.FindEntity(self, duration)
+end
+
+---comment
+---@param ent EntityHandle
+function Debug.PrintEntityCriteria(ent)
+    local c = {}
+    ent:GatherCriteria(c)
+    Debug.PrintTable(c)
+end
+function CBaseEntity:PrintCriteria()
+    Debug.PrintEntityCriteria(self)
 end
 
