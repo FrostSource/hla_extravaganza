@@ -2,7 +2,7 @@
     "Lua.completion.autoRequire": false,
     "Lua.diagnostics.ignoredFiles": "Enable",
     "Lua.workspace.preloadFileSize": 300,
-    "Lua.hover.enumsLimit": 1,
+    "Lua.hover.enumsLimit": 5,
     "Lua.runtime.version": "LuaJIT",
     "Lua.runtime.builtin": {
         "coroutine": "enable",
