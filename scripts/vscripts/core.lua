@@ -1,5 +1,5 @@
 --[[
-    v1.0.0
+    v1.0.3
     https://github.com/FrostSource/hla_extravaganza
 ]]
 
@@ -258,11 +258,38 @@ local function load_entity_data(self)
         end
     end
 end
--- for key, value in pairs(self) do
---     print("Loading "..key, "default "..tostring(value))
---     self[key] = Storage.Load(self, key, value)
---     print("Loaded "..key, self[key])
--- end
+
+---Class that inherits all entity classes. Mostly used when creating entity classes.
+---`EntityHandle` should still be used when handling and passing entity types.
+---@class EntityClass : EntityClassBase,CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CBodyComponent,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
+local EntityClass = {}
+
+---@class EntityClassBase
+local EntityClassBase = {}
+---Save all entity data
+function EntityClassBase:Save()
+end
+---Called automatically if defined
+---@param loaded boolean
+function EntityClassBase:OnReady(loaded)
+end
+---Called automatically if defined
+---@param spawnkeys CScriptKeyValues
+function EntityClassBase:OnSpawn(spawnkeys)
+end
+---Called automatically if defined
+function EntityClassBase:Think()
+end
+---Called automatically if defined
+function EntityClassBase:ResumeThink()
+end
+---Called automatically if defined
+function EntityClassBase:PauseThink()
+end
+---@type boolean
+EntityClassBase.Initiated = false
+---@type boolean
+EntityClassBase.IsThinking = false
 
 ---
 ---Creates a new entity class.
@@ -284,8 +311,8 @@ function entity(name, ...)
 
     local inherits = {...}
 
-    -- Check if name is actually inherit
-    if type(name) == "table" or module_exists(name) then
+    -- Check if name is actually an inherit (class name was omitted)
+    if type(name) ~= "string" and (type(name) == "table" or module_exists(name)) then
         table.insert(inherits, 1, name)
         name = nil
     end
@@ -415,12 +442,17 @@ end
 -- Includes
 -------------
 
+-- Base libraries
+
 ifrequire 'debug.core'
 ifrequire 'util.util'
 ifrequire 'util.enums'
 ifrequire 'extensions.entity'
 ifrequire 'extensions.string'
 ifrequire 'math.core'
+ifrequire 'data.queue'
+ifrequire 'data.stack'
+ifrequire 'data.inventory'
 
 ---Add a function to the global scope with alternate casing styles.
 ---Makes a function easier to call from Hammer through I/O.
@@ -438,3 +470,5 @@ end
 ifrequire 'storage'
 ifrequire 'input'
 ifrequire 'player'
+
+ifrequire 'wrist_pocket.core'

@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.3
+    Version 2.0.4
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -45,35 +45,6 @@
 
 ---Combined entity handle type.
 ---@alias EntityHandle CBaseEntity|CEntityInstance|CBaseModelEntity|CBasePlayer|CHL2_Player|CBaseAnimating|CBaseFlex|CBaseCombatCharacter|CBodyComponent|CAI_BaseNPC|CBaseTrigger|CEnvEntityMaker|CInfoWorldLayer|CLogicRelay|CMarkupVolumeTagged|CEnvProjectedTexture|CPhysicsProp|CSceneEntity|CPointClientUIWorldPanel|CPointTemplate|CPointWorldText|CPropHMDAvatar|CPropVRHand
-
----Class that inherits all entity classes. Mostly used when creating entity classes.
----`EntityHandle` should still be used when handling and passing entity types.
----@class EntityClass : CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CBodyComponent,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
-local EntityClass = {}
----Save all entity data
-function EntityClass:Save()
-end
----Called automatically if defined
----@param loaded boolean
-function EntityClass:OnReady(loaded)
-end
----Called automatically if defined
----@param spawnkeys CScriptKeyValues
-function EntityClass:OnSpawn(spawnkeys)
-end
----Called automatically if defined
-function EntityClass:Think()
-end
----Called automatically if defined
-function EntityClass:ResumeThink()
-end
----Called automatically if defined
-function EntityClass:PauseThink()
-end
----@type boolean
-EntityClass.Initiated = false
----@type boolean
-EntityClass.IsThinking = false
 
 ---@class EHANDLE
 ---@alias ScriptScope table
