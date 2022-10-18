@@ -1,5 +1,5 @@
 --[[
-    v1.0.0
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -77,5 +77,17 @@ end
 ---@param delay number?
 function CBaseEntity:Delay(func, delay)
     self:SetContextThink(DoUniqueString("delay"), function() func() end, delay or 0)
+end
+
+---Gets all parents in the hierarchy upwards.
+---@return EntityHandle[]
+function CBaseEntity:GetParents()
+    local parents = {}
+    local parent = self:GetMoveParent()
+    while parent ~= nil do
+        parents[#parents+1] = parent
+        parent = parent:GetMoveParent()
+    end
+    return parents
 end
 
