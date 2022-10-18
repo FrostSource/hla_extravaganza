@@ -1,5 +1,5 @@
 --[[
-    v2.2.1
+    v2.2.3
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -383,6 +383,9 @@ else
         return true
     end
 
+    local _vector = Vector()
+    local _qangle = QAngle()
+
     ---Save a value.
     ---
     ---Uses type inference to save the value.
@@ -407,8 +410,8 @@ else
                 return Storage.SaveTable(handle, name, value)
             end
         -- better way to get userdata class?
-        elseif value.__index==Vector().__index then return Storage.SaveVector(handle, name, value)
-        elseif value.__index==QAngle().__index then return Storage.SaveQAngle(handle, name, value)
+        elseif value.__index==_vector.__index then return Storage.SaveVector(handle, name, value)
+        elseif value.__index==_qangle.__index then return Storage.SaveQAngle(handle, name, value)
         else
             Warn("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
             return false
@@ -420,16 +423,17 @@ else
     -------------
 
     ---Load a string.
+    ---@generic T
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the string was saved as.
-    ---@param default? string # Optional default value.
-    ---@return string
+    ---@param default? T # Optional default value.
+    ---@return string|T
     function Storage.LoadString(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t == "string" then
             local value = handle:GetContext(name)
-            if value == nil then return default or "" end
+            if value == nil then return default end
             return value:sub(2)
         elseif t == "splitstring" then
             local splits = handle:GetContext(name..separator.."splits")
@@ -440,31 +444,33 @@ else
             return str
         end
         Warn("String " .. name .. " could not be loaded!")
-        return default or ""
+        return default
     end
 
     ---Load a number.
+    ---@generic T
     ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name the number was saved as.
-    ---@param default? number # Optional default value.
-    ---@return number
+    ---@param default? T # Optional default value.
+    ---@return number|T
     function Storage.LoadNumber(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         local value = handle:GetContext(name)
         if not value or t ~= "number" then
             Warn("Number " .. name .. " could not be loaded! ("..type(value)..", "..tostring(value)..")")
-            return default or 0
+            return default
         end
         if type(value) == "number" then return value end
-        return default or 0
+        return default
     end
 
     ---Load a boolean value.
+    ---@generic T
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the boolean was saved as.
-    ---@param default? boolean # Optional default value.
-    ---@return boolean|nil
+    ---@param default? T # Optional default value.
+    ---@return boolean|T
     function Storage.LoadBoolean(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
@@ -477,16 +483,17 @@ else
     end
 
     ---Load a Vector.
+    ---@generic T
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the Vector was saved as.
-    ---@param default? Vector # Optional default value.
-    ---@return Vector
+    ---@param default? T # Optional default value.
+    ---@return Vector|T
     function Storage.LoadVector(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t ~= "vector" then
             Warn("Vector " .. name .. " could not be loaded!")
-            return default or Vector()
+            return default
         end
         local x = handle:GetContext(name .. ".x") or 0
         local y = handle:GetContext(name .. ".y") or 0
@@ -496,16 +503,17 @@ else
     end
 
     ---Load a QAngle.
+    ---@generic T
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name the QAngle was saved as.
-    ---@param default? QAngle # Optional default value.
-    ---@return QAngle
+    ---@param default? T # Optional default value.
+    ---@return QAngle|T
     function Storage.LoadQAngle(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
         if t ~= "qangle" then
             Warn("QAngle " .. name .. " could not be loaded!")
-            return default or QAngle()
+            return default
         end
         local x = handle:GetContext(name .. ".x") or 0
         local y = handle:GetContext(name .. ".y") or 0
@@ -515,10 +523,11 @@ else
     end
 
     ---Load a table.
+    ---@generic T
     ---@param handle EntityHandle
     ---@param name string
-    ---@param default? table<any,any>
-    ---@return table
+    ---@param default? T
+    ---@return table|T
     function Storage.LoadTable(handle, name, default)
         handle = resolveHandle(handle)
         local name_sep = name..separator
@@ -526,7 +535,7 @@ else
         local key_count = handle:GetContext(name_sep.."key_count")
         if t ~= "table" or not key_count  then
             Warn("Table " .. name .. " could not be loaded!")
-            return default or {}
+            return default
         end
         key_count = key_count - 1
 
@@ -541,10 +550,11 @@ else
     end
 
     ---Load an entity.
+    ---@generic T
     ---@param handle EntityHandle # Entity to save on.
     ---@param name string # Name to save as.
-    ---@param default? EntityHandle # Optional default value.
-    ---@return EntityHandle?
+    ---@param default? T # Optional default value.
+    ---@return EntityHandle|T
     function Storage.LoadEntity(handle, name, default)
         handle = resolveHandle(handle)
         local t = handle:GetContext(name..separator.."type")
