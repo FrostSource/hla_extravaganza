@@ -1,5 +1,5 @@
 --[[
-    v2.0.0
+    v2.1.2
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -158,6 +158,12 @@ CPropVRHand.LastClassGrabbed = ""
 ---**The literal type of this hand.**
 ---@type integer|0|1
 CPropVRHand.Literal = nil
+---**The entity handle of the item in the wrist pocket.**
+---@type EntityHandle?
+CPropVRHand.WristItem = nil
+---**The opposite hand to this one.**
+---@type CPropVRHand
+CPropVRHand.Opposite = nil
 
 
 -------------------------------
@@ -278,6 +284,7 @@ function CBasePlayer:GetLookingAt(maxDistance)
 end
 
 ---Disables fall damage for the player.
+--TODO: Change to entity save.
 function CBasePlayer:DisableFallDamage()
     local name = Storage.LoadString(self, "FallDamageFilterName", DoUniqueString("__player_fall_damage_filter"))
     Storage.SaveString(self, "FallDamageFilterName", name)
@@ -307,16 +314,78 @@ Expose(CBasePlayer.EnableFallDamage, "EnableFallDamage", CBasePlayer)
 ---@param shotgun_ammo? number
 ---@param resin? number
 function CBasePlayer:AddResources(pistol_ammo, rapidfire_ammo, shotgun_ammo, resin)
-    SendToServerConsole("hlvr_addresources "..(pistol_ammo or 0).." "..(rapidfire_ammo or 0).." "..(shotgun_ammo or 0).." "..(resin or 0))
-
-    -- For setting resources if ever find a way to track resin
-    -- SendToServerConsole("hlvr_setresources "..
-    --     (pistol_ammo or self.Items.ammo.energygun*10).." "..
-    --     (rapidfire_ammo or self.Items.ammo.rapidfire*30).." "..
-    --     (shotgun_ammo or self.Items.ammo.shotgun).." "..
-    --     (resin or self.Items.resin)
-    -- )
+    pistol_ammo = pistol_ammo or 0
+    rapidfire_ammo = rapidfire_ammo or 0
+    shotgun_ammo = shotgun_ammo or 0
+    resin = resin or 0
+    SendToServerConsole("hlvr_addresources "..pistol_ammo.." "..rapidfire_ammo.." "..shotgun_ammo.." "..resin)
+    self:SetItems(
+        self.Items.ammo.energygun + pistol_ammo,
+        nil,
+        self.Items.ammo.rapidfire + rapidfire_ammo,
+        self.Items.ammo.shotgun + shotgun_ammo,
+        nil,nil,nil,
+        self.Items.resin + resin
+    )
 end
+
+---Sets resources for the player.
+---@param pistol_ammo? number
+---@param rapidfire_ammo? number
+---@param shotgun_ammo? number
+---@param resin? number
+function CBasePlayer:SetResources(pistol_ammo, rapidfire_ammo, shotgun_ammo, resin)
+    -- Number value is different in-game (setresources uses bullets)
+    SendToServerConsole("hlvr_setresources "..
+        (pistol_ammo or self.Items.ammo.energygun*10).." "..
+        (rapidfire_ammo or self.Items.ammo.rapidfire*30).." "..
+        (shotgun_ammo or self.Items.ammo.shotgun).." "..
+        (resin or self.Items.resin)
+    )
+    self:SetItems(
+        pistol_ammo or self.Items.ammo.energygun,
+        nil,
+        rapidfire_ammo or self.Items.ammo.rapidfire,
+        shotgun_ammo or self.Items.ammo.shotgun,
+        nil,nil,nil,
+        resin or self.Items.resin
+    )
+end
+
+---Set the items that player has manually.
+---This is purely for scripting and does not modify the actual items the player has in game.
+---Use `Player:AddResources` to modify in-game items.
+---@param energygun_ammo? integer
+---@param generic_pistol_ammo? integer
+---@param rapidfire_ammo? integer
+---@param shotgun_ammo? integer
+---@param frag_grenades? integer
+---@param xen_grenades? integer
+---@param healthpens? integer
+---@param resin? integer
+function CBasePlayer:SetItems(
+    energygun_ammo,
+    generic_pistol_ammo,
+    rapidfire_ammo,
+    shotgun_ammo,
+    frag_grenades,
+    xen_grenades,
+    healthpens,
+    resin
+)
+    self.Items.ammo.energygun = energygun_ammo or self.Items.ammo.energygun
+    self.Items.ammo.generic_pistol = generic_pistol_ammo or self.Items.ammo.generic_pistol
+    self.Items.ammo.rapidfire = rapidfire_ammo or self.Items.ammo.rapidfire
+    self.Items.ammo.shotgun = shotgun_ammo or self.Items.ammo.shotgun
+    self.Items.grenades.frag = frag_grenades or self.Items.grenades.frag
+    self.Items.grenades.xen = xen_grenades or self.Items.grenades.xen
+    self.Items.healthpen = healthpens or self.Items.healthpen
+    self.Items.resin = resin or self.Items.resin
+
+    --TODO: Consider moving save function above this
+    Storage.SaveTable(Player, "PlayerItems", Player.Items)
+end
+
 
 ---Add pistol ammo to the player.
 ---@param amount number
@@ -568,6 +637,8 @@ local player_weapon_to_ammotype =
 
 local function savePlayerData()
     Storage.SaveTable(Player, "PlayerItems", Player.Items)
+    Storage.SaveEntity(Player, "LeftWristItem", Player.LeftHand.WristItem)
+    Storage.SaveEntity(Player, "RightWristItem", Player.RightHand.WristItem)
 end
 
 local function loadPlayerData()
@@ -598,6 +669,8 @@ local function listenEventPlayerActivate(data)
             Player.Hands[1]:SetEntityName("player_hand_right")
             Player.LeftHand = Player.Hands[1]
             Player.RightHand = Player.Hands[2]
+            Player.LeftHand.Opposite = Player.RightHand
+            Player.RightHand.Opposite = Player.LeftHand
             Player.IsLeftHanded = Convars:GetBool("hlvr_left_hand_primary") --[[@as boolean]]
             if Player.IsLeftHanded then
                 Player.PrimaryHand = Player.LeftHand
@@ -607,6 +680,9 @@ local function listenEventPlayerActivate(data)
                 Player.SecondaryHand = Player.LeftHand
             end
             Player.HMDAnchor = Player:GetHMDAnchor() --[[@as CEntityInstance]]
+            -- Have to load these seperately
+            Player.LeftHand.WristItem = Storage.LoadEntity(Player, "LeftWristItem")
+            Player.RightHand.WristItem = Storage.LoadEntity(Player, "RightWristItem")
             -- Registered callback
             data.player = Player
             data.game_loaded = player_previously_activated
@@ -686,15 +762,10 @@ local function listenEventItemPickup(data)
         end
     end
 
-    -- If the item being dropped was in the opposite hand we can assume it isn't anymore.
-    -- This might not be needed because item_released is fired when taken by other hand.
-    if hand_opposite.ItemHeld == hand.ItemHeld then
-        hand_opposite.ItemHeld = nil
-    end
     -- Registered callback
----@diagnostic disable-next-line: assign-type-mismatch
-    data.item = ent_held
     data.item_class = data.item
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    data.item = ent_held
     data.hand = hand
     data.hand_opposite = hand_opposite
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -741,7 +812,7 @@ local function listenEventItemReleased(data)
     hand.ItemHeld = nil
     -- Registered callback
     data.item_class = data.item
----@diagnostic disable-next-line: assign-type-mismatch
+    ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = Player.LastItemDropped
     data.hand = hand
     data.hand_opposite = hand_opposite
@@ -924,6 +995,9 @@ end
 ListenToGameEvent("player_retrieved_backpack_clip", listenEventPlayerRetrievedBackpackClip, nil)
 
 ---@class PLAYER_EVENT_PLAYER_STORED_ITEM_IN_ITEMHOLDER : GAME_EVENT_PLAYER_STORED_ITEM_IN_ITEMHOLDER
+---@field item EntityHandle # The entity handle of the item that stored.
+---@field item_class string # Classname of the entity that was stored.
+---@field hand CPropVRHand  # Hand that the entity was stored in.
 
 ---Wrist tracking
 ---@param data GAME_EVENT_PLAYER_STORED_ITEM_IN_ITEMHOLDER
@@ -931,6 +1005,18 @@ local function listenEventPlayerStoredItemInItemholder(data)
     -- print("\nSTORE WRIST:")
     -- Debug.PrintTable(data)
     -- print("\n")
+
+    --TODO: Test the accuracy of this.
+    local item = Player.LastItemDropped
+    local hand
+    -- Can infer wrist stored by checking which hand dropped
+    if Player.LeftHand.LastItemDropped == item then
+        Player.RightHand.WristItem = item
+        hand = Player.RightHand
+    else
+        Player.LeftHand.WristItem = item
+        hand = Player.LeftHand
+    end
 
     if data.item == "item_hlvr_grenade_frag" then
         Player.Items.grenades.frag = Player.Items.grenades.frag + 1
@@ -941,6 +1027,10 @@ local function listenEventPlayerStoredItemInItemholder(data)
     end
     savePlayerData()
     -- Registered callback
+    data.item_class = data.item
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    data.item = item
+    data.hand = hand
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
         if context ~= true then
             callback(context, data)
@@ -952,6 +1042,9 @@ end
 ListenToGameEvent("player_stored_item_in_itemholder", listenEventPlayerStoredItemInItemholder, nil)
 
 ---@class PLAYER_EVENT_PLAYER_REMOVED_ITEM_FROM_ITEMHOLDER : GAME_EVENT_PLAYER_REMOVED_ITEM_FROM_ITEMHOLDER
+---@field item EntityHandle # The entity handle of the item that removed.
+---@field item_class string # Classname of the entity that was removed.
+---@field hand CPropVRHand  # Hand that the entity was removed form.
 
 ---Tracking wrist items
 ---@param data GAME_EVENT_PLAYER_REMOVED_ITEM_FROM_ITEMHOLDER
@@ -959,6 +1052,23 @@ local function listenEventPlayerRemovedItemFromItemholder(data)
     -- print("\nREMOVE FROM WRIST:")
     -- Debug.PrintTable(data)
     -- print("\n")
+
+    local left = Player.LeftHand
+    local right = Player.RightHand
+    local item, hand
+
+    if left.ItemHeld == right.WristItem then
+        item = right.WristItem
+        hand = right
+        right.WristItem = nil
+    elseif right.ItemHeld == left.WristItem then
+        item = left.WristItem
+        hand = left
+        left.WristItem = nil
+    else
+        -- Shouldn't get here, means other functions aren't accurate
+        Warning("Wrist item being taken out couldn't be resolved!")
+    end
 
     if data.item == "item_hlvr_grenade_frag" then
         Player.Items.grenades.frag = Player.Items.grenades.frag - 1
@@ -969,6 +1079,10 @@ local function listenEventPlayerRemovedItemFromItemholder(data)
     end
     savePlayerData()
     -- Registered callback
+    data.item_class = data.item
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    data.item = item
+    data.hand = hand
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
         if context ~= true then
             callback(context, data)
