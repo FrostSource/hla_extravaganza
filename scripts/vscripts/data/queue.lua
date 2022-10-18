@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Adds queue behaviour for tables with #queue.items being the front of the queue.
@@ -44,7 +44,6 @@
     queue = Storage:Load('queue')
     ```
 ]]
-require "storage"
 
 ---@class Queue
 local QueueClass =
