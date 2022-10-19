@@ -21,6 +21,7 @@
 
 """
 
+from calendar import c
 from types import LambdaType
 from zipfile import ZipFile
 import os
@@ -179,88 +180,110 @@ def parse_assets():
         list[str]: The assets.
     """
     asset_categories:dict[str,list[str]] = {}
-    try:
-        with open('release_assets.txt', 'r') as file:
-            prefix_path = ''
-            reroute_path = ''
-            remove_paths = False
-            current_category = 'main'
-            asset_categories[current_category] = []
-            for line in file:
-                # Skip comments and empty
-                if line.isspace() or line.lstrip().startswith('#'): continue
+    reroute_categories:dict[str,dict[str,list[str]]] = {}
+    # try:
+    with open('release_assets.txt', 'r') as file:
+        prefix_path = ''
+        reroute_path = ''
+        remove_paths = False
+        current_category = 'main'
+        asset_categories[current_category] = []
+        for line in file:
+            # Skip comments and empty
+            if line.isspace() or line.lstrip().startswith('#'): continue
 
-                cmd, path = parse_command_line(line)
+            cmd, path = parse_command_line(line)
 
-                match cmd:
-                    
-                    # Create or set a new category
-                    case CMD.CATEGORY:
-                        current_category = path
-                        if not current_category in asset_categories:
-                            asset_categories[current_category] = []
-                        continue
-
-                    # Join the given path to the beginning of each subsequent asset
-                    case CMD.APPEND_PATH:
-                        prefix_path = path
-                        continue
-                    # Stop prefixing asset paths
-                    case CMD.STOP_APPEND:
-                        prefix_path = ''
-                        continue
-
-                    case CMD.INCL_CATEGORY:
-                        asset_categories[current_category].extend(asset_categories[path])
-                        continue
-
-                    case CMD.REROUTE_PATH:
-                        reroute_path = path
-                        continue
-
-                    case CMD.INFER_PATHS:
-                        for file in get_files_in_folder(path):
-                            match os.path.basename(file).lower():
-                                case 'readme.md':
-                                    asset_categories[current_category].extend(parse_readme(file))
-                        continue
-
-                    case CMD.REMOVE_PATHS:
-                        remove_paths = True
-
-
-                # Asset line
-                #TODO: Support wildcard (*)
-
-                if prefix_path != '':
-                    path = os.path.join(prefix_path, path)
-
-                if os.path.isdir(path):
-                    new_assets = get_files_in_folder(path, subfolders=True)
-                else:
-                    new_assets = [path]
+            match cmd:
                 
-                if remove_paths:
-                    asset_categories[current_category][:] = [x for x in asset_categories[current_category] if x not in new_assets]
-                    remove_paths = False
-                else:
-                    asset_categories[current_category].extend(new_assets)
-        
-        if VERBOSE: print('Assets collected from release_assets.txt:')
-        for category, assets in asset_categories.items():
-            removed = verify_paths(assets)
+                # Create or set a new category
+                case CMD.CATEGORY:
+                    current_category = path
+                    if not current_category in asset_categories:
+                        asset_categories[current_category] = []
+                        reroute_categories[current_category] = {}
+                    continue
 
-            if VERBOSE:
-                print()
-                print(f'\t{category}:')
-                print('\t\tverified:')
-                print_list(assets, '\t\t\t')
-                print('\t\tremoved:')
-                print_list(removed, '\t\t\t')
-                
-        return asset_categories
-    except:
-        input('Could not open release_assets.txt! Press enter to exit...')
+                # Join the given path to the beginning of each subsequent asset
+                case CMD.APPEND_PATH:
+                    prefix_path = path
+                    continue
+                # Stop prefixing asset paths
+                case CMD.STOP_APPEND:
+                    prefix_path = ''
+                    continue
+
+                case CMD.INCL_CATEGORY:
+                    asset_categories[current_category].extend(asset_categories[path])
+                    continue
+
+                case CMD.REROUTE_PATH:
+                    reroute_path = path
+                    # print(reroute_path not in reroute_categories[current_category])
+                    if reroute_path != '' and reroute_path not in reroute_categories[current_category]:
+                        reroute_categories[current_category][reroute_path] = []
+                    continue
+
+                case CMD.INFER_PATHS:
+                    for file in get_files_in_folder(path, subfolders=True):
+                        match os.path.basename(file).lower():
+                            case 'readme.md':
+                                asset_categories[current_category].extend(parse_readme(file))
+                    continue
+
+                case CMD.REMOVE_PATHS:
+                    remove_paths = True
+
+
+            # Asset line
+            #TODO: Support wildcard (*)
+
+            if prefix_path != '':
+                path = os.path.join(prefix_path, path)
+
+            if os.path.isdir(path):
+                new_assets = get_files_in_folder(path, subfolders=True)
+            else:
+                new_assets = [path]
+            
+            if remove_paths:
+                asset_categories[current_category][:] = [x for x in asset_categories[current_category] if x not in new_assets]
+                if reroute_path != '':
+                    reroute_categories[current_category][reroute_path][:] = [x for x in reroute_categories[current_category][reroute_path] if x not in new_assets]
+                remove_paths = False
+            else:
+                asset_categories[current_category].extend(new_assets)
+                if reroute_path != '':
+                    reroute_categories[current_category][reroute_path].extend(new_assets)
+    
+    def find_reroute_path(category:str, path:str):
+        for reroute, assets in reroute_categories[category].items():
+            if path in assets:
+                return reroute
+
+    if VERBOSE: print('Assets collected from release_assets.txt:')
+    for category, assets in asset_categories.items():
+        removed = verify_paths(assets)
+
+        if VERBOSE:
+            print()
+            print(f'  {category}:')
+            print('    verified:')
+            for asset in assets:
+                print(f'      {asset}', end='')
+                reroute = find_reroute_path(category, asset)
+                if reroute is not None:
+                    print(f' -> {reroute}')
+                else:
+                    print('')
+            # print_list(assets, '      ')
+            # print('    removed:')
+            # print_list(removed, '      ')
+            
+    return asset_categories
+    # except Exception as e:
+    #     print(e)
+    #     input('Could not open release_assets.txt! Press enter to exit...')
 
 def zip_files(files: 'list[Path]', output_path: Path):
     """Zips a list of files to a given output zip file.
@@ -428,12 +451,12 @@ def generate_releases():
 #endregion
 
 if __name__ == '__main__':
-    try:
+    # try:
         print()
         assets = parse_assets()
         # if not STOP_AFTER_ASSET_COLLECTION:
         #     generate_releases()
         # input('')
-    except Exception as e:
-        print(e)
+    # except Exception as e:
+        # print(e)
         # input(e)
