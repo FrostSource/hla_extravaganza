@@ -1,7 +1,8 @@
 /*
-	Snippets for quick coding using the built-in VLua functions.
+	v1.0.1
+	https://github.com/FrostSource/hla_extravaganza
 
-	This file is exactly the same as 'scripts/.vscode/vlua_snippets.code-snippets' minus this comment line.
+	Snippets for quick coding using the built-in VScript functions.
 */
 {
 	/*

@@ -1,3 +1,7 @@
+/*
+	v1.1.0
+	https://github.com/FrostSource/hla_extravaganza
+*/
 {
     "Lua.completion.autoRequire": false,
     "Lua.diagnostics.ignoredFiles": "Enable",

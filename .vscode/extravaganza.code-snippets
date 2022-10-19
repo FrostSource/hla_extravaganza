@@ -1,8 +1,8 @@
+/*
+	v2.0.0
+	https://github.com/FrostSource/hla_extravaganza
+*/
 {
-	/*
-		Util setups
-	*/
-
 	"Entity Base":{
 		"scope": "lua",
 		"prefix": ["Entity Base", "Base Entity"],
@@ -51,6 +51,16 @@
 		"prefix": ["Expose (private)"],
 		"body": [
 			"thisEntity:GetPrivateScriptScope().${1:func} = ${1:func}"
-		]
+		],
+		"description": "Exposes a single local function to Hammer."
+	},
+
+	"Stop Second Execute":{
+		"scope": "lua",
+		"prefix": ["Stop second execute", "Fix second execute"],
+		"body": [
+			"if thisEntity then if thisEntity:GetPrivateScriptScope().__load then return else thisEntity:GetPrivateScriptScope().__load = true end else return end"
+		],
+		"description": "Stops the script from executing a second time when the game loads. Place at the top of the script."
 	}
 }
