@@ -1,15 +1,31 @@
 --[[
-    v2.0.1
+    v2.1.0
+    https://github.com/FrostSource/hla_extravaganza
+
     Prefab specific functions for maps/prefabs/logic/logic_weighted_random/logic_weighted_random.vmap
 ]]
+if thisEntity then if thisEntity:GetPrivateScriptScope().__load then return else thisEntity:GetPrivateScriptScope().__load = true end else return end
 require "storage"
 require "math.weighted_random"
 
 ---@type WeightedRandom
 local wr
 
+---Pick and fire a random case output.
+---@param data TypeIOInvoke
 local function PickRandomWeight(data)
     thisEntity:FireOutput("On"..wr:Random().case, data.activator, thisEntity, nil, 0)
+end
+thisEntity:GetPrivateScriptScope().PickRandomWeight = PickRandomWeight
+
+---@param activateType 0|1|2
+function Activate(activateType)
+    if activateType == 2 then
+        wr = thisEntity:LoadWeightedRandom("Weights")
+        if wr == nil then
+            Warning("logic_weighted_random.lua could not load weights!")
+        end
+    end
 end
 
 function Spawn(spawnkeys)
@@ -22,33 +38,6 @@ function Spawn(spawnkeys)
             weights[#weights+1] = { weight = weight, case = case}
         end
     end
-    thisEntity:SaveTable("Weights", weights)
     wr = WeightedRandom(weights)
+    thisEntity:SaveWeightedRandom("Weights", wr)
 end
-
-local function ready(saveLoaded)
-    if saveLoaded then
-        local weights = thisEntity:LoadTable("Weights", {})
-        wr = WeightedRandom(weights)
-    end
-end
-
--- Fix for script executing twice on restore.
--- This binds to the new local ready function on second execution.
-if thisEntity:GetPrivateScriptScope().savewasloaded then
-    thisEntity:SetContextThink("init", function() ready(true) end, 0)
-end
-
----@param activateType 0|1|2
-function Activate(activateType)
-    -- If game is being restored then set the script scope ready for next execution.
-    if activateType == 2 then
-        thisEntity:GetPrivateScriptScope().savewasloaded = true
-        return
-    end
-    -- Otherwise just run the ready function after "instant" delay (player will be ready).
-    thisEntity:SetContextThink("init", function() ready(false) end, 0)
-end
-
--- Add local functions to private script scope to avoid environment pollution.
-local _a,_b=1,thisEntity:GetPrivateScriptScope()while true do local _c,_d=debug.getlocal(1,_a)if _c==nil then break end;if type(_d)=='function'then _b[_c]=_d end;_a=1+_a end
