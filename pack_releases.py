@@ -255,7 +255,7 @@ def parse_assets():
                 print(f'\t{category}:')
                 print('\t\tverified:')
                 print_list(assets, '\t\t\t')
-                print('\t\tverified:')
+                print('\t\tremoved:')
                 print_list(removed, '\t\t\t')
                 
         return asset_categories
@@ -431,8 +431,9 @@ if __name__ == '__main__':
     try:
         print()
         assets = parse_assets()
-        print_dict(assets)
-        generate_releases()
-        input('')
-    except:
-        input('Error...')
+        # if not STOP_AFTER_ASSET_COLLECTION:
+        #     generate_releases()
+        # input('')
+    except Exception as e:
+        print(e)
+        # input(e)
