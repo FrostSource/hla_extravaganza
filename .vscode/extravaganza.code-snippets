@@ -45,4 +45,12 @@
 		],
 		"description": "Adds local functions to private script scope to avoid environment pollution."
 	},
+
+	"Expose - Private":{
+		"scope": "lua",
+		"prefix": ["Expose (private)"],
+		"body": [
+			"thisEntity:GetPrivateScriptScope().${1:func} = ${1:func}"
+		]
+	}
 }
