@@ -80,9 +80,97 @@ def get_files_in_folder(src, subfolders=False):
         if not subfolders: break
     return all_files
 
+def verify_paths(paths:list[str]):
+    """Removes any paths that don't exist and returns the removed paths.
+
+    Args:
+        paths (list[str]): Paths to verify.
+
+    Returns:
+        list[str]: Removed paths.
+    """
+    removed:list[str] = []
+    for x in paths:
+        if not os.path.exists(x):
+            removed.append(x)
+    paths[:] = [x for x in paths if os.path.exists(x)]
+    return removed
+
 #endregion
 
 #region Parsing/Packing
+
+def parse_readme(path):
+    """Parses a README.md to find any asset paths.
+
+    Args:
+        path (str): Path to the README.md
+
+    Returns:
+        list[str]: List of assets.
+    """
+    assets:list[str] = []
+    with open(path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith('-'):
+                line = line[1:]
+                line = line.strip()
+            if os.path.exists(line):
+                assets.append(line)
+    return assets
+
+
+class CMD(Enum):
+    NONE          = 0
+    CATEGORY      = 1
+    APPEND_PATH   = 2
+    STOP_APPEND   = 3
+    INCL_CATEGORY = 4
+    REROUTE_PATH  = 5
+    INFER_PATHS   = 6
+    REMOVE_PATHS  = 7
+
+def parse_command_line(line:str):
+    """Gets a command and path from a command line.
+
+    Args:
+        line (str): Command line.
+
+    Returns:
+        CMD: Command found.
+        str: Path.
+    """
+    line = line.strip()
+    command:CMD = CMD.NONE
+    if line.endswith(':'):
+        command = CMD.CATEGORY
+        line = line[:-1]
+    elif line.startswith('->'):
+        command = CMD.APPEND_PATH
+        line = line[2:]
+    elif line.startswith('<-'):
+        command = CMD.STOP_APPEND
+        line = ''
+    elif line.startswith('&'):
+        command = CMD.INCL_CATEGORY
+        line = line[1:]
+    elif line.startswith('@'):
+        command = CMD.REROUTE_PATH
+        line = line[1:]
+    elif line.startswith('?'):
+        command = CMD.INFER_PATHS
+        line = line[1:]
+    elif line.startswith('~'):
+        command = CMD.REMOVE_PATHS
+        line = line[1:]
+    
+    line = line.strip()
+    if line.startswith('"'): line = line[1:]
+    if line.endswith('"'): line = line[:-1]
+
+    return command, line
+
 
 def parse_assets():
     """Parse the release_assets.txt file in the same folder and return the asset paths.
@@ -90,45 +178,87 @@ def parse_assets():
     Returns:
         list[str]: The assets.
     """
-    assets:dict[str,list[str]] = {}
+    asset_categories:dict[str,list[str]] = {}
     try:
         with open('release_assets.txt', 'r') as file:
             prefix_path = ''
+            reroute_path = ''
+            remove_paths = False
             current_category = 'main'
-            assets[current_category] = []
+            asset_categories[current_category] = []
             for line in file:
-                line = line.rstrip()
-                # Skip comments
-                if line.lstrip().startswith('#') or line.strip() == '': continue
-                # Create or set a new category
-                if line.endswith(':'):
-                    category = line.strip()[:-1]
-                    current_category = category
-                    if not category in assets:
-                        assets[category] = []
-                    continue
-                # Join the given path to the beginning of each subsequent asset
-                if line.lstrip().startswith('->'):
-                    prefix_path = line.lstrip()[2:]
-                    continue
-                # Stop prefixing asset paths
-                if line.lstrip().startswith('<-'):
-                    prefix_path = ''
-                    continue
+                # Skip comments and empty
+                if line.isspace() or line.lstrip().startswith('#'): continue
+
+                cmd, path = parse_command_line(line)
+
+                match cmd:
+                    
+                    # Create or set a new category
+                    case CMD.CATEGORY:
+                        current_category = path
+                        if not current_category in asset_categories:
+                            asset_categories[current_category] = []
+                        continue
+
+                    # Join the given path to the beginning of each subsequent asset
+                    case CMD.APPEND_PATH:
+                        prefix_path = path
+                        continue
+                    # Stop prefixing asset paths
+                    case CMD.STOP_APPEND:
+                        prefix_path = ''
+                        continue
+
+                    case CMD.INCL_CATEGORY:
+                        asset_categories[current_category].extend(asset_categories[path])
+                        continue
+
+                    case CMD.REROUTE_PATH:
+                        reroute_path = path
+                        continue
+
+                    case CMD.INFER_PATHS:
+                        for file in get_files_in_folder(path):
+                            match os.path.basename(file).lower():
+                                case 'readme.md':
+                                    asset_categories[current_category].extend(parse_readme(file))
+                        continue
+
+                    case CMD.REMOVE_PATHS:
+                        remove_paths = True
+
+
                 # Asset line
                 #TODO: Support wildcard (*)
-                #TODO: Check for asset existence
-                path = line
+
                 if prefix_path != '':
                     path = os.path.join(prefix_path, path)
-                # if os.path.isdir(path) and not path.endswith(('/','\\')):
-                #     path += os.path.sep
+
                 if os.path.isdir(path):
-                    assets[category].extend(get_files_in_folder(path, subfolders=True))
+                    new_assets = get_files_in_folder(path, subfolders=True)
                 else:
-                    assets[category].append(path)
+                    new_assets = [path]
                 
-        return assets
+                if remove_paths:
+                    asset_categories[current_category][:] = [x for x in asset_categories[current_category] if x not in new_assets]
+                    remove_paths = False
+                else:
+                    asset_categories[current_category].extend(new_assets)
+        
+        if VERBOSE: print('Assets collected from release_assets.txt:')
+        for category, assets in asset_categories.items():
+            removed = verify_paths(assets)
+
+            if VERBOSE:
+                print()
+                print(f'\t{category}:')
+                print('\t\tverified:')
+                print_list(assets, '\t\t\t')
+                print('\t\tverified:')
+                print_list(removed, '\t\t\t')
+                
+        return asset_categories
     except:
         input('Could not open release_assets.txt! Press enter to exit...')
 
