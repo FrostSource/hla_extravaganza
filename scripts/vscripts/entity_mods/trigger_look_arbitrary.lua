@@ -1,5 +1,5 @@
 --[[
-    v0.1.0
+    v1.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     Attaching this script to your trigger_look entity will augment it to allow
@@ -47,8 +47,8 @@
 
 
     You can set the above properties in-game as well as in Hammer.
-    Send an input of RunScriptCode to your trigger_look with a
-    parameter override as one of the following:
+    Changes made in-game are persistent with game save/load.
+    Send an input of RunScriptCode to your trigger_look with a parameter override as one of the following:
 
     SetLookFromClass('class_name_here')
     SetLookFromName('target_name_here')
@@ -62,49 +62,89 @@
     SetLookFromAttachment('light_attach')
     SetCheckAllTargets(true)
 
+    ---
+
     For in-game debugging purposes you can toggle debug visuals for the current session
     by calling the function ToggleDebug on any trigger_look with the script attached.
 
     CallPrivateScriptFunction -> ToggleDebug
 
 ]]
-require "util.util"
+if thisEntity then if thisEntity:GetPrivateScriptScope().__load then return else thisEntity:GetPrivateScriptScope().__load = true end else return end
 require "storage"
 
 --- Properties relating directly to the Hammer entity.
 
-local target_name = ""
-local look_time = 0.5
-local fov = 0.9
-local use_2d = false
-local test_occlusion = false
-local look_from_class = ""
-local look_from_name = ""
+local target_name               = ""
+local look_time                 = 0.5
+local fov                       = 0.9
+local use_2d                    = false
+local test_occlusion            = false
+local look_from_class           = "player"
+local look_from_name            = ""
 local look_from_attachment_name = ""
-local check_all_targets = false
+local check_all_targets         = false
 
 --- Internal variables.
+
+---If debug visuals should be displayed.
+local debug_enabled = false
+local debug_colors
+if debug_enabled then
+    ---Automatically generates indexed colors when accessed.
+    ---@type Vector[]
+    debug_colors = { Vector(0,0,255) }
+    debug_colors.__index = function (table, key)
+        debug_colors[key] = Vector(RandomInt(50,230), RandomInt(50,255), RandomInt(50,255))
+        return debug_colors[key]
+    end
+    setmetatable(debug_colors, debug_colors)
+end
 
 ---The target handle found from `target_name`.
 ---@type EntityHandle
 local target = nil
+
 ---The look from handle found from `look_from_class`.
 ---@type EntityHandle
 local look_from_handle = nil
+
 ---The real index found from `look_from_attachment_name`.
 local look_from_attachment_index = 0
+
 ---Time when the entity first catches glimpse of `target`
 ---Used to track length of look time.
 local start_look_time = -1
+
 ---Target is currently being looked at after `look_time`.
 local looked_at_target = false
+
 ---OnStartTouchAll activator.
 ---@type EntityHandle
 local current_activator = nil
+
 ---OnEndTouchAll activator.
 ---@type EntityHandle
 local current_caller = nil
-local debug_enabled = false
+
+local function load()
+    print('load name', thisEntity:LoadString("script.target"))
+    target_name               = thisEntity:LoadString("script.target", target_name)
+    look_time                 = thisEntity:LoadNumber("script.LookTime", look_time)
+    fov                       = thisEntity:LoadNumber("script.FieldOfView", fov)
+    use_2d                    = thisEntity:LoadBoolean("script.FOV2D", use_2d)
+    test_occlusion            = thisEntity:LoadBoolean("script.test_occlusion", test_occlusion)
+    look_from_class           = thisEntity:LoadString("script.LookFromClass", look_from_class)
+    look_from_name            = thisEntity:LoadString("script.LookFromName", look_from_name)
+    look_from_attachment_name = thisEntity:LoadString("script.LookFromAttachment", look_from_attachment_name)
+    check_all_targets         = thisEntity:LoadBoolean("script.CheckAllTargets", check_all_targets)
+end
+---@param activateType 0|1|2
+function Activate(activateType)
+    if activateType == 2 then
+        load()
+    end
+end
 
 ---Set the class to test looking from.
 ---e.g. SetLookFromClass('hlvr_flashlight_attachment')
@@ -113,7 +153,7 @@ local function SetLookFromClass(class)
     look_from_class = class or look_from_class
     thisEntity:SaveString("script.LookFromClass", look_from_class)
 end
-Expose(SetLookFromClass)
+thisEntity:GetPrivateScriptScope().SetLookFromClass = SetLookFromClass
 
 ---Set the targetname to test looking from.
 ---This takes precedence over `look_from_class`.
@@ -123,7 +163,7 @@ local function SetLookFromName(targetname)
     look_from_name = targetname or look_from_name
     thisEntity:SaveString("script.LookFromName", look_from_name)
 end
-Expose(SetLookFromName)
+thisEntity:GetPrivateScriptScope().SetLookFromName = SetLookFromName
 
 ---Set the attachment on the model to test looking from.
 ---Both origin and forward of the attachment are used.
@@ -133,7 +173,7 @@ local function SetLookFromAttachment(attachment_name)
     look_from_attachment_name = attachment_name or look_from_attachment_name
     thisEntity:SaveString("script.LookFromAttachment", look_from_attachment_name)
 end
-Expose(SetLookFromAttachment)
+thisEntity:GetPrivateScriptScope().SetLookFromAttachment = SetLookFromAttachment
 
 ---Set if the script should check all named targets or only one.
 ---@param check_all boolean
@@ -141,35 +181,42 @@ local function SetCheckAllTargets(check_all)
     check_all_targets = check_all
     thisEntity:SaveBoolean("script.CheckAllTargets", check_all_targets)
 end
-Expose(SetCheckAllTargets)
+thisEntity:GetPrivateScriptScope().SetCheckAllTargets = SetCheckAllTargets
 
 ---Toggles debug state. This is not saved between sessions.
 local function ToggleDebug()
     debug_enabled = not debug_enabled
 end
-Expose(ToggleDebug)
+thisEntity:GetPrivateScriptScope().ToggleDebug = ToggleDebug
 
-
----Get if the look from entity can see a given `handle`.
+---Check if an entity can be seen from a given origin and direction.
 ---@param look_origin Vector
 ---@param look_forward Vector
 ---@param handle EntityHandle
 ---@return boolean, number
 local function IsLookingAtHandle(look_origin, look_forward, handle)
-    local pos = (handle:GetOrigin() - look_origin):Normalized()
+    local dir = (handle:GetOrigin() - look_origin):Normalized()
+    local dot
     if use_2d then
-        -- what is the best way to convert 3d forward to 2d?
-        -- this gives rough matching output as trigger
-        look_forward = look_forward * 100
-        look_forward.z = 0
-        look_forward = look_forward:Normalized()
-        pos.z = 0
+        -- I'm bad at maths, there must be a simpler way to project 2d
+        local v1 = math.deg(math.atan2(look_forward.y,look_forward.x))
+        local v2 = math.deg(math.atan2(dir.y,dir.x))
+        local diff = AngleDiff(v2,v1)
+        if diff < 0 then
+            dot = RemapVal(diff, -180, 0, -1, 1)
+        elseif diff > 0 then
+            dot = RemapVal(diff, 180, 0, -1, 1)
+        else
+            dot = 1
+        end
+    else
+        dot = look_forward:Dot(dir)
     end
 
     local can_see_target = false
     -- 2013 engine uses greater than, not greater or equal
     -- https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/server/triggers.cpp#L1149
-    local dot = look_forward:Dot(pos)
+    -- local dot = look_forward:Dot(dir)
     if dot > fov then
         can_see_target = true
         if test_occlusion then
@@ -190,7 +237,7 @@ end
 
 ---Main think for trigger.
 ---@return number? # Update interval
-local function ThinkFlashlightAim()
+local function Thinker()
     if not target or not IsValidEntity(target) then
         target = Entities:FindByName(nil, target_name)
         if not target then return nil end
@@ -199,7 +246,7 @@ local function ThinkFlashlightAim()
     local look_forward
     local look_origin
     if look_from_class == "player" then
-        look_forward = AnglesToVector(look_from_handle:EyeAngles())
+        look_forward = look_from_handle:EyeAngles():Forward()
         look_origin = look_from_handle:EyePosition()
     else
         -- Only model entities have these methods
@@ -214,9 +261,22 @@ local function ThinkFlashlightAim()
 
     local can_see_target = false
     local seen_target = target
+    if debug_enabled then
+        debugoverlay:Sphere(look_origin, 3, 255, 255, 255, 255, false, 0)
+        debugoverlay:Line(look_origin, look_origin+look_forward*64, 255, 255, 255, 255, false, 0)
+    end
     if check_all_targets then
-        for _, targ in ipairs(Entities:FindAllByName(target_name)) do
-            if IsLookingAtHandle(look_origin, look_forward, targ) then
+        for i, targ in ipairs(Entities:FindAllByName(target_name)) do
+            local can_see, dot = IsLookingAtHandle(look_origin, look_forward, targ)
+            -- Debug
+            if debug_enabled then
+                local col = debug_colors[i]
+                debugoverlay:Sphere(targ:GetOrigin(), 3, col.x, col.y, col.z, 255, false, 0)
+                debugoverlay:Line(look_origin, look_origin+(targ:GetOrigin()-look_origin):Normalized()*64, col.x, col.y, col.z, 255, false, 0)
+                debugoverlay:Text(targ:GetOrigin(), 0, string.format("FOV: %.2f / %.2f", dot, fov), 64, col.x, col.y, col.z, 255, 0)
+            end
+            -- End debug
+            if can_see then
                 can_see_target = true
                 seen_target = targ
                 break
@@ -227,14 +287,14 @@ local function ThinkFlashlightAim()
         if can_see then
             can_see_target = true
         end
-        --Debug the look-from vectors in-game, currently only for one target
+        --Debug the look-from vectors in-game
         if debug_enabled then
-            debugoverlay:Sphere(look_origin, 3, 255, 0, 0, 255, false, 0)
-            debugoverlay:Sphere(target:GetOrigin(), 3, 0, 0, 255, 255, false, 0)
-            debugoverlay:Line(look_origin, look_origin+look_forward*64, 255, 0, 0, 255, false, 0)
-            debugoverlay:Line(look_origin, look_origin+(target:GetOrigin()-look_origin):Normalized()*64, 0, 0, 255, 255, false, 0)
-            debugoverlay:Text(look_origin, 0, string.format("FOV: %.2f / %.2f", dot, fov), 64, 0, 0, 255, 255, 0)
+            local col = debug_colors[1]
+            debugoverlay:Sphere(target:GetOrigin(), 3, col.x, col.y, col.z, 255, false, 0)
+            debugoverlay:Line(look_origin, look_origin+(target:GetOrigin()-look_origin):Normalized()*64, col.x, col.y, col.z, 255, false, 0)
+            debugoverlay:Text(look_origin, 0, string.format("FOV: %.2f / %.2f", dot, fov), 64, col.x, col.y, col.z, 255, 0)
         end
+        -- End debug
     end
 
     if can_see_target then
@@ -279,34 +339,37 @@ local function OnStartTouchAll(input)
             look_from_attachment_index = look_from_handle:ScriptLookupAttachment(look_from_attachment_name)
         end
         -- print("looking from", look_from_class, look_from_handle, look_from_attachment_name)
-        thisEntity:SetThink(ThinkFlashlightAim, "ThinkFlashlightAim", 0)
+        thisEntity:SetContextThink("LookThinker", Thinker, 0)
     else
-        if not target then Warning("trigger_look_arbitrary.lua Could not find target!\n") end
-        if not look_from_handle then Warning("trigger_look_arbitrary.lua Could not find look from entity!\n") end
+        if not target then Warning("trigger_look_arbitrary.lua could not find target with name='"..target_name.."'\n") end
+        if not look_from_handle then Warning("trigger_look_arbitrary.lua could not find look from entity with class='"..look_from_class.."', name='"..look_from_name.."'\n") end
     end
 end
-Expose(OnStartTouchAll)
+thisEntity:GetPrivateScriptScope().OnStartTouchAll = OnStartTouchAll
 
 ---Output redirected here.
 ---@param input TypeIOInvoke
 local function OnEndTouchAll(input)
     start_look_time = -1
     looked_at_target = false
-    thisEntity:StopThink("ThinkFlashlightAim")
+    thisEntity:SetContextThink("LookThinker", nil, 0)
 end
-Expose(OnEndTouchAll)
+thisEntity:GetPrivateScriptScope().OnEndTouchAll = OnEndTouchAll
 
 ---@param spawnkeys CScriptKeyValues
 function Spawn(spawnkeys)
     thisEntity:SaveString("script.target", spawnkeys:GetValue("target") or target_name)
-    thisEntity:SaveNumber("script.LookTime", tonumber(spawnkeys:GetValue("LookTime")) or 0.5)
-    thisEntity:SaveNumber("script.FieldOfView", tonumber(spawnkeys:GetValue("FieldOfView")) or 0.9)
+    thisEntity:SaveNumber("script.LookTime", tonumber(spawnkeys:GetValue("LookTime")) or look_time)
+    thisEntity:SaveNumber("script.FieldOfView", tonumber(spawnkeys:GetValue("FieldOfView")) or fov)
     thisEntity:SaveBoolean("script.FOV2D", spawnkeys:GetValue("FOV2D"))
     thisEntity:SaveBoolean("script.test_occlusion", spawnkeys:GetValue("test_occlusion"))
     thisEntity:SaveString("script.LookFromClass", spawnkeys:GetValue("LookFromClass") or look_from_class)
     thisEntity:SaveString("script.LookFromName", spawnkeys:GetValue("LookFromName") or look_from_name)
     thisEntity:SaveString("script.LookFromAttachment", spawnkeys:GetValue("LookFromAttachment") or look_from_attachment_name)
-    thisEntity:SaveBoolean("script.CheckAllTargets", spawnkeys:GetValue("CheckAllTargets") == 1)
+    local checkalltargets = spawnkeys:GetValue("CheckAllTargets")
+    thisEntity:SaveBoolean("script.CheckAllTargets", (checkalltargets == 1) or (checkalltargets == true) )
+
+    load()
 
     thisEntity:RedirectOutput("OnStartTouchAll", "OnStartTouchAll", thisEntity)
     thisEntity:RedirectOutput("OnEndTouchAll", "OnEndTouchAll", thisEntity)
@@ -315,31 +378,31 @@ end
 
 -- Game load fix
 
-local function ready(saveLoaded)
-    target_name = thisEntity:LoadString("script.target")
-    look_time = thisEntity:LoadNumber("script.LookTime")
-    fov = thisEntity:LoadNumber("script.FieldOfView")
-    use_2d = thisEntity:LoadBoolean("script.FOV2D")
-    test_occlusion = thisEntity:LoadBoolean("script.test_occlusion")
-    look_from_class = thisEntity:LoadString("script.LookFromClass")
-    look_from_name = thisEntity:LoadString("script.LookFromName")
-    look_from_attachment_name = thisEntity:LoadString("script.LookFromAttachment")
-    check_all_targets = thisEntity:LoadBoolean("script.CheckAllTargets")
-end
+-- local function ready(saveLoaded)
+--     target_name = thisEntity:LoadString("script.target")
+--     look_time = thisEntity:LoadNumber("script.LookTime")
+--     fov = thisEntity:LoadNumber("script.FieldOfView")
+--     use_2d = thisEntity:LoadBoolean("script.FOV2D")
+--     test_occlusion = thisEntity:LoadBoolean("script.test_occlusion")
+--     look_from_class = thisEntity:LoadString("script.LookFromClass")
+--     look_from_name = thisEntity:LoadString("script.LookFromName")
+--     look_from_attachment_name = thisEntity:LoadString("script.LookFromAttachment")
+--     check_all_targets = thisEntity:LoadBoolean("script.CheckAllTargets")
+-- end
 
--- Fix for script executing twice on restore.
--- This binds to the new local ready function on second execution.
-if thisEntity:GetPrivateScriptScope().savewasloaded then
-    thisEntity:SetContextThink("init", function() ready(true) end, 0)
-end
+-- -- Fix for script executing twice on restore.
+-- -- This binds to the new local ready function on second execution.
+-- if thisEntity:GetPrivateScriptScope().savewasloaded then
+--     thisEntity:SetContextThink("init", function() ready(true) end, 0)
+-- end
 
----@param activateType 0|1|2
-function Activate(activateType)
-    -- If game is being restored then set the script scope ready for next execution.
-    if activateType == 2 then
-        thisEntity:GetPrivateScriptScope().savewasloaded = true
-        return
-    end
-    -- Otherwise just run the ready function after "instant" delay (player will be ready).
-    thisEntity:SetContextThink("init", function() ready(false) end, 0)
-end
+-- ---@param activateType 0|1|2
+-- function Activate(activateType)
+--     -- If game is being restored then set the script scope ready for next execution.
+--     if activateType == 2 then
+--         thisEntity:GetPrivateScriptScope().savewasloaded = true
+--         return
+--     end
+--     -- Otherwise just run the ready function after "instant" delay (player will be ready).
+--     thisEntity:SetContextThink("init", function() ready(false) end, 0)
+-- end
