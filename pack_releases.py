@@ -32,14 +32,14 @@ from enum import Enum
 
 PRINT_ONLY = True
 VERBOSE = True
-STOP_AFTER_ASSET_COLLECTION = True
+STOP_AFTER_ASSET_COLLECTION = False
 
 # Doesn't work yet
 BACKUP_PREVIOUS_RELEASES = True
 
 root = Path(__file__).parent
-release = root.joinpath('release/')
-# release = root.joinpath('test_release/')
+# release = root.joinpath('release/')
+release = root.joinpath('test_release/')
 
 #region Utility
 
@@ -181,109 +181,115 @@ def parse_assets():
     """
     asset_categories:dict[str,list[str]] = {}
     reroute_categories:dict[str,dict[str,list[str]]] = {}
-    # try:
-    with open('release_assets.txt', 'r') as file:
-        prefix_path = ''
-        reroute_path = ''
-        remove_paths = False
-        current_category = 'main'
-        asset_categories[current_category] = []
-        for line in file:
-            # Skip comments and empty
-            if line.isspace() or line.lstrip().startswith('#'): continue
+    try:
+        with open('release_assets.txt', 'r') as file:
+            prefix_path = ''
+            reroute_path = ''
+            remove_paths = False
+            current_category = 'main'
+            asset_categories[current_category] = []
+            for line in file:
+                # Skip comments and empty
+                if line.isspace() or line.lstrip().startswith('#'): continue
 
-            cmd, path = parse_command_line(line)
+                cmd, path = parse_command_line(line)
 
-            match cmd:
-                
-                # Create or set a new category
-                case CMD.CATEGORY:
-                    current_category = path
-                    if not current_category in asset_categories:
-                        asset_categories[current_category] = []
-                        reroute_categories[current_category] = {}
-                    continue
+                match cmd:
+                    case CMD.NONE:
+                        pass
+                    
+                    # Create or set a new category
+                    case CMD.CATEGORY:
+                        current_category = path
+                        if not current_category in asset_categories:
+                            asset_categories[current_category] = []
+                            reroute_categories[current_category] = {}
+                        continue
 
-                # Join the given path to the beginning of each subsequent asset
-                case CMD.APPEND_PATH:
-                    prefix_path = path
-                    continue
-                # Stop prefixing asset paths
-                case CMD.STOP_APPEND:
-                    prefix_path = ''
-                    continue
+                    # Join the given path to the beginning of each subsequent asset
+                    case CMD.APPEND_PATH:
+                        prefix_path = path
+                        continue
+                    # Stop prefixing asset paths
+                    case CMD.STOP_APPEND:
+                        prefix_path = ''
+                        continue
 
-                case CMD.INCL_CATEGORY:
-                    asset_categories[current_category].extend(asset_categories[path])
-                    continue
+                    case CMD.INCL_CATEGORY:
+                        asset_categories[current_category].extend(asset_categories[path])
+                        continue
 
-                case CMD.REROUTE_PATH:
-                    reroute_path = path
-                    # print(reroute_path not in reroute_categories[current_category])
-                    if reroute_path != '' and reroute_path not in reroute_categories[current_category]:
-                        reroute_categories[current_category][reroute_path] = []
-                    continue
+                    case CMD.REROUTE_PATH:
+                        reroute_path = path
+                        # print(reroute_path not in reroute_categories[current_category])
+                        if reroute_path != '' and reroute_path not in reroute_categories[current_category]:
+                            reroute_categories[current_category][reroute_path] = []
+                        continue
 
-                case CMD.INFER_PATHS:
-                    for file in get_files_in_folder(path, subfolders=True):
-                        match os.path.basename(file).lower():
-                            case 'readme.md':
-                                asset_categories[current_category].extend(parse_readme(file))
-                    continue
+                    case CMD.INFER_PATHS:
+                        for file in get_files_in_folder(path, subfolders=True):
+                            match os.path.basename(file).lower():
+                                case 'readme.md':
+                                    asset_categories[current_category].extend(parse_readme(file))
+                        continue
 
-                case CMD.REMOVE_PATHS:
-                    remove_paths = True
+                    case CMD.REMOVE_PATHS:
+                        remove_paths = True
 
 
-            # Asset line
-            #TODO: Support wildcard (*)
+                # Asset line
+                #TODO: Support wildcard (*)
 
-            if prefix_path != '':
-                path = os.path.join(prefix_path, path)
+                if prefix_path != '':
+                    path = os.path.join(prefix_path, path)
 
-            if os.path.isdir(path):
-                new_assets = get_files_in_folder(path, subfolders=True)
-            else:
-                new_assets = [path]
-            
-            if remove_paths:
-                asset_categories[current_category][:] = [x for x in asset_categories[current_category] if x not in new_assets]
-                if reroute_path != '':
-                    reroute_categories[current_category][reroute_path][:] = [x for x in reroute_categories[current_category][reroute_path] if x not in new_assets]
-                remove_paths = False
-            else:
-                asset_categories[current_category].extend(new_assets)
-                if reroute_path != '':
-                    reroute_categories[current_category][reroute_path].extend(new_assets)
-    
-    def find_reroute_path(category:str, path:str):
-        for reroute, assets in reroute_categories[category].items():
-            if path in assets:
-                return reroute
-
-    if VERBOSE: print('Assets collected from release_assets.txt:')
-    for category, assets in asset_categories.items():
-        removed = verify_paths(assets)
-
-        if VERBOSE:
-            print()
-            print(f'  {category}:')
-            print('    verified:')
-            for asset in assets:
-                print(f'      {asset}', end='')
-                reroute = find_reroute_path(category, asset)
-                if reroute is not None:
-                    print(f' -> {reroute}')
+                if os.path.isdir(path):
+                    new_assets = get_files_in_folder(path, subfolders=True)
                 else:
-                    print('')
-            # print_list(assets, '      ')
-            # print('    removed:')
-            # print_list(removed, '      ')
-            
-    return asset_categories
-    # except Exception as e:
-    #     print(e)
-    #     input('Could not open release_assets.txt! Press enter to exit...')
+                    new_assets = [path]
+                
+                if remove_paths:
+                    asset_categories[current_category][:] = [x for x in asset_categories[current_category] if x not in new_assets]
+                    if reroute_path != '':
+                        reroute_categories[current_category][reroute_path][:] = [x for x in reroute_categories[current_category][reroute_path] if x not in new_assets]
+                    remove_paths = False
+                else:
+                    asset_categories[current_category].extend(new_assets)
+                    if reroute_path != '':
+                        reroute_categories[current_category][reroute_path].extend(new_assets)
+        
+        def find_reroute_path(category:str, path:str):
+            for reroute, assets in reroute_categories[category].items():
+                if path in assets:
+                    return reroute
+
+        if VERBOSE: print('Assets collected from release_assets.txt:')
+        for category, assets in asset_categories.items():
+            removed = verify_paths(assets)
+
+            if VERBOSE:
+                print()
+                print(f'  {category}:')
+                print('    verified:')
+                for asset in assets:
+                    print(f'      {asset}', end='')
+                    reroute = find_reroute_path(category, asset)
+                    if reroute is not None:
+                        print(f' -> {os.path.join(reroute,os.path.basename(asset))}')
+                    else:
+                        print('')
+                print('    removed:')
+                print_list(removed, '      ')
+                
+        return asset_categories, reroute_categories
+
+    except Exception as e:
+        template = "\nAn exception of type {0} occurred. Arguments:\n{1!r}"
+        print(template.format(type(e).__name__, e.args))
+        import traceback
+        print(traceback.format_exc())
+    input('Could not open release_assets.txt! Press enter to exit...')
+    exit()
 
 def zip_files(files: 'list[Path]', output_path: Path):
     """Zips a list of files to a given output zip file.
@@ -294,7 +300,7 @@ def zip_files(files: 'list[Path]', output_path: Path):
     """
     with ZipFile( output_path , 'w' ) as zip_obj:
         for file in files:
-            if file.exists:
+            if file.exists():
                 #print(file.relative_to( root ))
                 zip_obj.write( file, file.relative_to( root ) )
             else:
@@ -370,12 +376,15 @@ def copy_unpacked_files(assets: 'list[Path]'):
         shutil.copy(asset, p )
 
 def generate_releases():
-    asset_categories = parse_assets()
+    asset_categories, reroute_categories = parse_assets()
     all_assets:list[Path] = []
     changelog:list[str] = []
     changes = 0
 
-    release.mkdir(parents=False, exist_ok=True)
+    print()
+
+    if not PRINT_ONLY:
+        release.mkdir(parents=False, exist_ok=True)
 
     for category, assets in asset_categories.items():
         # Remove duplicates and convert to Paths
@@ -396,67 +405,68 @@ def generate_releases():
         if output.exists():
             old = output.with_suffix(output.suffix + '.old')
             print(f' Renaming previous {category} release for comparing...',end='')
-            if old.exists():
-                os.remove(old)
-            os.rename(output, old)
+            if not PRINT_ONLY:
+                if old.exists():
+                    os.remove(old)
+                os.rename(output, old)
         print(' DONE.')
         
         print(f'Packing {len(assets)} assets...', end='')
-        zip_files(assets, output)
+        if not PRINT_ONLY:
+            zip_files(assets, output)
         print(' DONE')
 
         # Compare changes
-        print('Comparing zips...', end='')
-        if old is not None:
-            log = compare_zips(output, old)
-            changes += len(log)
-            if len(log) > 0:
-                changelog.append(f'**{category}.zip**')
-                for message in log:
-                    changelog.append('- ' + message)
-                changelog.append('')
-            print(f' Found {len(log)} changes.')
-        else:
-            print(' No previous zip to compare to.')
+        if not PRINT_ONLY:
+            print('Comparing zips...', end='')
+            if old is not None:
+                log = compare_zips(output, old)
+                changes += len(log)
+                if len(log) > 0:
+                    changelog.append(f'**{category}.zip**')
+                    for message in log:
+                        changelog.append('- ' + message)
+                    changelog.append('')
+                print(f' Found {len(log)} changes.')
+            else:
+                print(' No previous zip to compare to.')
 
         # Clean up
-        print('Deleting old zip...', end='')
-        if old is not None:
-            os.remove(old)
-            print(' DONE.')
-        else:
-            print(' No old zip to delete.')
+        if not PRINT_ONLY:
+            print('Deleting old zip...', end='')
+            if old is not None:
+                os.remove(old)
+                print(' DONE.')
+            else:
+                print(' No old zip to delete.')
 
     # Copy unpacked files
-    print(f'Copying {len(assets)} unpacked assets...', end='')
-    copy_unpacked_files(all_assets)
-    print(' DONE.')
+    if not PRINT_ONLY:
+        print(f'Copying {len(assets)} unpacked assets...', end='')
+        copy_unpacked_files(all_assets)
+        print(' DONE.')
     
     print()
 
     # Generate changelog
-    print('Generating changelog...', end='')
-    if len(changelog) > 0:
-        with open(release.joinpath('changelog.txt'), 'a') as file:
-            file.write(datetime.datetime.now().date().strftime('%d/%m/%y') + ':\n\n')
-            for message in changelog:
-                file.write(message + '\n')
-            file.write('\n')
-        print(f' {changes} total changes.')
-    else:
-        print(' No changes.')
+    if not PRINT_ONLY:
+        print('Generating changelog...', end='')
+        if len(changelog) > 0:
+            with open(release.joinpath('changelog.txt'), 'a') as file:
+                file.write(datetime.datetime.now().date().strftime('%d/%m/%y') + ':\n\n')
+                for message in changelog:
+                    file.write(message + '\n')
+                file.write('\n')
+            print(f' {changes} total changes.')
+        else:
+            print(' No changes.')
     
     print('\nFinished generating all releases!')
 
 #endregion
 
 if __name__ == '__main__':
-    # try:
         print()
         assets = parse_assets()
-        # if not STOP_AFTER_ASSET_COLLECTION:
-        #     generate_releases()
-        # input('')
-    # except Exception as e:
-        # print(e)
-        # input(e)
+        if not STOP_AFTER_ASSET_COLLECTION:
+            generate_releases()
