@@ -33,8 +33,18 @@ from enum import Enum
 from typing import Union
 from luaparser import ast, astnodes
 
+# TODO: Symbol for packing prefabs into their own zips.
+# TODO: Cache Lua externals
+# TODO: Only search Lua if using ?
+
+# Script will run without modifying files.
 PRINT_ONLY = False
+
+# More text will show.
 VERBOSE = False
+
+# Script will not enter the packing stage.
+# Used for debug.
 STOP_AFTER_ASSET_COLLECTION = False
 
 # Doesn't work yet
@@ -365,30 +375,6 @@ class AssetCategories():
         else:
             return self.categories[self._index], self.categories[self._index].assets
 
-# print('sdf')
-# c = AssetCategory('test', [
-#         Asset('C:/test1.png'),
-#         Asset('C:/test2.png'),
-#         Asset('C:/test3.png'),
-#         Asset('C:/test4.png')
-#     ])
-# cat = AssetCategories([
-#     c,
-#     AssetCategory('second category', [
-#         Asset('F:/test1.txt'),
-#         Asset('F:/test2.txt'),
-#         Asset('F:/test3.txt'),
-#         Asset('F:/test4.txt')
-#     ])
-# ])
-# # for category, assets in cat:
-# #     print(category, [f'{x}' for x in assets])
-# print('C:/test1.png' in c)
-# print('C:\\test1.png' in c)
-# print('c:\\test1.png' in c)
-# print('f:/test1.png' in c)
-# exit()
-
 
 def parse_assets():
     """Parse the release_assets.txt file in the same folder and return the asset paths.
@@ -496,7 +482,7 @@ def parse_assets():
         # print(traceback.format_exc())
     # input('Could not open release_assets.txt! Press enter to exit...')
 
-def zip_files(files: 'list[Asset]', output_path: Path):
+def zip_files(assets: 'list[Asset]', output_path: Path):
     """Zips a list of files to a given output zip file.
 
     Args:
@@ -504,12 +490,13 @@ def zip_files(files: 'list[Asset]', output_path: Path):
         output_path (Path): The destination for the zip file.
     """
     with ZipFile( output_path , 'w' ) as zip_obj:
-        for file in files:
-            if file.exists():
+        for asset in assets:
+            if asset.exists():
                 #print(file.relative_to( root ))
-                zip_obj.write( file.get_path(), file.relative_to( root ) )
+                # zip_obj.write( file.get_path(), file.relative_to( root ) )
+                zip_obj.write( asset.file, asset.get_path() )
             else:
-                print(f'{file} File Doesn\'t Exist:', file)
+                print(f'{asset} File Doesn\'t Exist:', asset)
 
 def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
     """Compares two zip files and returns a readable log of changes to the files.
@@ -533,10 +520,7 @@ def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
             old_assets[info.filename] = {
                 'crc': info.CRC
             }
-    
-    #for k,v in new_assets.items():
-    #    print(k,v)
-    #return
+
     log = []
     for asset in new_assets:
         # If this asset is in the old assets then it might be updated
@@ -574,14 +558,16 @@ def copy_unpacked_files(assets: 'list[Asset]'):
     """
     # print(f'Copying {len(assets)} assets.')
     unpacked_path = release.joinpath('unpacked/')
-    if not PRINT_ONLY: shutil.rmtree(unpacked_path)
+    if not PRINT_ONLY:
+        if unpacked_path.exists():
+            shutil.rmtree(unpacked_path)
     for asset in assets:
         # p = unpacked_path.joinpath(asset.relative_to(root)).parent
         p = unpacked_path.joinpath(asset.get_path()).parent
         if VERBOSE: print(f'Copying unpacked file {asset.file.name} to {p}\n')
         if not PRINT_ONLY:
             p.mkdir(parents=True, exist_ok=True)
-            shutil.copy(asset, p )
+            shutil.copy(asset.file, p )
 
 def generate_releases(asset_categories:AssetCategories):
     all_assets:list[Asset] = []
@@ -594,9 +580,7 @@ def generate_releases(asset_categories:AssetCategories):
         release.mkdir(parents=False, exist_ok=True)
 
     for category, assets in asset_categories:
-        # Remove duplicates and convert to Paths
-        # assets = list(set(assets))
-        # assets = [Path(os.path.abspath(x)) for x in assets]
+        # Collect all assets for unpacked
         all_assets.extend(assets)
 
         if len(assets) == 0:
@@ -648,7 +632,7 @@ def generate_releases(asset_categories:AssetCategories):
                 print(' No old zip to delete.')
 
     # Copy unpacked files
-    print(f'Copying {len(assets)} unpacked assets...', end='')
+    print(f'Copying {len(all_assets)} unpacked assets...', end='')
     copy_unpacked_files(all_assets)
     print(' DONE.')
     
