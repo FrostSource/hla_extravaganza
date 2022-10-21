@@ -18,8 +18,8 @@ by FrostSource
 | - | - |
 | Color | RGB color for the particle. Not all particles can change color.
 | Max Trace Distance | The maximum distance the laser is allowed to trace. Very large numbers can cause performance problems. You generally want 1024-2048 for lasers that move in large areas.
-| Ignored Entity Name (use @) | The targetname of the entity the laser should ignore when tracing. If you place the laser inside the body of its parent to you should use the name of the parent.<br>You should use @ as the targetname prefix if you're not collapsing this prefab or disabling `Fixup entity names`.
-| Parent (use @) | The targetname of the laser's parent in the movement hierarchy. Entities with parents move with their parent.<br>You should use @ as the targetname prefix if you're not collapsing this prefab or disabling `Fixup entity names`.
+| Ignored Entity Name (use @) | The targetname of the entity the laser should ignore when tracing. If you place the laser inside the body of its parent to you should use the name of the parent.
+| Parent (use @) | The targetname of the laser's parent in the movement hierarchy. Entities with parents move with their parent.
 | Parent Model Attachment Name | The name of the bone or attachment to attach to on the entity's parent in the movement hierarchy.
 | Model Attachment position offset | Offset in the local space of the parent model's attachment/bone to use in hierarchy. Not used if you are not using parent attachment.
 | Model Attachment angular offset | Angular offset in the local space of the parent model's attachment/bone to use in hierarchy. Not used if you are not using parent attachment.

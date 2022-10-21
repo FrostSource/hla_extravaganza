@@ -9,8 +9,8 @@ by FrostSource
 
 - maps/prefabs/logic/logic_weighted_random/logic_weighted_random.vmap
 - scripts/vscripts/prefabs/logic/logic_weighted_random.lua
-- scripts/vscripts/util/weighted_random.lua
-- scripts/vscripts/util/storage.lua
+- scripts/vscripts/math/weighted_random.lua
+- scripts/vscripts/storage.lua
 
 ---
 
