@@ -59,3 +59,7 @@ fgd:
 prefabs:
     ?maps/prefabs
     ~maps/prefabs/logic/logic_player_extension
+
+# This will automatically find required scripts
+entity_mods:
+    scripts/vscripts/entity_mods

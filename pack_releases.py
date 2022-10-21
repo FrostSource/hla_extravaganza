@@ -7,6 +7,7 @@
     RULES
     # is a comment. Must be on its own line.
     Folders will select all files and subfiles.
+    If file is .lua it will be searched for any external references and those will be added.
 
     Special Symbols
     name:  - Define a release category.
@@ -16,7 +17,7 @@
     @path  - Pack paths under this path instead of the original path.
              Use @ alone to reset.
     ?path  - Infer paths from files.
-            Supported: README.md
+             Supported: README.md
     ~path  - Remove path(s) from the current category.
 
 """
@@ -29,9 +30,11 @@ from pathlib import Path
 import datetime
 import shutil
 from enum import Enum
+from typing import Union
+from luaparser import ast, astnodes
 
-PRINT_ONLY = True
-VERBOSE = True
+PRINT_ONLY = False
+VERBOSE = False
 STOP_AFTER_ASSET_COLLECTION = False
 
 # Doesn't work yet
@@ -99,7 +102,7 @@ def verify_paths(paths:list[str]):
 
 #endregion
 
-#region Parsing/Packing
+#region Parsing
 
 def parse_readme(path):
     """Parses a README.md to find any asset paths.
@@ -121,6 +124,38 @@ def parse_readme(path):
                 assets.append(line)
     return assets
 
+
+# Lua functions that call for an external script.
+lua_funcs = [
+    'require',
+    'ifrequire',
+    'IncludeScript',
+    'DoIncludeScript',
+    'entity',
+    # 'inherit'
+]
+
+def get_required_from_lua(src:str)->list[str]:
+    """Searches a Lua script for any other scripts it calls upon.
+
+    Args:
+        src (str): Lua source code string.
+
+    Returns:
+        list[str]: List of script files found.
+    """
+    tree = ast.parse(src)
+    required_scripts = []
+    for node in ast.walk(tree):
+        if isinstance(node, astnodes.Call) and isinstance(node.func, astnodes.Name):
+            if node.func.id in lua_funcs:
+                for arg in node.args:
+                    if isinstance(arg, astnodes.String):
+                        s = arg.s
+                        fixed = s.removesuffix('.lua').replace('.','/')
+                        path = f'scripts/vscripts/{fixed}.lua'
+                        required_scripts.append(path)
+    return required_scripts
 
 class CMD(Enum):
     NONE          = 0
@@ -173,21 +208,202 @@ def parse_command_line(line:str):
     return command, line
 
 
+class Asset:
+    def __init__(self, path:str, reroute:str=''):
+        self.original_path = path
+        self.file = Path(path)
+        self.reroute = reroute
+    
+    def get_path(self):
+        if self.has_reroute():
+            return Path(os.path.join(self.reroute, self.file.name))
+        else:
+            return self.file
+
+    def exists(self)->bool:
+        """Get if the asset exists on disk.
+
+        Returns:
+            bool: If asset exists.
+        """
+        return os.path.exists(self.original_path)
+    
+    def relative_to(self, other):
+        return self.file.relative_to(other)
+    
+    def has_reroute(self)->bool:
+        """Get if this asset has a reroute.
+        Can also do if asset.reroute:
+
+        Returns:
+            bool: Asset has reroute.
+        """
+        return self.reroute != ''
+    
+    def __eq__(self, other):
+        if isinstance(other, Asset):
+            other = other.original_path
+        elif not isinstance(other, str):
+            return False
+        return os.path.normpath(self.original_path) == os.path.normpath(other)
+
+    def __str__(self):
+        return str(self.file)
+    
+    def pretty(self):
+        if self.has_reroute():
+            return f'{self.file} -> {self.get_path()}'
+        else:
+            return str(self.file)
+    
+    def clone(self):
+        return Asset(self.original_path, self.reroute)
+
+class AssetCategory:
+    def __init__(self, name:str, assets:list[Asset]=[]):
+        self.name = name
+        self.category = name
+        self.assets = list(assets)
+
+        self._index = -1
+        self._iterlist = []
+    
+    def add(self, asset:Union[Asset,str], reroute:str=''):
+        """Add a new asset to this category if it doesn't exist.
+
+        Args:
+            asset (Union[Asset,str]): Either an existing asset or a path to a file.
+            reroute (str, optional): If `asset` is a string then the reroute can be defined. Defaults to ''.
+        """
+        if isinstance(asset, str):
+            asset = Asset(asset, reroute)
+        if asset not in self.assets:
+            self.assets.append(asset)
+    
+    def remove_list(self, assets:list[str]):
+        for asset in self.assets:
+            for remove_asset in assets:
+                if remove_asset == asset:
+                    self.assets.remove(asset)
+
+    def extend(self, category:Union['AssetCategory',list[str]]):
+        for asset in category:
+            if isinstance(asset, Asset):
+                self.add(asset.clone())
+            elif isinstance(asset, str):
+                self.add(Asset(asset))
+    
+    def verify(self)->list[Asset]:
+        """Removes any assets in the category which don't exist.
+
+        Returns:
+            _type_: _description_
+        """
+
+        
+        removed = []
+        for x in self.assets:
+            if not x.exists(): removed.append(x)
+        self.assets[:] = [x for x in self.assets if x.exists()]
+        return removed
+    
+    def __contains__(self, item:Union[Asset,str]):
+        return item in self.assets
+    
+    def __iter__(self):
+        self._iterlist = list(self.assets)
+        self._index = -1
+        return self
+    
+    def __next__(self):
+        self._index += 1
+        if self._index >= len(self._iterlist):
+            self._index = -1
+            raise StopIteration
+        else:
+            return self._iterlist[self._index]
+    
+    def __str__(self):
+        return self.name
+
+class AssetCategories():
+    def __init__(self, categories:list[AssetCategory] = []):
+        self.categories:list[AssetCategory] = categories
+
+        self._index = -1
+
+    def add(self, category:Union[AssetCategory,str]):
+        if isinstance(category, str):
+            category = AssetCategory(category)
+        self.categories.append(category)
+
+    def verify(self):
+        for category in self.categories:
+            category.verify()
+    
+    def __contains__(self, item):
+        for category in self.categories:
+            if category.name == item:
+                return True
+        return False
+
+    def __getitem__(self, key):
+        for category in self.categories:
+            if category.name == key:
+                return category
+        raise KeyError
+    
+    def __iter__(self):
+        self._index = -1
+        return self
+    
+    def __next__(self):
+        self._index += 1
+        if self._index >= len(self.categories):
+            self._index = -1
+            raise StopIteration
+        else:
+            return self.categories[self._index], self.categories[self._index].assets
+
+# print('sdf')
+# c = AssetCategory('test', [
+#         Asset('C:/test1.png'),
+#         Asset('C:/test2.png'),
+#         Asset('C:/test3.png'),
+#         Asset('C:/test4.png')
+#     ])
+# cat = AssetCategories([
+#     c,
+#     AssetCategory('second category', [
+#         Asset('F:/test1.txt'),
+#         Asset('F:/test2.txt'),
+#         Asset('F:/test3.txt'),
+#         Asset('F:/test4.txt')
+#     ])
+# ])
+# # for category, assets in cat:
+# #     print(category, [f'{x}' for x in assets])
+# print('C:/test1.png' in c)
+# print('C:\\test1.png' in c)
+# print('c:\\test1.png' in c)
+# print('f:/test1.png' in c)
+# exit()
+
+
 def parse_assets():
     """Parse the release_assets.txt file in the same folder and return the asset paths.
 
     Returns:
         list[str]: The assets.
     """
-    asset_categories:dict[str,list[str]] = {}
-    reroute_categories:dict[str,dict[str,list[str]]] = {}
+    asset_categories = AssetCategories()
     try:
         with open('release_assets.txt', 'r') as file:
             prefix_path = ''
             reroute_path = ''
             remove_paths = False
             current_category = 'main'
-            asset_categories[current_category] = []
+            asset_categories.add(current_category)
             for line in file:
                 # Skip comments and empty
                 if line.isspace() or line.lstrip().startswith('#'): continue
@@ -202,8 +418,7 @@ def parse_assets():
                     case CMD.CATEGORY:
                         current_category = path
                         if not current_category in asset_categories:
-                            asset_categories[current_category] = []
-                            reroute_categories[current_category] = {}
+                            asset_categories.add(current_category)
                         continue
 
                     # Join the given path to the beginning of each subsequent asset
@@ -221,9 +436,6 @@ def parse_assets():
 
                     case CMD.REROUTE_PATH:
                         reroute_path = path
-                        # print(reroute_path not in reroute_categories[current_category])
-                        if reroute_path != '' and reroute_path not in reroute_categories[current_category]:
-                            reroute_categories[current_category][reroute_path] = []
                         continue
 
                     case CMD.INFER_PATHS:
@@ -244,54 +456,47 @@ def parse_assets():
                     path = os.path.join(prefix_path, path)
 
                 if os.path.isdir(path):
-                    new_assets = get_files_in_folder(path, subfolders=True)
+                    new_assets = [Asset(x, reroute_path) for x in get_files_in_folder(path, subfolders=True)]
                 else:
-                    new_assets = [path]
+                    new_assets = [Asset(path, reroute_path)]
                 
                 if remove_paths:
-                    asset_categories[current_category][:] = [x for x in asset_categories[current_category] if x not in new_assets]
-                    if reroute_path != '':
-                        reroute_categories[current_category][reroute_path][:] = [x for x in reroute_categories[current_category][reroute_path] if x not in new_assets]
+                    asset_categories[current_category].remove_list(new_assets)
                     remove_paths = False
                 else:
+                    new_scripts = []
+                    for asset in new_assets:
+                        if asset.file.suffix.lower() == '.lua':
+                            with asset.file.open('r') as f:
+                                src = f.read()
+                            new_scripts.extend([Asset(x) for x in get_required_from_lua(src)])
+                    new_assets.extend(new_scripts)
                     asset_categories[current_category].extend(new_assets)
-                    if reroute_path != '':
-                        reroute_categories[current_category][reroute_path].extend(new_assets)
-        
-        def find_reroute_path(category:str, path:str):
-            for reroute, assets in reroute_categories[category].items():
-                if path in assets:
-                    return reroute
 
         if VERBOSE: print('Assets collected from release_assets.txt:')
-        for category, assets in asset_categories.items():
-            removed = verify_paths(assets)
+        for category, assets in asset_categories:
+            removed = category.verify()
 
             if VERBOSE:
                 print()
                 print(f'  {category}:')
                 print('    verified:')
                 for asset in assets:
-                    print(f'      {asset}', end='')
-                    reroute = find_reroute_path(category, asset)
-                    if reroute is not None:
-                        print(f' -> {os.path.join(reroute,os.path.basename(asset))}')
-                    else:
-                        print('')
+                    print(f'      {asset.pretty()}')
                 print('    removed:')
                 print_list(removed, '      ')
                 
-        return asset_categories, reroute_categories
+        return asset_categories
 
     except Exception as e:
-        template = "\nAn exception of type {0} occurred. Arguments:\n{1!r}"
-        print(template.format(type(e).__name__, e.args))
-        import traceback
-        print(traceback.format_exc())
-    input('Could not open release_assets.txt! Press enter to exit...')
-    exit()
+        raise e
+        # template = "\nAn exception of type {0} occurred. Arguments:\n{1!r}"
+        # print(template.format(type(e).__name__, e.args))
+        # import traceback
+        # print(traceback.format_exc())
+    # input('Could not open release_assets.txt! Press enter to exit...')
 
-def zip_files(files: 'list[Path]', output_path: Path):
+def zip_files(files: 'list[Asset]', output_path: Path):
     """Zips a list of files to a given output zip file.
 
     Args:
@@ -302,7 +507,7 @@ def zip_files(files: 'list[Path]', output_path: Path):
         for file in files:
             if file.exists():
                 #print(file.relative_to( root ))
-                zip_obj.write( file, file.relative_to( root ) )
+                zip_obj.write( file.get_path(), file.relative_to( root ) )
             else:
                 print(f'{file} File Doesn\'t Exist:', file)
 
@@ -360,7 +565,7 @@ def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
 
     return log
 
-def copy_unpacked_files(assets: 'list[Path]'):
+def copy_unpacked_files(assets: 'list[Asset]'):
     """Copies all assets into an unpacked folder in the release directory
     instead of zipping them.
 
@@ -369,15 +574,17 @@ def copy_unpacked_files(assets: 'list[Path]'):
     """
     # print(f'Copying {len(assets)} assets.')
     unpacked_path = release.joinpath('unpacked/')
-    shutil.rmtree(unpacked_path)
+    if not PRINT_ONLY: shutil.rmtree(unpacked_path)
     for asset in assets:
-        p = unpacked_path.joinpath(asset.relative_to(root)).parent
-        p.mkdir(parents=True, exist_ok=True)
-        shutil.copy(asset, p )
+        # p = unpacked_path.joinpath(asset.relative_to(root)).parent
+        p = unpacked_path.joinpath(asset.get_path()).parent
+        if VERBOSE: print(f'Copying unpacked file {asset.file.name} to {p}\n')
+        if not PRINT_ONLY:
+            p.mkdir(parents=True, exist_ok=True)
+            shutil.copy(asset, p )
 
-def generate_releases():
-    asset_categories, reroute_categories = parse_assets()
-    all_assets:list[Path] = []
+def generate_releases(asset_categories:AssetCategories):
+    all_assets:list[Asset] = []
     changelog:list[str] = []
     changes = 0
 
@@ -386,10 +593,10 @@ def generate_releases():
     if not PRINT_ONLY:
         release.mkdir(parents=False, exist_ok=True)
 
-    for category, assets in asset_categories.items():
+    for category, assets in asset_categories:
         # Remove duplicates and convert to Paths
-        assets = list(set(assets))
-        assets = [Path(os.path.abspath(x)) for x in assets]
+        # assets = list(set(assets))
+        # assets = [Path(os.path.abspath(x)) for x in assets]
         all_assets.extend(assets)
 
         if len(assets) == 0:
@@ -441,10 +648,9 @@ def generate_releases():
                 print(' No old zip to delete.')
 
     # Copy unpacked files
-    if not PRINT_ONLY:
-        print(f'Copying {len(assets)} unpacked assets...', end='')
-        copy_unpacked_files(all_assets)
-        print(' DONE.')
+    print(f'Copying {len(assets)} unpacked assets...', end='')
+    copy_unpacked_files(all_assets)
+    print(' DONE.')
     
     print()
 
@@ -467,6 +673,6 @@ def generate_releases():
 
 if __name__ == '__main__':
         print()
-        assets = parse_assets()
+        asset_categories = parse_assets()
         if not STOP_AFTER_ASSET_COLLECTION:
-            generate_releases()
+            generate_releases(asset_categories)
