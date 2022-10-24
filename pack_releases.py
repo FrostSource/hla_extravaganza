@@ -34,7 +34,6 @@ from typing import Union
 from luaparser import ast, astnodes
 
 # TODO: Symbol for packing prefabs into their own zips.
-# TODO: Cache Lua externals
 # TODO: Only search Lua if using ?
 
 # Script will run without modifying files.
@@ -145,17 +144,27 @@ lua_funcs = [
     # 'inherit'
 ]
 
-def get_required_from_lua(src:str)->list[str]:
+lua_cached_files:dict[str,list[str]] = {}
+
+def get_required_from_lua(lua_file:str)->list[str]:
     """Searches a Lua script for any other scripts it calls upon.
 
     Args:
-        src (str): Lua source code string.
+        lua_file (str): Path to the Lua file.
 
     Returns:
         list[str]: List of script files found.
     """
+    if not os.path.exists(lua_file): return []
+    abspath = os.path.abspath(lua_file)
+    # Return cached files instead of re-parsing the script
+    if abspath in lua_cached_files:
+        return list(lua_cached_files[abspath])
+    # Get the source string
+    with open(lua_file) as f:
+        src = f.read()
     tree = ast.parse(src)
-    required_scripts = []
+    lua_cached_files[abspath] = []
     for node in ast.walk(tree):
         if isinstance(node, astnodes.Call) and isinstance(node.func, astnodes.Name):
             if node.func.id in lua_funcs:
@@ -164,8 +173,8 @@ def get_required_from_lua(src:str)->list[str]:
                         s = arg.s
                         fixed = s.removesuffix('.lua').replace('.','/')
                         path = f'scripts/vscripts/{fixed}.lua'
-                        required_scripts.append(path)
-    return required_scripts
+                        lua_cached_files[abspath].append(path)
+    return list(lua_cached_files[abspath])
 
 class CMD(Enum):
     NONE          = 0
