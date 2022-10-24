@@ -22,8 +22,11 @@
 
 """
 
-from calendar import c
-from types import LambdaType
+# TODO: Symbol for packing any file found from a single path line into their own zip inside the main zip (+)
+# TODO: Only search Lua if using (?)
+# TODO: Generalize the language to simplify rules
+
+import re
 from zipfile import ZipFile
 import os
 from pathlib import Path
@@ -33,18 +36,15 @@ from enum import Enum
 from typing import Union
 from luaparser import ast, astnodes
 
-# TODO: Symbol for packing prefabs into their own zips.
-# TODO: Only search Lua if using ?
-
 # Script will run without modifying files.
 PRINT_ONLY = False
 
 # More text will show.
-VERBOSE = False
+VERBOSE = True
 
 # Script will not enter the packing stage.
 # Used for debug.
-STOP_AFTER_ASSET_COLLECTION = False
+STOP_AFTER_ASSET_COLLECTION = True
 
 # Doesn't work yet
 BACKUP_PREVIOUS_RELEASES = True
@@ -76,7 +76,7 @@ def print_dict(d:dict):
         if isinstance(v, list): print_list(v, '\t')
         else: print(f'\t{v}')
 
-def get_files_in_folder(src, subfolders=False):
+def get_files_in_folder(src, subfolders=False, ignore:list[str]=[]):
     """Get a list of all files in a
 
     Args:
@@ -86,10 +86,12 @@ def get_files_in_folder(src, subfolders=False):
     Returns:
         list[str]: List of files found.
     """
+    ignore = [os.path.normpath(x) for x in ignore]
     all_files:list[str] = []
     for (dirpath, dirs, files) in os.walk(src):
-        for f in files:
-            all_files.append(os.path.join(dirpath,f))
+        if not [x for x in ignore if os.path.normpath(dirpath).startswith(x)]:
+            for f in files:
+                all_files.append(os.path.join(dirpath,f))
         if not subfolders: break
     return all_files
 
@@ -159,8 +161,10 @@ def get_required_from_lua(lua_file:str)->list[str]:
     abspath = os.path.abspath(lua_file)
     # Return cached files instead of re-parsing the script
     if abspath in lua_cached_files:
+        # print(f'GOT CACHE {lua_file}')
         return list(lua_cached_files[abspath])
     # Get the source string
+    # print(f'ACTUALLY PARSING {lua_file}')
     with open(lua_file) as f:
         src = f.read()
     tree = ast.parse(src)
@@ -185,6 +189,7 @@ class CMD(Enum):
     REROUTE_PATH  = 5
     INFER_PATHS   = 6
     REMOVE_PATHS  = 7
+    EXCLUDE_PATH  = 8
 
 def parse_command_line(line:str):
     """Gets a command and path from a command line.
@@ -219,12 +224,25 @@ def parse_command_line(line:str):
     elif line.startswith('~'):
         command = CMD.REMOVE_PATHS
         line = line[1:]
+    elif line.startswith('--'):
+        command = CMD.EXCLUDE_PATH
+        line = line[2:]
     
     line = line.strip()
     if line.startswith('"'): line = line[1:]
     if line.endswith('"'): line = line[:-1]
 
     return command, line
+
+def parse_wildcard_path(path:str):
+    # Handle any wildcards
+    if '*' in path:
+        # Replace separators with regex version
+        # line = line.replace('/', os.path.sep).replace('\\', os.path.sep)
+        path = '[\\\\/]'.join([re.escape(x) for x in re.split('\\/', path)])
+        # Replace wildcard with regex version
+        path = '.*'.join(path.split('\\*'))
+    return path
 
 
 class Asset:
@@ -398,6 +416,9 @@ def parse_assets():
             reroute_path = ''
             remove_paths = False
             current_category = 'main'
+            exclude_paths = []
+
+            all_addon_files = get_files_in_folder('.', subfolders=True, ignore=exclude_paths)
             asset_categories.add(current_category)
             for line in file:
                 # Skip comments and empty
@@ -442,15 +463,27 @@ def parse_assets():
 
                     case CMD.REMOVE_PATHS:
                         remove_paths = True
+                    
+                    case CMD.EXCLUDE_PATH:
+                        if not path in exclude_paths:
+                            exclude_paths.append(path)
+                        # Recapture addon files, can be improved by just removing matching paths
+                        all_addon_files = get_files_in_folder('.', subfolders=True, ignore=exclude_paths)
+                        continue
 
 
                 # Asset line
-                #TODO: Support wildcard (*)
 
                 if prefix_path != '':
                     path = os.path.join(prefix_path, path)
 
-                if os.path.isdir(path):
+                if '*' in path:
+                    path = parse_wildcard_path(path)
+                    new_assets = []
+                    for file in all_addon_files:
+                        if re.findall(path, file, re.I):
+                            new_assets.append(Asset(file))
+                elif os.path.isdir(path):
                     new_assets = [Asset(x, reroute_path) for x in get_files_in_folder(path, subfolders=True)]
                 else:
                     new_assets = [Asset(path, reroute_path)]
@@ -462,9 +495,7 @@ def parse_assets():
                     new_scripts = []
                     for asset in new_assets:
                         if asset.file.suffix.lower() == '.lua':
-                            with asset.file.open('r') as f:
-                                src = f.read()
-                            new_scripts.extend([Asset(x) for x in get_required_from_lua(src)])
+                            new_scripts.extend([Asset(x) for x in get_required_from_lua(asset.original_path)])
                     new_assets.extend(new_scripts)
                     asset_categories[current_category].extend(new_assets)
 

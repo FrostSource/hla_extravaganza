@@ -1,6 +1,7 @@
 # RULES
 # is a comment. Must be on its own line.
 # Folders will select all files and subfiles.
+# * is a wildcard matching any character but is only valid for paths being added/removed from a category.
 #
 # Special Symbols
 # name:  - Define a release category.
@@ -12,6 +13,14 @@
 # ?path  - Infer paths from files.
 #          Supported: README.md
 # ~path  - Remove path(s) from the current category.
+# --path - Exclude this path when searching wildcard files.
+
+# Paths to not search with wildcard
+--.git
+--_bakeresourcecache
+--release
+--test_release
+--scripts/vscripts/__test
 
 scripting:
     .vscode/
@@ -25,22 +34,16 @@ scripting:
     player.lua
     input.lua
 
-    util/enums.lua
-    util/util.lua
-
-    math/core.lua
-    math/weighted_random.lua
-
     framework/frameworkinit.lua
 
-    extensions/entity.lua
-    extensions/string.lua
+    util/*.lua
+    math/*.lua
+    extensions/*.lua
+    data/*.lua
+    debug/*.lua
 
-    data/inventory.lua
-    data/queue.lua
-    data/stack.lua
-
-    debug/core.lua
+    # Remove any accidental test Lua files
+    ~*__test*
 
     <-
 
