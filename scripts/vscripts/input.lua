@@ -1,6 +1,6 @@
 --[[
     v1.0.1
-
+    https://github.com/FrostSource/hla_extravaganza
 
 ]]
 --TODO: If player sets button callback on primary hand, this will be wrong when they switch primary hand.
