@@ -5,27 +5,38 @@
 ]]
 --TODO: If player sets button callback on primary hand, this will be wrong when they switch primary hand.
 
+---
+---The input class simplifies button tracking.
+---
 Input = {}
 
+---
 ---If the input system should start automatically on player spawn.
 ---Set this to false soon after require to stop it.
+---
 Input.AutoStart = true
 
+---
 ---Number of seconds after a press in which it can still be detected as a single press.
 ---Set this to 0 if your think functions use a 0 return.
 ---
 ---This is not used with callback events.
+---
 ---@type number
 Input.PressedTolerance = 0.5
 
+---
 ---Number of seconds after a released in which it can still be detected as a single release.
 ---Set this to 0 if your think functions use a 0 return.
 ---
 ---This is not used with callback events.
+---
 ---@type number
 Input.ReleasedTolerance = 0.5
 
+---
 ---Number of seconds after a press in which another press can be considered a double/triple (etc) press.
+---
 ---@type number
 Input.MultiplePressInterval = 0.35
 
@@ -70,7 +81,9 @@ local function createButtonTable()
     }
 end
 
+---
 ---Set a button to be tracked.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 function Input:TrackButton(button)
     tracked_buttons[button] = {
@@ -79,7 +92,9 @@ function Input:TrackButton(button)
     }
 end
 
+---
 ---Set an array of buttons to be tracked.
+---
 ---@param buttons ENUM_DIGITAL_INPUT_ACTIONS[]
 function Input:TrackButtons(buttons)
     for _, button in ipairs(buttons) do
@@ -87,12 +102,16 @@ function Input:TrackButtons(buttons)
     end
 end
 
+---
 ---Stop all buttons from being tracked.
+---
 function Input:StopTrackingAllButtons()
     tracked_buttons = {}
 end
 
+---
 ---Set all buttons to be tracked.
+---
 function Input:TrackAllButtons()
     self:TrackButtons({
         0,1,2,3,4,5,6,7,8,9,10,
@@ -101,13 +120,17 @@ function Input:TrackAllButtons()
     })
 end
 
+---
 ---Stop tracking a button.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 function Input:StopTrackingButton(button)
     tracked_buttons[button] = nil
 end
 
+---
 ---Stop tracking an array of buttons.
+---
 ---@param buttons ENUM_DIGITAL_INPUT_ACTIONS[]
 function Input:StopTrackingButtons(buttons)
     for _,button in ipairs(buttons) do
@@ -116,8 +139,10 @@ function Input:StopTrackingButtons(buttons)
 end
 
 
+---
 ---Get if a button has just been pressed for a given hand.
 ---Optionally lock the button press so it can't be detected by other scripts until it is released.
+---
 ---@param hand CPropVRHand|0|1
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@param lock boolean?
@@ -133,8 +158,10 @@ function Input:Pressed(hand, button, lock)
     return false
 end
 
+---
 ---Get if a button has just been released for a given hand.
 ---Optionally lock the button release so it can't be detected by other scripts until it is pressed.
+---
 ---@param hand CPropVRHand|0|1
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@param lock boolean?
@@ -150,7 +177,9 @@ function Input:Released(hand, button, lock)
     return false
 end
 
+---
 ---Get if a button is currently being held down for a given hand.
+---
 ---@param hand CPropVRHand|0|1
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@return boolean
@@ -164,7 +193,9 @@ function Input:Button(hand, button)
     return false
 end
 
+---
 ---Get the amount of seconds a button has been held for a given hand.
+---
 ---@param hand CPropVRHand|0|1
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@return number
@@ -178,7 +209,9 @@ function Input:ButtonTime(hand, button)
     return 0
 end
 
+---
 ---Button index pointing to its description.
+---
 local DESCS =
 {
     [0] = "Menu > Toggle Menu",
@@ -211,15 +244,19 @@ local DESCS =
     [27] = "Move > Adjust Height",
 }
 
+---
 ---Get the description of a given button.
 ---Useful for debugging or hint display.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@return string
 function Input:GetButtonDescription(button)
     return DESCS[button]
 end
 
+---
 ---Get the name of a hand.
+---
 ---@param hand CPropVRHand|0|1
 ---@param use_operant boolean? # If true, will return primary/secondary instead of left/right
 function Input:GetHandName(hand, use_operant)
@@ -237,7 +274,9 @@ function Input:GetHandName(hand, use_operant)
     end
 end
 
+---
 ---Register a callback for a specific button press/release.
+---
 ---@param kind "press"|"release" # If the callback is registered for press or release.
 ---@param hand CPropVRHand|-1|0|1 # The ID of the hand to register for (-1 means both).
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS # The button to check.
@@ -265,7 +304,9 @@ function Input:RegisterCallback(kind, hand, button, presses, callback)
 
 end
 
+---
 ---Unregisters a specific callback from all buttons and hands.
+---
 ---@param callback function
 function Input:UnregisterCallback(callback)
     for button, hands in pairs(tracked_buttons) do
@@ -285,8 +326,10 @@ function Input:UnregisterCallback(callback)
 end
 
 
+---
 ---Get if a button has just been pressed for this hand.
 ---Optionally lock the button press so it can't be detected by other scripts until it is released.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@param lock boolean?
 ---@return boolean
@@ -294,8 +337,10 @@ function CPropVRHand:Pressed(button, lock)
     return Input:Pressed(self:GetHandID(), button, lock)
 end
 
+---
 ---Get if a button has just been released for this hand.
 ---Optionally lock the button release so it can't be detected by other scripts until it is pressed.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@param lock boolean?
 ---@return boolean
@@ -303,14 +348,18 @@ function CPropVRHand:Released(button, lock)
     return Input:Released(self:GetHandID(), button, lock)
 end
 
+---
 ---Get if a button is currently being held down for a this hand.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@return boolean
 function CPropVRHand:Button(button)
     return Input:Button(self:GetHandID(), button)
 end
 
+---
 ---Get the amount of seconds a button has been held for this hand.
+---
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 ---@return number
 function CPropVRHand:ButtonTime(button)
@@ -335,11 +384,7 @@ end
 
 local function InputThink()
     local player = Entities:GetLocalPlayer()
-    local hmd = player:GetHMDAvatar()
-    if not hmd then
-        Warning("Input could not find HMD, make sure VR mode is enabled. Disabling Input...")
-        return nil
-    end
+    local hmd = player:GetHMDAvatar()--[[@as CPropHMDAvatar]]
 
     for button, hands in pairs(tracked_buttons) do
         for handid, data in pairs(hands) do
@@ -399,20 +444,26 @@ local function InputThink()
     return 0
 end
 
+---
 ---The current entity that has the tracking think.
 ---This is normally the player.
+---
 ---@type EntityHandle?
 local tracking_ent = nil
 
+---
 ---Starts the input system.
+---
 ---@param on EntityHandle? # Optional entity to do the tracking on. This is the player by default.
 function Input:Start(on)
-    if not on then on = Entities:GetLocalPlayer() end
+    if on == nil then on = Entities:GetLocalPlayer() end
     tracking_ent = on
     tracking_ent:SetContextThink("InputThink", InputThink, 0)
 end
 
+---
 ---Stops the input system.
+---
 function Input:Stop()
     if tracking_ent then
         tracking_ent:SetContextThink("InputThink", nil, 0)
@@ -421,8 +472,16 @@ end
 
 ListenToGameEvent("player_activate", function()
     if Input.AutoStart then
-        print("Initiating input auto start...")
-        Input:Start()
+        -- Delay init to get hmd
+        local player = Entities:GetLocalPlayer()
+        player:SetContextThink("InputInit", function()
+            if not player:GetHMDAvatar() then
+                Warning("Input could not find HMD, make sure VR mode is enabled. Disabling Input...")
+                return nil
+            end
+            print("Initiating input auto start...")
+            Input:Start()
+        end, 0)
     end
 end, nil)
 
