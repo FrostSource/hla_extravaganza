@@ -98,7 +98,7 @@ function Debug.PrintEntities(search, exact, dont_include_parents)
         for _, value in ipairs(list) do
             preents[#preents+1] = value
             if not dont_include_parents then
-                vlua.extend(preents, Debug.GetParents(value))
+                vlua.extend(preents, value:GetParents())
             end
         end
     end
