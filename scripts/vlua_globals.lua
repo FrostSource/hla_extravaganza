@@ -1069,8 +1069,8 @@ function DestroyDamageInfo(info) end
 ---@param action string
 ---@param value string
 ---@param delay number
----@param activator EntityHandle?
----@param caller EntityHandle?
+---@param activator EntityHandle
+---@param caller EntityHandle
 function DoEntFire(target, action, value, delay, activator, caller) end
 ---Internal native function for EntFireByHandle().
 ---@param target EntityHandle
