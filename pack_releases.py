@@ -1,24 +1,29 @@
 """    
+    v1.1.0
+    https://github.com/FrostSource/hla_extravaganza
 
     Simple zipping automation for release packages.
     A file named "release_assets.txt" must exist in the same folder as this script.
     If no category is defined, a default "main" name is used.
-
-    RULES
-    # is a comment. Must be on its own line.
-    Folders will select all files and subfiles.
-    If file is .lua it will be searched for any external references and those will be added.
-
-    Special Symbols
-    name:  - Define a release category.
-    ->path - Prepend all subsequent paths with this.
-    <-     - Stop prepending.
-    &name  - Include all paths from a named category in the current category.
-    @path  - Pack paths under this path instead of the original path.
-             Use @ alone to reset.
-    ?path  - Infer paths from files.
-             Supported: README.md
-    ~path  - Remove path(s) from the current category.
+    
+# RULES
+# is a comment. Must be on its own line.
+# Folders will select all files and subfiles.
+# * is a wildcard matching any character but is only valid for paths being added/removed from a category.
+#
+# Special Symbols
+# name:         - Define a release category.
+# ~path         - Remove path(s) from the current category.
+# ->path        - Prepend all subsequent paths with this when adding them to a category.
+# <-            - Stop prepending.
+# &name         - Include all paths from a named category in the current category.
+# @path         - Pack paths under this path instead of its original path.
+#                 Use @ on its own to reset.
+# ?path         - Infer paths from files.
+#                 Supported: README.md
+# [exclude]path - Exclude this path when searching wildcard files.
+# [readme]text  - Adds a line of text to a readme that will be zipped in this category.
+#                 Escape sequences are consumed and must be taken into account.
 
 """
 
@@ -36,6 +41,23 @@ from enum import Enum
 from typing import Union
 from luaparser import ast, astnodes
 
+# https://stackoverflow.com/a/24519338/15190248
+# Extract below into a separate script
+import re
+import codecs
+ESCAPE_SEQUENCE_RE = re.compile(r'''
+    ( \\U........      # 8-digit hex escapes
+    | \\u....          # 4-digit hex escapes
+    | \\x..            # 2-digit hex escapes
+    | \\[0-7]{1,3}     # Octal escapes
+    | \\N\{[^}]+\}     # Unicode characters by name
+    | \\[\\'"abfnrtv]  # Single-character escapes
+    )''', re.UNICODE | re.VERBOSE)
+def decode_escapes(s):
+    def decode_match(match):
+        return codecs.decode(match.group(0), 'unicode-escape')
+    return ESCAPE_SEQUENCE_RE.sub(decode_match, s)
+
 # Script will run without modifying files.
 PRINT_ONLY = False
 
@@ -44,7 +66,7 @@ VERBOSE = True
 
 # Script will not enter the packing stage.
 # Used for debug.
-STOP_AFTER_ASSET_COLLECTION = True
+STOP_AFTER_ASSET_COLLECTION = False
 
 # Doesn't work yet
 BACKUP_PREVIOUS_RELEASES = True
@@ -190,6 +212,7 @@ class CMD(Enum):
     INFER_PATHS   = 6
     REMOVE_PATHS  = 7
     EXCLUDE_PATH  = 8
+    README_TEXT   = 9
 
 def parse_command_line(line:str):
     """Gets a command and path from a command line.
@@ -224,9 +247,12 @@ def parse_command_line(line:str):
     elif line.startswith('~'):
         command = CMD.REMOVE_PATHS
         line = line[1:]
-    elif line.startswith('--'):
+    elif line.startswith('[exclude]'):
         command = CMD.EXCLUDE_PATH
-        line = line[2:]
+        line = line[9:]
+    elif line.lower().startswith('[readme]'):
+        command = CMD.README_TEXT
+        line = line[8:]
     
     line = line.strip()
     if line.startswith('"'): line = line[1:]
@@ -251,9 +277,15 @@ class Asset:
         self.file = Path(path)
         self.reroute = reroute
     
-    def get_path(self):
+    def get_path(self)->Path:
+        """Get the path of this asset, taking reroutes into account.
+
+        Returns:
+            Path: Path asset should be at.
+        """
         if self.has_reroute():
             return Path(os.path.join(self.reroute, self.file.name))
+            # return Path(self.reroute)
         else:
             return self.file
 
@@ -402,6 +434,7 @@ class AssetCategories():
         else:
             return self.categories[self._index], self.categories[self._index].assets
 
+readme_text:dict[str,str] = {}
 
 def parse_assets():
     """Parse the release_assets.txt file in the same folder and return the asset paths.
@@ -410,117 +443,119 @@ def parse_assets():
         list[str]: The assets.
     """
     asset_categories = AssetCategories()
-    try:
-        with open('release_assets.txt', 'r') as file:
-            prefix_path = ''
-            reroute_path = ''
-            remove_paths = False
-            current_category = 'main'
-            exclude_paths = []
+    with open('release_assets.txt', 'r') as file:
+        prefix_path = ''
+        reroute_path = ''
+        remove_paths = False
+        current_category_name = 'main'
+        exclude_paths = []
 
-            all_addon_files = get_files_in_folder('.', subfolders=True, ignore=exclude_paths)
-            asset_categories.add(current_category)
-            for line in file:
-                # Skip comments and empty
-                if line.isspace() or line.lstrip().startswith('#'): continue
+        all_addon_files = get_files_in_folder('.', subfolders=True, ignore=exclude_paths)
+        asset_categories.add(current_category_name)
+        for line in file:
+            # Skip comments and empty
+            if line.isspace() or line.lstrip().startswith('#'): continue
 
-                cmd, path = parse_command_line(line)
+            cmd, path = parse_command_line(line)
 
-                match cmd:
-                    case CMD.NONE:
-                        pass
-                    
-                    # Create or set a new category
-                    case CMD.CATEGORY:
-                        current_category = path
-                        if not current_category in asset_categories:
-                            asset_categories.add(current_category)
-                        continue
-
-                    # Join the given path to the beginning of each subsequent asset
-                    case CMD.APPEND_PATH:
-                        prefix_path = path
-                        continue
-                    # Stop prefixing asset paths
-                    case CMD.STOP_APPEND:
-                        prefix_path = ''
-                        continue
-
-                    case CMD.INCL_CATEGORY:
-                        asset_categories[current_category].extend(asset_categories[path])
-                        continue
-
-                    case CMD.REROUTE_PATH:
-                        reroute_path = path
-                        continue
-
-                    case CMD.INFER_PATHS:
-                        for file in get_files_in_folder(path, subfolders=True):
-                            match os.path.basename(file).lower():
-                                case 'readme.md':
-                                    asset_categories[current_category].extend(parse_readme(file))
-                        continue
-
-                    case CMD.REMOVE_PATHS:
-                        remove_paths = True
-                    
-                    case CMD.EXCLUDE_PATH:
-                        if not path in exclude_paths:
-                            exclude_paths.append(path)
-                        # Recapture addon files, can be improved by just removing matching paths
-                        all_addon_files = get_files_in_folder('.', subfolders=True, ignore=exclude_paths)
-                        continue
-
-
-                # Asset line
-
-                if prefix_path != '':
-                    path = os.path.join(prefix_path, path)
-
-                if '*' in path:
-                    path = parse_wildcard_path(path)
-                    new_assets = []
-                    for file in all_addon_files:
-                        if re.findall(path, file, re.I):
-                            new_assets.append(Asset(file))
-                elif os.path.isdir(path):
-                    new_assets = [Asset(x, reroute_path) for x in get_files_in_folder(path, subfolders=True)]
-                else:
-                    new_assets = [Asset(path, reroute_path)]
+            match cmd:
+                case CMD.NONE:
+                    pass
                 
-                if remove_paths:
-                    asset_categories[current_category].remove_list(new_assets)
-                    remove_paths = False
-                else:
-                    new_scripts = []
-                    for asset in new_assets:
-                        if asset.file.suffix.lower() == '.lua':
-                            new_scripts.extend([Asset(x) for x in get_required_from_lua(asset.original_path)])
-                    new_assets.extend(new_scripts)
-                    asset_categories[current_category].extend(new_assets)
+                # Create or set a new category
+                case CMD.CATEGORY:
+                    current_category_name = path
+                    if not current_category_name in asset_categories:
+                        asset_categories.add(current_category_name)
+                    continue
 
-        if VERBOSE: print('Assets collected from release_assets.txt:')
-        for category, assets in asset_categories:
-            removed = category.verify()
+                # Join the given path to the beginning of each subsequent asset
+                case CMD.APPEND_PATH:
+                    prefix_path = path
+                    continue
+                # Stop prefixing asset paths
+                case CMD.STOP_APPEND:
+                    prefix_path = ''
+                    continue
 
-            if VERBOSE:
-                print()
-                print(f'  {category}:')
-                print('    verified:')
-                for asset in assets:
-                    print(f'      {asset.pretty()}')
-                print('    removed:')
-                print_list(removed, '      ')
+                case CMD.INCL_CATEGORY:
+                    asset_categories[current_category_name].extend(asset_categories[path])
+                    continue
+
+                case CMD.REROUTE_PATH:
+                    reroute_path = path
+                    continue
+
+                case CMD.INFER_PATHS:
+                    for file in get_files_in_folder(path, subfolders=True):
+                        match os.path.basename(file).lower():
+                            case 'readme.md':
+                                asset_categories[current_category_name].extend(parse_readme(file))
+                    continue
+
+                case CMD.REMOVE_PATHS:
+                    remove_paths = True
                 
-        return asset_categories
+                case CMD.EXCLUDE_PATH:
+                    if not path in exclude_paths:
+                        exclude_paths.append(path)
+                    # Recapture addon files, can be improved by just removing matching paths
+                    all_addon_files = get_files_in_folder('.', subfolders=True, ignore=exclude_paths)
+                    continue
+                
+                case CMD.README_TEXT:
+                    if not current_category_name in readme_text:
+                        readme_text[current_category_name] = ''
+                    if readme_text[current_category_name] != '': readme_text[current_category_name] += '\n'
+                    readme_text[current_category_name] += decode_escapes(path)
+                    continue
 
-    except Exception as e:
-        raise e
-        # template = "\nAn exception of type {0} occurred. Arguments:\n{1!r}"
-        # print(template.format(type(e).__name__, e.args))
-        # import traceback
-        # print(traceback.format_exc())
-    # input('Could not open release_assets.txt! Press enter to exit...')
+
+            # Asset line
+
+            if prefix_path != '':
+                path = os.path.join(prefix_path, path)
+
+            if '*' in path:
+                path = parse_wildcard_path(path)
+                new_assets = []
+                for file in all_addon_files:
+                    if re.findall(path, file, re.I):
+                        new_assets.append(Asset(file))
+            elif os.path.isdir(path):
+                new_assets = [Asset(x, reroute_path) for x in get_files_in_folder(path, subfolders=True)]
+            else:
+                new_assets = [Asset(path, reroute_path)]
+            
+            if remove_paths:
+                asset_categories[current_category_name].remove_list(new_assets)
+                remove_paths = False
+            else:
+                new_scripts = []
+                for asset in new_assets:
+                    if asset.file.suffix.lower() == '.lua':
+                        new_scripts.extend([Asset(x) for x in get_required_from_lua(asset.original_path)])
+                new_assets.extend(new_scripts)
+                asset_categories[current_category_name].extend(new_assets)
+
+    if VERBOSE: print('Assets collected from release_assets.txt:')
+    for category, assets in asset_categories:
+        removed = category.verify()
+
+        if VERBOSE:
+            print()
+            print(f'  {category}:')
+            print('    README:')
+            if category.name in readme_text:
+                print('    ' + readme_text[category.name])
+            print('    verified:')
+            for asset in assets:
+                print(f'      {asset.pretty()}')
+            print('    removed:')
+            print_list(removed, '      ')
+            
+    return asset_categories
+
 
 def zip_files(assets: 'list[Asset]', output_path: Path):
     """Zips a list of files to a given output zip file.
@@ -645,6 +680,9 @@ def generate_releases(asset_categories:AssetCategories):
         print(f'Packing {len(assets)} assets...', end='')
         if not PRINT_ONLY:
             zip_files(assets, output)
+            if category.name in readme_text:
+                with ZipFile( output , 'a' ) as zip_obj:
+                    zip_obj.writestr('readme.txt', readme_text[category.name])
         print(' DONE')
 
         # Compare changes
