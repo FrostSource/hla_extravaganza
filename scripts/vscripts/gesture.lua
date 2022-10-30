@@ -34,6 +34,12 @@
 Gesture = {}
 Gesture.__index = Gesture
 
+---
+---If the gesture system should start automatically on player spawn.
+---Set this to false soon after require to stop it.
+---
+Gesture.AutoStart = true
+
 Gesture.DebugEnabled = false
 
 ---
@@ -477,17 +483,44 @@ local function GestureThink()
     return 0
 end
 
+---
+---The current entity that has the tracking think.
+---This is normally the player.
+---
+---@type EntityHandle|nil
+local tracking_ent = nil
+
+---
+---Starts the gesture system.
+---
+---@param on EntityHandle? # Optional entity to do the tracking on. This is the player by default.
+function Gesture:Start(on)
+    if on == nil then on = Entities:GetLocalPlayer() end
+    tracking_ent = on
+    tracking_ent:SetContextThink("GestureThink", GestureThink, 0)
+end
+
+---
+---Stops the gesture system.
+---
+function Gesture:Stop()
+    if tracking_ent then
+        tracking_ent:SetContextThink("GestureThink", nil, 0)
+    end
+end
+
 ListenToGameEvent("player_spawn", function()
-    -- Delay init to get hmd
-    local player = Entities:GetLocalPlayer()
-    player:SetContextThink("GestureInit", function()
-        local hmd = player:GetHMDAvatar()
-        if not hmd then
-            Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...")
-            return nil
-        end
-        print("Gesture engine starting...")
-        player:SetContextThink("GestureThink", GestureThink, 0)
-    end, 0)
+    if Gesture.AutoStart then
+        -- Delay init to get hmd
+        local player = Entities:GetLocalPlayer()
+        player:SetContextThink("GestureInit", function()
+            if not player:GetHMDAvatar() then
+                Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...")
+                return nil
+            end
+            print("Gesture engine starting...")
+            Gesture:Start(player)
+        end, 0)
+    end
 end, nil)
 
