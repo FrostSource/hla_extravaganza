@@ -1636,8 +1636,8 @@ metadata
 @PointClass base(BasePropPhysics, Targetname, Parentname ) model("models/props_combine/combine_battery/combine_battery.vmdl")
 metadata
 	{
-		entity_tool_name = "Health Station Vial"
-		entity_tool_tip = "Vial used to power a health station"
+		entity_tool_name = "Combine Battery"
+		entity_tool_tip = "Used for powering combine consoles"
 		entity_tool_group = "Items"
 	}
 = item_hlvr_prop_battery : "Battery"
