@@ -1,14 +1,77 @@
 --[[
-    v1.0.1
+    v1.0.3
     https://github.com/FrostSource/hla_extravaganza
 
+    Simplifies the tracking of button presses/releases. This system will automatically
+    start when the player spawns unless told not to before the player spawns.
+
+    ```lua
+    Input.AutoStart = false
+    ```
+
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+
+    ```lua
+    require "input"
+    ```
+
+    ======================================== Usage ========================================
+
+    The system can be told to track all buttons or individual buttons for those who are
+    performant conscious:
+
+    ```lua
+    Input:TrackAllButtons()
+    Input:TrackButtons({7, 17})
+    ```
+
+    Common usage is to register a callback function which will fire whenever the passed
+    conditions are met. `press`/`release` can be individually registered, followed by which
+    hand to check (or -1 for both), the digital button to check, number of presses
+    (if `press` kind), and the function to call.
+
+    ```lua
+    Input:RegisterCallback("press", 1, 7, 1, function(data)
+        ---@cast data INPUT_PRESS_CALLBACK
+        print(("Button %s pressed at %.2f on %s"):format(
+            Input:GetButtonDescription(data.button),
+            data.press_time,
+            Input:GetHandName(data.hand)
+        ))
+    end)
+    ```
+    
+    ```lua
+    Input:RegisterCallback("release", -1, 17, nil, function(data)
+        ---@cast data INPUT_RELEASE_CALLBACK
+        if data.held_time >= 5 then
+            print(("Button %s charged for %d seconds on %s"):format(
+                Input:GetButtonDescription(data.button),
+                data.held_time, 
+                Input:GetHandName(data.hand)
+            ))
+        end
+    end)
+    ```
+
+    Other general use functions exist for checking presses and are extended to the hand class for ease of use:
+
+    ```lua
+    if Player.PrimaryHand:Pressed(3) then end
+    if Player.PrimaryHand:Released(3) then end
+    if Player.PrimaryHand:Button(3) then end
+    if Player.PrimaryHand:ButtonTime(3) >= 5 then end
+    ```
+
 ]]
---TODO: If player sets button callback on primary hand, this will be wrong when they switch primary hand.
+---@TODO: If player sets button callback on primary hand, this will be wrong when they switch primary hand.
+---@TODO: Allow context to be passed to the callbacks.
 
 ---
 ---The input class simplifies button tracking.
 ---
 Input = {}
+Input.__index = Input
 
 ---
 ---If the input system should start automatically on player spawn.
@@ -145,7 +208,7 @@ end
 ---
 ---@param hand CPropVRHand|0|1
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
----@param lock boolean?
+---@param lock? boolean
 ---@return boolean
 function Input:Pressed(hand, button, lock)
     local b = tracked_buttons[button]
@@ -280,7 +343,7 @@ end
 ---@param kind "press"|"release" # If the callback is registered for press or release.
 ---@param hand CPropVRHand|-1|0|1 # The ID of the hand to register for (-1 means both).
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS # The button to check.
----@param presses integer|nil # Number of times the button must be pressed in quick succession. E.g. 2 for double click.
+---@param presses integer|nil # Number of times the button must be pressed in quick succession. E.g. 2 for double click. Only applicable for `kind` press.
 ---@param callback function # The function that will be called when conditions are met.
 function Input:RegisterCallback(kind, hand, button, presses, callback)
 
@@ -459,6 +522,7 @@ function Input:Start(on)
     if on == nil then on = Entities:GetLocalPlayer() end
     tracking_ent = on
     tracking_ent:SetContextThink("InputThink", InputThink, 0)
+    print("Input system starting...")
 end
 
 ---
@@ -479,10 +543,12 @@ ListenToGameEvent("player_activate", function()
                 Warning("Input could not find HMD, make sure VR mode is enabled. Disabling Input...")
                 return nil
             end
-            print("Initiating input auto start...")
-            Input:Start()
+            Input:Start(player)
         end, 0)
     end
 end, nil)
 
 
+print("input.lua initialized...")
+
+return Input

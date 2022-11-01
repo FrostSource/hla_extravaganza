@@ -270,7 +270,7 @@ thisEntity = nil
 ---| "\"player_grabbed_ladder\"" #
 ---| "\"commentary_started\"" #
 ---| "\"commentary_stopped\"" #
----| "\"vr_controller_hint_create\"" # can create hints?
+---| "\"vr_controller_hint_create\"" #
 
 ---@alias GAME_EVENTS_CORE
 ---| "\"server_spawn\"" # As soon as a server starts.

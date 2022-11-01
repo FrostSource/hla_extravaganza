@@ -1,10 +1,16 @@
 --[[
-    v1.2.0
+    v1.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     Adds stack behaviour for tables with index 1 as the top of the stack.
 
-    ======================================== Basic Usage ==========================================
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "data.stack"
+    ```
+
+    ======================================== Usage ==========================================
 
     ```lua
     -- Create a stack with 3 initial values.
@@ -36,13 +42,14 @@
 
     =========================================== Notes =============================================
 
-    This class supports `util.storage` with `Storage.Save(stack)` or if encountered when saving
-    a table.
+    This class supports `storage` with `Storage.SaveStack()`:
 
     ```lua
-    Storage:Save('stack', stack)
-    stack = Storage:Load('stack')
+    Storage:SaveStack('stack', stack)
+    stack = Storage:LoadStack('stack')
     ```
+
+    Stacks are also natively saved using `Storage.Save()` or if encountered in a table being saved.
 ]]
 
 ---@class Stack

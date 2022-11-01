@@ -1,10 +1,16 @@
 --[[
-    v1.3.0
+    v1.3.1
     https://github.com/FrostSource/hla_extravaganza
 
     Adds queue behaviour for tables with #queue.items being the front of the queue.
 
-    ======================================== Basic Usage ==========================================
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "data.queue"
+    ```
+
+    ======================================== Usage ==========================================
 
     ```lua
     -- Create a queue with 3 initial values.
@@ -36,13 +42,14 @@
 
     =========================================== Notes =============================================
 
-    This class supports `util.storage` with `Storage.Save(queue)` or if encountered when saving
-    a table.
+    This class supports `storage` with `Storage.SaveQueue()`:
 
     ```lua
-    Storage:Save('queue', queue)
-    queue = Storage:Load('queue')
+    Storage:SaveQueue('queue', queue)
+    queue = Storage:LoadQueue('queue')
     ```
+    
+    Queues are also natively saved using `Storage.Save()` or if encountered in a table being saved.
 ]]
 
 ---@class Queue

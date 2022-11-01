@@ -1,13 +1,62 @@
 --[[
-    v1.0.0
+    v1.0.1
     https://github.com/FrostSource/hla_extravaganza
 
+    Provides a system for tracking simple hand poses and gestures.
+
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "gesture"
+    ```
+
+    ======================================== Usage ========================================
+
+    Gestures are added with a unique name and a [0-1] curl range for each finger, or nil if
+    the finger shouldn't be taken into consideration.
+
+    ```lua
+    Gesture:AddGesture("AllFingersNoThumb", 1, 1, 1, 1, 0)
+    ```
+   
+    Built-in gestures can be removed to lower a small amount of processing cost, however
+    this might produce undesirable results for other mods using the same gesture script if
+    you plan to use a system like Scalable Init.
+
+    ```lua
+    Gesture:RemoveGestures({"OpenHand", "ClosedFist"})
+    ```
+
+    Recommended usage for tracking gestures is to register a callback function with a given
+    set of conditions:
+
+    ```lua
+    Gesture:RegisterCallback("start", 1, "ThumbsUp", nil, function(gesture)
+        ---@cast gesture GESTURE_CALLBACK
+        print(("Player made %s gesture at %d"):format(gesture.name, gesture.time))
+    end)
+    ```
+
+    Generic gesture functions exist for all other times:
+
+    ```lua
+    local g = Gesture:GetGesture(Player.PrimaryHand)
+    if g.name == "ThumbsUp" then
+        print("Player did thumbs up")
+    end
+
+    local g = Gesture:GetGestureRaw(Player.PrimaryHand)
+    if g.index > 0.5 then
+        print("Player has index more than half extended")
+    end
+    ```
+
 ]]
---TODO: Create start/stop system functions.
---TODO: Refine finger tracking positions, especially thumb.
---TODO: Allow range of finger pose to be defined separate to discrepancy tolerance.
---TODO: Documenation.
---TODO: Track duration.
+
+---@TODO: Create start/stop system functions.
+---@TODO: Refine finger tracking positions, especially thumb.
+---@TODO: Allow range of finger pose to be defined separate to discrepancy tolerance.
+---@TODO: Track duration.
 
 ---@alias GestureNames
 ---| string
@@ -22,6 +71,7 @@
 ---| "MiddleFinger"
 ---| "TheShocker"
 ---| "Peace"
+-- Custom gesture names can be appended here to improve writing.
 
 ---@class GestureTable
 ---@field name GestureNames # Name of the gesture.
@@ -157,6 +207,7 @@ function Gesture:RemoveGestures(names)
 end
 
 -- Add default gestures...
+-- For users who are not scripting and just using the prefab you can add your custom gestures here.
 Gesture:AddGesture("OpenHand", 1, 1, 1, 1, 1)
 Gesture:AddGesture("ClosedFist", 0, 0, 0, 0, 0)
 Gesture:AddGesture("ThumbsUp", 0, 0, 0, 0, 1)
@@ -191,7 +242,7 @@ function Gesture:GetGesture(hand)
 end
 
 ---
----Gets the current gesture values of a given hand.
+---Gets the current [0-1] finger curl values of a given hand.
 ---
 ---@param hand CPropVRHand|0|1
 ---@return GestureTable
@@ -208,7 +259,7 @@ end
 ---@param kind "start"|"stop" # If the callback is registered for gesture start or stop.
 ---@param hand CPropVRHand|-1|0|1 # The ID of the hand to register for (-1 means both).
 ---@param gesture GestureNames # Name of the gesture.
----@param duration number # Not implemented
+---@param duration unknown # Not implemented
 ---@param callback function # The function that will be called when conditions are met.
 ---@param context? any
 function Gesture:RegisterCallback(kind, hand, gesture, duration, callback, context)
@@ -231,10 +282,10 @@ end
 ---
 ---@param callback function
 function Gesture:UnregisterCallback(callback)
-    for hand_id, kinds in pairs(callbacks) do
-        for kind, names in pairs(kinds) do
-            for name, cllbcks in pairs(names) do
-                for cllbck, context in pairs(cllbcks) do
+    for _, kinds in pairs(callbacks) do
+        for _, names in pairs(kinds) do
+            for _, cllbcks in pairs(names) do
+                for cllbck, _ in pairs(cllbcks) do
                     if cllbck == callback then
                         cllbcks[cllbck] = nil
                         break
@@ -245,58 +296,13 @@ function Gesture:UnregisterCallback(callback)
     end
 end
 
--- local CurrentGestureLeft = {
---     index = 0,
---     middle = 0,
---     ring = 0,
---     pinky = 0,
---     thumb = 0,
--- }
--- local CurrentGestureRight = {
---     index = 0,
---     middle = 0,
---     ring = 0,
---     pinky = 0,
---     thumb = 0,
--- }
-
--- Attachment index as they appear in modeldoc
--- add 1 to each if 0 is not the first attachment
-
--- local glove_index_finger_tip = 4+1
--- local glove_middle_finger_tip = 5+1
--- local glove_ring_finger_tip = 6+1
--- local glove_pinky_finger_tip = 7+1
--- local glove_thumb_tip = 3+1
--- local glove_vr_palm = 0+1
-
--- testing glove
--- local hand_fingertip_index = 4+1
--- local hand_fingertip_middle = 5+1
--- local hand_fingertip_ring = 6+1
--- local hand_fingertip_pinky = 7+1
--- local hand_fingertip_thumb = 3+1
--- local hand_vr_hand_origin = 0+1
-
--- testing hand
-local hand_fingertip_index = 5+1
-local hand_fingertip_middle = 6+1
-local hand_fingertip_ring = 7+1
-local hand_fingertip_pinky = 8+1
-local hand_fingertip_thumb = 9+1
-local hand_vr_hand_origin = 13+1
-
--- function Gesture:DebugGesture(name)
---     print("\n"..name..":")
---     print("index",GestureRaw[1].index)
---     print("middle",GestureRaw[1].middle)
---     print("pinky",GestureRaw[1].pinky)
---     print("ring",GestureRaw[1].ring)
---     print("thumb",GestureRaw[1].thumb)
--- end
-
-function Gesture:CurrentGestureRaw()
-end
+-- Attachment indexes
+local hand_fingertip_index = 6
+local hand_fingertip_middle = 7
+local hand_fingertip_ring = 8
+local hand_fingertip_pinky = 9
+local hand_fingertip_thumb = 10
+local hand_vr_hand_origin = 14
 
 -- Pre-calculated min/max values.
 local thumb_max = 4.0799
@@ -314,30 +320,11 @@ local pinky_min = 1.3178
 -- Cache for faster lookup...
 local gestures = Gesture.Gestures
 
-local function DebugTextOutline(text, r, g, b, duration, line_offset)
-    local x, y = 32, 32
-    local offset = 1
-    line_offset = line_offset or 0
-    DebugDrawClear()
-    DebugScreenTextPretty(x, y, line_offset, text, r, g, b, 255, duration, "", 64, true)
-
-    DebugScreenTextPretty(x-offset, y, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-    DebugScreenTextPretty(x+offset, y, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-    DebugScreenTextPretty(x, y-offset, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-    DebugScreenTextPretty(x, y+offset, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-
-    DebugScreenTextPretty(x-offset, y-offset, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-    DebugScreenTextPretty(x+offset, y+offset, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-    DebugScreenTextPretty(x-offset, y+offset, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-    DebugScreenTextPretty(x+offset, y-offset, line_offset, text, 0, 0, 0, 255, duration, "", 64, true)
-
-end
-
 ---@class GESTURE_CALLBACK
 ---@field kind "start"|"stop" # If the gesture was started or stopped.
 ---@field name GestureNames # The name of the gesture performed.
 ---@field hand CPropVRHand # The hand the gesture was performed on.
----@field time number # Server time the gesture occured.
+---@field time number # Server time the gesture occurred.
 
 local function GestureThink()
     local hmd = Entities:GetLocalPlayer():GetHMDAvatar()--[[@as CPropHMDAvatar]]
@@ -392,27 +379,6 @@ local function GestureThink()
 
             DebugDrawSphere(origin_attach, Vector(0,255,255), 255, r, nodepth, 0)
         end
-
-
-        -- local up = Vector(0,0,1.5)
-        -- DebugDrawText(index+up, f:format(dindex), nodepth, 0)
-        -- DebugDrawText(middle+up, f:format(dmiddle), nodepth, 0)
-        -- DebugDrawText(ring+up, f:format(dring), nodepth, 0)
-        -- DebugDrawText(pinky+up, f:format(dpinky), nodepth, 0)
-        -- DebugDrawText(thumb+up, f:format(dthumb), nodepth, 0)
-
-        -- indexmin = min(indexmin, dindex)
-        -- middlemin = min(middlemin, dmiddle)
-        -- ringmin = min(ringmin, dring)
-        -- pinkymin = min(pinkymin, dpinky)
-        -- thumbmin = min(thumbmin, dthumb)
-        -- indexmax = max(indexmax, dindex)
-        -- middlemax = max(middlemax, dmiddle)
-        -- ringmax = max(ringmax, dring)
-        -- pinkymax = max(pinkymax, dpinky)
-        -- thumbmax = max(thumbmax, dthumb)
-
-
 
         gesture_raw[i].index = index_val
         gesture_raw[i].middle = middle_val
@@ -475,11 +441,6 @@ local function GestureThink()
         end
     end
 
-    -- --debug
-    -- if Gesture.CurrentGesture[1] ~= nil then
-    --     debugoverlay:Text(hmd:GetVRHand(1):GetOrigin() + Vector(0,0,2), 0, Gesture.CurrentGesture[1].name, 255, 255,255,255, 255, 0)
-    -- end
-
     return 0
 end
 
@@ -498,6 +459,7 @@ function Gesture:Start(on)
     if on == nil then on = Entities:GetLocalPlayer() end
     tracking_ent = on
     tracking_ent:SetContextThink("GestureThink", GestureThink, 0)
+    print("Gesture system starting...")
 end
 
 ---
@@ -518,9 +480,12 @@ ListenToGameEvent("player_spawn", function()
                 Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...")
                 return nil
             end
-            print("Gesture engine starting...")
             Gesture:Start(player)
         end, 0)
     end
 end, nil)
 
+
+print("gesture.lua initialized...")
+
+return Gesture

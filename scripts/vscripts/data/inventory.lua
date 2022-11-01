@@ -1,11 +1,17 @@
 --[[
-    v1.2.0
+    v1.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     An inventory is a table where each key has an integer value assigned to it.
     When a value hits 0 the key is removed from the table.
 
-    ======================================== Basic Usage ==========================================
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "data.inventory"
+    ```
+
+    ======================================== Usage ========================================
 
     ```lua
     -- Create an inventory with 2 initial keys.
@@ -39,13 +45,14 @@
 
     =========================================== Notes =============================================
 
-    This class supports `util.storage` with `Storage.Save(inv)` or if encountered when saving
-    a table.
+    This class supports `storage` with `Storage.SaveInventory()`:
 
     ```lua
-    Storage:Save('inv', inv)
-    inv = Storage:Load('inv')
+    Storage:SaveInventory('inv', inv)
+    inv = Storage:LoadInventory('inv')
     ```
+    
+    Inventories are also natively saved using `Storage.Save()` or if encountered in a table being saved.
 ]]
 
 ---@class Inventory

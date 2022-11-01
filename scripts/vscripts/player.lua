@@ -1,52 +1,100 @@
 --[[
-    v2.1.2
+    v2.1.4
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
     entity access for player related entities by extending the player class.
 
-    Include this script into the global scope using the following line:
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
 
-        require "Util.player"
+    ```lua
+    require "player"
+    ```
 
-    -
-
-    Useful Player methods are replicated as global functions so they
-    can easily be invoked in Hammer using 'CallGlobalScriptFunction'.
-
-    -
+    ======================================== Usage ========================================
 
     Common method for referencing the player and related entities is:
 
+    ```lua
     local player = Entities:GetLocalPlayer()
     local hmd_avatar = player:GetHMDAvatar()
     local left_hand = hmd_avatar:GetVRHand(0)
     local right_hand = hmd_avatar:GetVRHand(1)
+    ```
 
     This script simplifies the above code significantly by automatically
     caching player entity handles when the player spawns and introducing
     the global variable 'Player' which references the base player entity:
 
+    ```lua
     local player = Player
     local hmd_avatar = Player.HMDAvatar
     local left_hand = Player.LeftHand
     local right_hand = Player.RightHand
+    ```
 
-    Since this script extends the player entity class directly you can
-    mix and match your scripting style without worrying that you're
-    referencing the wrong player table.
+    Since this script extends the player entity class directly you can mix and match your scripting style
+    without worrying that you're referencing the wrong player table.
 
-    -
+    
+    ======================================== Player Callbacks ========================================
 
-    The script attempts to track which item is currently being held in each hand
-    which can be accessed using the extended CPropVRHand member 'ItemHeld':
+    Many game events related to the player are used to track player activity and callbacks can be
+    registered to hook into them the same way you would a game event:
 
-    local primary_held_name = Player.PrimaryHand.ItemHeld:GetName()
+    ```lua
+    RegisterPlayerEventCallback("vr_player_ready", function(data)
+        ---@cast data PLAYER_EVENT_VR_PLAYER_READY
+        if data.game_loaded then
+            -- Load data
+        end
+    end)
+    ```
+
+    Although most of the player events are named after the same game events, the data that is passed to
+    the callback is pre-processed and extended to provide better context for the event:
+
+    ```lua
+    ---@param data PLAYER_EVENT_ITEM_PICKUP
+    RegisterPlayerEventCallback("item_pickup", function(data)
+        if data.hand == Player.PrimaryHand and data.item_name == "@gun" then
+            data.item:DoNotDrop(true)
+        end
+    end)
+    ```
+
+    ======================================== Tracking Items ========================================
+
+    The script attempts to track player items, both inventory and physically held objects.
+    These can be accessed through several new player tables and variables.
+    
+    Below are a few of the new variables that point an entity handle that the player has interacted with:
+
+    ```lua
+    Player.PrimaryHand.WristItem
+    Player.PrimaryHand.ItemHeld
+    Player.PrimaryHand.LastItemDropped
+    ```
+
+    The player might not be holding anything so remember to nil check:
+
+    ```lua
+    local item = Player.PrimaryHand.ItemHeld
+    if item then
+        local primary_held_name = item:GetName()
+    end
+    ```
+
+    The `Player.Items` table keeps track of the ammo and resin the player has in the backpack.
+    One addition value tracked is `resin_found` which is the amount of resin the player has
+    collected regardless of removing from backpack or spending on upgrades.
 
 ]]
 require "util.util"
 require "extensions.entity"
 require "storage"
+
+---@TODO: Count grenades and pens held towards amount in Player.Items
 
 -----------------------------
 -- Class extension members --
@@ -114,14 +162,16 @@ CBasePlayer.PreviouslyEquipped = PLAYER_WEAPON_HAND
 
 ---**Table of items player currently has possession of.**
 CBasePlayer.Items = {
-    grenades = {
-        ---Frag grenades.
-        frag = 0,
-        ---Xen grenades.
-        xen = 0,
-    },
-    ---Healthpen syringes.
-    healthpen = 0,
+    -- grenades = {
+    --     ---Frag grenades.
+    --     frag = 0,
+    --     ---Xen grenades.
+    --     xen = 0,
+    -- },
+    -- ---Healthpen syringes.
+    -- healthpen = 0,
+
+    ---Ammo in the backpack.
     ammo = {
         ---Ammo for the main pistol. This is number of magazines, not bullets. Multiply by 10 to get bullets.
         energygun = 0,
@@ -132,9 +182,11 @@ CBasePlayer.Items = {
         ---Ammo for the generic pistol. This is number of magazines, not bullets.
         generic_pistol = 0,
     },
+
     ---Crafting currency the player has.
     ---@type integer
     resin = nil,
+
     ---Total number of resin player has had in inventory, regardless of upgrades.
     ---@type integer
     resin_found = nil,
@@ -223,16 +275,18 @@ Expose(CBasePlayer.DropActivator, "DropActivator", CBasePlayer)
 ---@param hand? CPropVRHand|0|1
 function CBasePlayer:GrabByHandle(handle, hand)
     if IsEntity(handle, true) then
-        -- If no hand provided, find nearest
-        if hand == nil then
-            local pos = handle:GetOrigin()
-            if VectorDistanceSq(self.Hands[1]:GetOrigin(),pos) < VectorDistanceSq(self.Hands[2]:GetOrigin(),pos) then
-                hand = 0
+        if type(hand) ~= "number" then
+            if hand ~= nil and IsEntity(hand) and hand:IsInstance(CPropVRHand) then
+                hand = hand:GetHandID()
             else
-                hand = 1
+                -- If no hand provided, find nearest
+                local pos = handle:GetOrigin()
+                if VectorDistanceSq(self.Hands[1]:GetOrigin(),pos) < VectorDistanceSq(self.Hands[2]:GetOrigin(),pos) then
+                    hand = 0
+                else
+                    hand = 1
+                end
             end
-        elseif IsEntity(hand) then
-            hand = hand:GetHandID()
         end
         DoEntFireByInstanceHandle(handle, "Use", tostring(hand), 0, self, self)
     end
@@ -284,7 +338,7 @@ function CBasePlayer:GetLookingAt(maxDistance)
 end
 
 ---Disables fall damage for the player.
---TODO: Change to entity save.
+---@TODO: Change to entity save.
 function CBasePlayer:DisableFallDamage()
     local name = Storage.LoadString(self, "FallDamageFilterName", DoUniqueString("__player_fall_damage_filter"))
     Storage.SaveString(self, "FallDamageFilterName", name)
@@ -382,33 +436,90 @@ function CBasePlayer:SetItems(
     self.Items.healthpen = healthpens or self.Items.healthpen
     self.Items.resin = resin or self.Items.resin
 
-    --TODO: Consider moving save function above this
+    ---@TODO: Consider moving save function above this
     Storage.SaveTable(Player, "PlayerItems", Player.Items)
 end
 
 
+---
 ---Add pistol ammo to the player.
+---
 ---@param amount number
 function CBasePlayer:AddPistolAmmo(amount)
     self:AddResources(amount, nil, nil, nil)
 end
+---
 ---Add shotgun ammo to the player.
+---
 ---@param amount number
 function CBasePlayer:AddShotgunAmmo(amount)
     self:AddResources(nil, nil, amount, nil)
 end
+---
 ---Add rapidfire ammo to the player.
+---
 ---@param amount number
 function CBasePlayer:AddRapidfireAmmo(amount)
     self:AddResources(nil, amount, nil, nil)
 end
+---
 ---Add resin to the player.
+---
 ---@param amount number
 function CBasePlayer:AddResin(amount)
     self:AddResources(nil, nil, nil, amount)
 end
 
+---
+---Gets the items currently held or in wrist pockets.
+---
+---@return EntityHandle[]
+function CBasePlayer:GetImmediateItems()
+    return {
+        self.LeftHand.WristItem,
+        self.RightHand.WristItem,
+        self.LeftHand.ItemHeld,
+        self.RightHand.ItemHeld
+    }
+end
+
+---
+---Gets the grenades currently held or in wrist pockets.
+---
+---Use `#Player:GetGrenades()` to get number of grenades player has access to.
+---
+---@return EntityHandle[]
+function CBasePlayer:GetGrenades()
+    local grenades = {}
+    local immediate_items = self:GetImmediateItems()
+    for i in ipairs(immediate_items) do
+        if i and (i:GetClassname() == "item_hlvr_grenade_frag" or i:GetClassname() == "item_hlvr_grenade_xen") then
+            grenades[#grenades+1] = i
+        end
+    end
+    return grenades
+end
+
+---
+---Gets the health pens currently held or in wrist pockets.
+---
+---Use `#Player:GetHealthPens()` to get number of health pens player has access to.
+---
+---@return EntityHandle[]
+function CBasePlayer:GetHealthPens()
+    local healthpens = {}
+    local immediate_items = self:GetImmediateItems()
+    for i in ipairs(immediate_items) do
+        if i and (i:GetClassname() == "item_healthvial") then
+            healthpens[#healthpens+1] = i
+        end
+    end
+    return healthpens
+end
+
+---
 ---Marges an existing prop with a given hand.
+---
 ---@param hand CPropVRHand|0|1 # The hand handle or index.
 ---@param prop EntityHandle|string # The prop handle or targetname.
 ---@param hide_hand boolean # If the hand should turn invisible after merging.
@@ -419,7 +530,9 @@ function CBasePlayer:MergePropWithHand(hand, prop, hide_hand)
     hand:MergeProp(prop, hide_hand)
 end
 
+---
 ---Return if the player has a gun equipped.
+---
 ---@return boolean
 function CBasePlayer:HasWeaponEquipped()
     return self.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN
@@ -500,7 +613,7 @@ end
 ---@param entity EntityHandle
 ---@return boolean	
 function CBasePlayer:IsHolding(entity)
-    return self.PrimaryHand.ItemHeld == entity or self.SecondaryHand.ItemHeld == entity	
+    return self.PrimaryHand.ItemHeld == entity or self.SecondaryHand.ItemHeld == entity
 end
 
 ---Get the entity handle of the currently equipped weapon/item.
@@ -666,7 +779,7 @@ local function listenEventPlayerActivate(data)
             Player.Hands[1].Literal = Player.Hands[1]:GetLiteralHandType()
             Player.Hands[2].Literal = Player.Hands[2]:GetLiteralHandType()
             Player.Hands[1]:SetEntityName("player_hand_left")
-            Player.Hands[1]:SetEntityName("player_hand_right")
+            Player.Hands[2]:SetEntityName("player_hand_right")
             Player.LeftHand = Player.Hands[1]
             Player.RightHand = Player.Hands[2]
             Player.LeftHand.Opposite = Player.RightHand
@@ -731,7 +844,7 @@ listenEventPlayerActivateID = ListenToGameEvent("player_activate", listenEventPl
 ---@field item EntityHandle # The entity handle of the item that was picked up.
 ---@field item_class string # Classname of the entity that was picked up.
 ---@field hand CPropVRHand # The entity handle of the hand that picked up the item.
----@field hand_opposite CPropVRHand # The entity handle of the opposite hand.
+---@field otherhand CPropVRHand # The entity handle of the opposite hand.
 
 ---Tracking player held items.
 ---@param data GAME_EVENT_ITEM_PICKUP
@@ -743,7 +856,7 @@ local function listenEventItemPickup(data)
     -- 1=primary,2=secondary converted to 0=left,1=right
     local handId = Util.GetHandIdFromTip(data.vr_tip_attachment)
     local hand = Player.Hands[handId + 1]
-    local hand_opposite = Player.Hands[(1 - handId) + 1]
+    local otherhand = Player.Hands[(1 - handId) + 1]
     local ent_held = Util.EstimateNearestEntity(data.item_name, data.item, hand:GetOrigin())
 
     hand.ItemHeld = ent_held
@@ -767,7 +880,7 @@ local function listenEventItemPickup(data)
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = ent_held
     data.hand = hand
-    data.hand_opposite = hand_opposite
+    data.otherhand = otherhand
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
         if context ~= true then
             callback(context, data)
@@ -782,7 +895,7 @@ ListenToGameEvent("item_pickup", listenEventItemPickup, nil)
 ---@field item EntityHandle # The entity handle of the item that was dropped.
 ---@field item_class string # Classname of the entity that was dropped.
 ---@field hand CPropVRHand # The entity handle of the hand that dropped the item.
----@field hand_opposite CPropVRHand # The entity handle of the opposite hand.
+---@field otherhand CPropVRHand # The entity handle of the opposite hand.
 
 -- ---@type "item_hlvr_crafting_currency_small"|"item_hlvr_crafting_currency_large"|nil
 ---@type EntityHandle|nil
@@ -798,7 +911,7 @@ local function listenEventItemReleased(data)
     -- 1=primary,2=secondary converted to 0=left,1=right
     local handId = Util.GetHandIdFromTip(data.vr_tip_attachment)
     local hand = Player.Hands[handId + 1]
-    local hand_opposite = Player.Hands[(1 - handId) + 1]
+    local otherhand = Player.Hands[(1 - handId) + 1]
     -- Hack to get the number of shells dropped
     if data.item == "item_hlvr_clip_shotgun_shellgroup" then
         shellgroup_cache = #hand.ItemHeld:GetChildren()
@@ -815,7 +928,7 @@ local function listenEventItemReleased(data)
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = Player.LastItemDropped
     data.hand = hand
-    data.hand_opposite = hand_opposite
+    data.otherhand = otherhand
     for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
         if context ~= true then
             callback(context, data)
@@ -1006,7 +1119,7 @@ local function listenEventPlayerStoredItemInItemholder(data)
     -- Debug.PrintTable(data)
     -- print("\n")
 
-    --TODO: Test the accuracy of this.
+    ---@TODO: Test the accuracy of this.
     local item = Player.LastItemDropped
     local hand
     -- Can infer wrist stored by checking which hand dropped
@@ -1018,13 +1131,13 @@ local function listenEventPlayerStoredItemInItemholder(data)
         hand = Player.LeftHand
     end
 
-    if data.item == "item_hlvr_grenade_frag" then
-        Player.Items.grenades.frag = Player.Items.grenades.frag + 1
-    elseif data.item == "item_hlvr_grenade_xen" then
-        Player.Items.grenades.xen = Player.Items.grenades.xen + 1
-    elseif data.item == "item_healthvial" then
-        Player.Items.healthpen = Player.Items.healthpen + 1
-    end
+    -- if data.item == "item_hlvr_grenade_frag" then
+    --     Player.Items.grenades.frag = Player.Items.grenades.frag + 1
+    -- elseif data.item == "item_hlvr_grenade_xen" then
+    --     Player.Items.grenades.xen = Player.Items.grenades.xen + 1
+    -- elseif data.item == "item_healthvial" then
+    --     Player.Items.healthpen = Player.Items.healthpen + 1
+    -- end
     savePlayerData()
     -- Registered callback
     data.item_class = data.item
@@ -1070,13 +1183,13 @@ local function listenEventPlayerRemovedItemFromItemholder(data)
         Warning("Wrist item being taken out couldn't be resolved!")
     end
 
-    if data.item == "item_hlvr_grenade_frag" then
-        Player.Items.grenades.frag = Player.Items.grenades.frag - 1
-    elseif data.item == "item_hlvr_grenade_xen" then
-        Player.Items.grenades.xen = Player.Items.grenades.xen - 1
-    elseif data.item == "item_healthvial" then
-        Player.Items.healthpen = Player.Items.healthpen - 1
-    end
+    -- if data.item == "item_hlvr_grenade_frag" then
+    --     Player.Items.grenades.frag = Player.Items.grenades.frag - 1
+    -- elseif data.item == "item_hlvr_grenade_xen" then
+    --     Player.Items.grenades.xen = Player.Items.grenades.xen - 1
+    -- elseif data.item == "item_healthvial" then
+    --     Player.Items.healthpen = Player.Items.healthpen - 1
+    -- end
     savePlayerData()
     -- Registered callback
     data.item_class = data.item

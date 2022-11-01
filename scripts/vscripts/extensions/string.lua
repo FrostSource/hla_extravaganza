@@ -1,8 +1,14 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Provides string class extension methods.
+
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "extensions.string"
+    ```
 ]]
 
 ---

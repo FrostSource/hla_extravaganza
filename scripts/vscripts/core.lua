@@ -1,17 +1,103 @@
 --[[
-    v1.0.3
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
+
+    The main core script provides useful global functions as well as loading any standard libraries that it can find.
+
+    The two main purposes are:
+    
+    1. Automatically load libraries to simplify the process for users.
+    2. Provide entity class functions to emulate OOP programming.
+
+    Load this script into the global scope using the following line:
+
+    ```lua
+    require "core"
+    ```
+
+    ======================================== Entity Classes ========================================
+
+    NOTE: Entity classes are still early in development and documentation is sparse.
+    
+    The new `entity` function is designed to ease the creation of entity classes and all the trouble
+    that comes with complex entity scripts. Instead of defining functions and variables in the
+    private script scope we define them in a shared table class which is inherited by all entities
+    using this class.
+
+    The simplest example of the entity function is:
+
+    ```lua
+    ---Define the entity class, which returns both the class (base) and entity handle (self).
+    ---By "inheriting" EntityClass we get helpful code completion.
+    ---@class EntityName : EntityClass
+    local base, self = entity("EntityName")
+    ---This stops code executing a second time after a game load.
+    if self.Initiated then return end
+
+    ---A variable is defined for the class.
+    base.class_variable = 1
+
+    ---A function is defined for the class. This specific function is called automatically.
+    ---@param loaded boolean
+    function base:OnReady(loaded)
+        ---Reference a class variable, note that we use `self` instead of `base` here inside the function.
+        self.class_variable = self.class_variable + 1
+    end
+    ```
+
+    Entity scripts using this feature should *not* use `thisEntity` and instead use `self`.
+    It's important to remember to define your class functions on the `base` class. Functions
+    defined on `self` will not be inherited by other classes which inherit your class.
+
+    Thinking is simplified, allowing you to define a base class think which can be paused/resumed
+    and the state of which will be saved, meaning the think function will automatically resume
+    after a game load:
+
+    ```lua
+    function base:OnReady(loaded)
+        if not loaded then
+            self:ResumeThink()
+        end
+    end
+
+    function base:Think()
+        if Time() > 50 then
+            self:PauseThink()
+            return
+        end
+        return 0
+    endpos
+    ```
+
+    Like the think state, any fields defined in the `base`/`self` objects will be automatically loaded.
+    Currently these values still need to be saved manually but this is done easily with the new save function:
+
+    ```lua
+    base.value = 1
+
+    function base:ChangeValue()
+        self.value = self.value + 1
+        self:Save()
+    end
+    ```
+
+
 ]]
+
+
+
+Msg("Initializing Extravaganza core system...")
 
 ---------------------
 -- Global functions
+--#region
 ---------------------
 
 ---
 ---Get the file name of the current script without folders or extension. E.g. `util.util`
 ---
 ---@param sep?  string # Separator character, default is '.'
----@param level (integer|function)? # Function level, [View documents](command:extension.lua.doc?["en-us/51/manual.html/pdf-debug.getinfo"])
+---@param level? (integer|function)? # Function level, [View documents](command:extension.lua.doc?["en-us/51/manual.html/pdf-debug.getinfo"])
 ---@return string
 function GetScriptFile(sep, level)
     sep = sep or "."
@@ -92,7 +178,7 @@ end
 ---@return unknown
 ---@diagnostic disable-next-line: lowercase-global
 function ifrequire(modname, callback)
-    --TODO: Consider using module_exists
+    ---@TODO: Consider using module_exists
     local success, result = pcall(require, modname)
     if success and callback then
         callback(result)
@@ -137,43 +223,56 @@ function prints(...)
     print(t)
 end
 
-
----------------
--- Extensions
----------------
--- Consider separate extension script
-
 ---
----Find an entity within the same prefab as another entity.
+---Add a function to the calling entity's script scope with alternate casing.
 ---
----Will have issues in nested prefabs.
+---Makes a function easier to call from Hammer through I/O.
 ---
----@param entity EntityHandle
----@param name string
----@return EntityHandle?
-function Entities:FindInPrefab(entity, name)
-    local myname = entity:GetName()
-    for _,ent in ipairs(Entities:FindAllByName('*' .. name)) do
-        local prefab_part = ent:GetName():sub(1, #ent:GetName() - #name)
-        if prefab_part == myname:sub(1, #prefab_part) then
-            return ent
+---E.g.
+---
+---    local function TriggerRelay(io)
+---        DoEntFire("my_relay", "Trigger", "", 0, io.activator, io.caller)
+---    end
+---    Expose(TriggerRelay)
+---    -- Or with alternate name
+---    Expose(TriggerRelay, "RelayInput")
+---
+---@param func function # The function to expose.
+---@param name? string # Optionally the name of the function for faster processing.
+---@param scope? table # Optionally the explicit scope to put the exposed function in.
+function Expose(func, name, scope)
+    local fenv = getfenv(func)
+    -- if name is empty then find the name
+    if name == "" or name == nil then
+        name = Util.FindKeyFromValueDeep(fenv, func)
+        -- if name is still empty after searching environment, search locals
+        if name == nil then
+            local i = 1
+            while true do
+                local val
+                name, val = debug.getlocal(2,i)
+                if name == nil or val == func then break end
+                i = i + 1
+            end
+            -- if name is still nil then function doesn't exist yet
+            if name == nil then
+                Warning("Trying to sanitize function ["..tostring(func).."] which doesn't exist in environment!\n")
+                return
+            end
         end
     end
-    return nil
+    fenv = scope or fenv
+    print("Sanitizing function '"..name.."' for Hammer in scope ["..tostring(fenv).."]")
+    fenv[name] = func
+    fenv[name:lower()] = func
+    fenv[name:upper()] = func
+    fenv[name:sub(1,1):upper()..name:sub(2)] = func
 end
-
----
----Find an entity within the same prefab as this entity.
----
----Will have issues in nested prefabs.
----
----@param name string
----@return EntityHandle?
-function CEntityInstance:FindInPrefab(name)
-    return Entities:FindInPrefab(self, name)
-end
+-- Old name for Expose
+--SanitizeFunctionForHammer = Expose
 
 local base_vector = Vector()
+
 ---
 ---Get if a value is a `Vector`
 ---
@@ -184,6 +283,7 @@ function IsVector(value)
 end
 
 local base_qangle = QAngle()
+
 ---
 ---Get if a value is a `QAngle`
 ---
@@ -221,9 +321,64 @@ function DeepCopyTable(tbl)
     return t
 end
 
+---
+---Returns a random value from an array.
+---
+---@generic T
+---@param array T[] # Array to get a value from.
+---@param min? integer # Optional minimum bound.
+---@param max? integer # Optional maximum bound.
+---@return T one # The random value.
+---@return integer two # The random index.
+function RandomFromArray(array, min, max)
+    local i = RandomInt(min or 1, max or #array)
+    return array[i], i
+end
+
+
+--#endregion
+
+---------------
+-- Extensions
+--#region
+---------------
+-- Consider separate extension script
+
+---
+---Find an entity within the same prefab as another entity.
+---
+---Will have issues in nested prefabs.
+---
+---@param entity EntityHandle
+---@param name string
+---@return EntityHandle?
+function Entities:FindInPrefab(entity, name)
+    local myname = entity:GetName()
+    for _,ent in ipairs(Entities:FindAllByName('*' .. name)) do
+        local prefab_part = ent:GetName():sub(1, #ent:GetName() - #name)
+        if prefab_part == myname:sub(1, #prefab_part) then
+            return ent
+        end
+    end
+    return nil
+end
+
+---
+---Find an entity within the same prefab as this entity.
+---
+---Will have issues in nested prefabs.
+---
+---@param name string
+---@return EntityHandle?
+function CEntityInstance:FindInPrefab(name)
+    return Entities:FindInPrefab(self, name)
+end
+
+--#endregion
 
 -------------------
--- Custom classes
+-- Entity classes
+--#region
 -------------------
 
 ---@type table<string, table>
@@ -259,6 +414,7 @@ local function load_entity_data(self)
     end
 end
 
+if false then
 ---Class that inherits all entity classes. Mostly used when creating entity classes.
 ---`EntityHandle` should still be used when handling and passing entity types.
 ---@class EntityClass : EntityClassBase,CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CBodyComponent,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
@@ -280,16 +436,19 @@ end
 ---Called automatically if defined
 function EntityClassBase:Think()
 end
----Called automatically if defined
+---Resume the entity think function.
 function EntityClassBase:ResumeThink()
 end
----Called automatically if defined
+---Pause the entity think function.
 function EntityClassBase:PauseThink()
 end
 ---@type boolean
 EntityClassBase.Initiated = false
 ---@type boolean
 EntityClassBase.IsThinking = false
+end
+
+---@TODO: Keep a proxy table to track when fields are modified and automatically save.
 
 ---
 ---Creates a new entity class.
@@ -303,7 +462,7 @@ EntityClassBase.IsThinking = false
 ---@generic      T
 ---@param name? `T` # Internal class name
 ---@param ...    string|table # Any inherit classes or scripts.
----@return T # Base class, the newly created class.
+---@return any # Base class, the newly created class.
 ---@return T # Self instance, the entity inheriting `base`.
 ---@return table # Super class, the first inheritance of `base`.
 ---@diagnostic disable-next-line: lowercase-global
@@ -436,10 +595,11 @@ function entity(name, ...)
 
     return base, self, super
 end
-
+--#endregion
 
 -------------
 -- Includes
+--#region
 -------------
 
 -- Base libraries
@@ -449,26 +609,23 @@ ifrequire 'util.util'
 ifrequire 'util.enums'
 ifrequire 'extensions.entity'
 ifrequire 'extensions.string'
+ifrequire 'extensions.entities'
 ifrequire 'math.core'
 ifrequire 'data.queue'
 ifrequire 'data.stack'
 ifrequire 'data.inventory'
 
----Add a function to the global scope with alternate casing styles.
----Makes a function easier to call from Hammer through I/O.
----@param func function # The function to sanitize.
----@param name? string # Optionally the name of the function for faster processing.
----@param scope? table # Optionally the explicit scope to put the sanitized functions in.
-Expose = function(func, name, scope)
-    --Consider extracting `SanitizeFunctionForHammer` directly to core
-    Warning("Cannot expose "..tostring(func).." because Util class is not defined!")
-end
-if Util then
-    Expose = Util.SanitizeFunctionForHammer
-end
+-- Useful extravaganza libraries
 
 ifrequire 'storage'
 ifrequire 'input'
+ifrequire 'gesture'
 ifrequire 'player'
 
+-- Common third-party libraries
+
 ifrequire 'wrist_pocket.core'
+
+--#endregion
+
+Msg("...done")

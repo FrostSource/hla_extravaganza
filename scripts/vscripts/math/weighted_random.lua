@@ -1,12 +1,14 @@
 --[[
-    v1.2.0
+    v1.2.1
     Weighted random allows you to assign chances to tables.
 
-    Should be loaded into global scope by using the following line:
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "math.weighted_random"
+    ```
 
-        require "math.weighted_random"
-
-    ---
+    ======================================== Usage ========================================
 
     The WeightedRandom() function takes a list of tables where each one must at least
     contain a key with the name "weight" pointing to a number value.
@@ -14,8 +16,7 @@
 
     Weights do not need to be [0-1] range.
 
-    Usage example:
-
+    ```lua
     local wr = WeightedRandom({
         { weight = 1, name = "Common" },
         { weight = 0.75, name = "Semi-common" },
@@ -27,6 +28,7 @@
     for i = 1, 20 do
         print(wr:Random().name)
     end
+    ```
 ]]
 
 ---
