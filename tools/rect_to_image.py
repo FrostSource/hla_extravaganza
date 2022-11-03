@@ -3,7 +3,6 @@
 https://github.com/FrostSource/hla_extravaganza
 """
 
-from ast import Tuple
 from pathlib import Path
 from lib.parsing import StringParser
 from PIL import Image, ImageDraw
@@ -26,7 +25,8 @@ def parse_rect_file(rect: Path):
         sp.eat("]")
         sp.either(
             ["properties","=","null"],
-            ["properties","=","{","allowRotation","=","true","}"]
+            ["properties","=","{","allowRotation","=","true","}"],
+            ["properties","=","{","allowRotation","=","false","}"]
         )
         sp.skip_line(2)
         return ((rect_min[0],rect_min[1]),(rect_max[0],rect_max[1]))
@@ -47,16 +47,20 @@ def parse_rect_file(rect: Path):
 
 
 if __name__ == '__main__':
+    # rect_path = "tools/__test_rect.rect"
     rect_path = input("Enter .rect file:")
     if rect_path.startswith('"'): rect_path = rect_path[1:]
     if rect_path.endswith('"'): rect_path = rect_path[:-1]
     rect_path = Path(rect_path)
     if rect_path.exists():
         print(rect_path)
-        size = input("Enter image size (single number):") or 4096
+        # size = 1024
+        size = input("Enter image size (single number):") or 1024
         size = int(size)
         shapes, max_size = parse_rect_file(rect_path)
-        size_division = max_size[0]/size, max_size[1]/size
+        # size_division = max_size[0]/size, max_size[1]/size
+        # Is the size hardcoded for rect files?
+        size_division = (32768/size, 32768/size)
         image = Image.new("RGBA", (size,size))
         for shape in shapes:
             draw = ImageDraw.Draw(image)
