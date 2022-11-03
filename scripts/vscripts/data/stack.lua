@@ -1,5 +1,5 @@
 --[[
-    v1.2.1
+    v1.2.2
     https://github.com/FrostSource/hla_extravaganza
 
     Adds stack behaviour for tables with index 1 as the top of the stack.
@@ -72,6 +72,7 @@ if pcall(require, "storage") then
     ---@param name string # The name to save as.
     ---@param stack Stack # The stack to save.
     ---@return boolean # If the save was successful.
+    ---@luadoc-ignore
     function StackClass.__save(handle, name, stack)
         return Storage.SaveTableCustom(handle, name, stack, "Stack")
     end
@@ -84,6 +85,7 @@ if pcall(require, "storage") then
     ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name to load.
     ---@return Stack|nil
+    ---@luadoc-ignore
     function StackClass.__load(handle, name)
         local stack = Storage.LoadTableCustom(handle, name, "Stack")
         if stack == nil then return nil end
@@ -101,6 +103,7 @@ if pcall(require, "storage") then
     ---@param name string # Name the Stack was saved as.
     ---@param default? T # Optional default value.
     ---@return Stack|T
+    ---@luadoc-ignore
     Storage.LoadStack = function(handle, name, default)
         local stack = StackClass.__load(handle, name)
         if stack == nil then

@@ -1,5 +1,5 @@
 --[[
-    v1.2.1
+    v1.2.2
     Weighted random allows you to assign chances to tables.
 
     If not using `vscripts/core.lua`, load this file at game start using the following line:
@@ -39,7 +39,7 @@
 ---      require "math.weighted_random"
 ---
 ---@class WeightedRandom
-local WeightedRandomBaseClass = {
+local WR = {
     ---Root list containing all weighted tables.
     ---@type table[]
     ItemPool = {},
@@ -47,10 +47,10 @@ local WeightedRandomBaseClass = {
     ---Otherwise it uses Valve's RandomFloat().
     UseRandomSeed = false,
 }
-WeightedRandomBaseClass.__index = WeightedRandomBaseClass
+WR.__index = WR
 
 if pcall(require, "storage") then
-    Storage.RegisterType("WeightedRandom", WeightedRandomBaseClass)
+    Storage.RegisterType("WeightedRandom", WR)
 
     ---
     ---**Static Function**
@@ -61,7 +61,8 @@ if pcall(require, "storage") then
     ---@param name string # The name to save as.
     ---@param wr WeightedRandom # The stack to save.
     ---@return boolean # If the save was successful.
-    function WeightedRandomBaseClass.__save(handle, name, wr)
+    ---@luadoc-ignore
+    function WR.__save(handle, name, wr)
         return Storage.SaveTableCustom(handle, name, wr, "WeightedRandom")
     end
 
@@ -73,13 +74,14 @@ if pcall(require, "storage") then
     ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name to load.
     ---@return WeightedRandom|nil
-    function WeightedRandomBaseClass.__load(handle, name)
+    ---@luadoc-ignore
+    function WR.__load(handle, name)
         local wr = Storage.LoadTableCustom(handle, name, "WeightedRandom")
         if wr == nil then return nil end
-        return setmetatable(wr, WeightedRandomBaseClass)
+        return setmetatable(wr, WR)
     end
 
-    Storage.SaveWeightedRandom = WeightedRandomBaseClass.__save
+    Storage.SaveWeightedRandom = WR.__save
     CBaseEntity.SaveWeightedRandom = Storage.SaveWeightedRandom
 
     ---
@@ -90,8 +92,9 @@ if pcall(require, "storage") then
     ---@param name string # Name the WeightedRandom was saved as.
     ---@param default? T # Optional default value.
     ---@return WeightedRandom|T
+    ---@luadoc-ignore
     Storage.LoadWeightedRandom = function(handle, name, default)
-        local wr = WeightedRandomBaseClass.__load(handle, name)
+        local wr = WR.__load(handle, name)
         if wr == nil then
             return default
         end
@@ -108,7 +111,7 @@ end
 ---
 ---@param tbl table # Table of values that will be returned.
 ---@param weight? number # Weight for this table.
-function WeightedRandomBaseClass:Add(tbl, weight)
+function WR:Add(tbl, weight)
     if weight ~= nil then tbl.weight = weight end
     self.ItemPool[#self.ItemPool+1] = tbl
 end
@@ -116,7 +119,7 @@ end
 ---Get the total weight of this weighted random object.
 ---
 ---@return number # The sum of all weights.
-function WeightedRandomBaseClass:TotalWeight()
+function WR:TotalWeight()
     local weight_sum = 0
     for _,item in ipairs(self.ItemPool) do
         weight_sum = weight_sum + item.weight
@@ -128,7 +131,7 @@ end
 ---Pick a random table from the list of weighted tables.
 ---
 ---@return table
-function WeightedRandomBaseClass:Random()
+function WR:Random()
     local weight_sum = self:TotalWeight()
     local weight_remaining
     if self.UseRandomSeed then
@@ -164,6 +167,6 @@ end
 ---@param weights table[]|"{\n\t{ weight = 1 },\n}"
 ---@return WeightedRandom
 function WeightedRandom(weights)
-    return setmetatable({ItemPool = weights or {}}, WeightedRandomBaseClass)
+    return setmetatable({ItemPool = weights or {}}, WR)
 end
 

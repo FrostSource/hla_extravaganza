@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -66,7 +66,7 @@
             return
         end
         return 0
-    endpos
+    end
     ```
 
     Like the think state, any fields defined in the `base`/`self` objects will be automatically loaded.
@@ -167,7 +167,7 @@ function module_exists(name)
 end
 
 ---
----Loads the given module, returns any value returned by the given module(`true` when `nil`).
+---Loads the given module, returns any value returned by the given module(`true` when module returns nothing).
 ---
 ---Then runs the given callback function.
 ---
@@ -338,44 +338,6 @@ end
 
 --#endregion
 
----------------
--- Extensions
---#region
----------------
--- Consider separate extension script
-
----
----Find an entity within the same prefab as another entity.
----
----Will have issues in nested prefabs.
----
----@param entity EntityHandle
----@param name string
----@return EntityHandle?
-function Entities:FindInPrefab(entity, name)
-    local myname = entity:GetName()
-    for _,ent in ipairs(Entities:FindAllByName('*' .. name)) do
-        local prefab_part = ent:GetName():sub(1, #ent:GetName() - #name)
-        if prefab_part == myname:sub(1, #prefab_part) then
-            return ent
-        end
-    end
-    return nil
-end
-
----
----Find an entity within the same prefab as this entity.
----
----Will have issues in nested prefabs.
----
----@param name string
----@return EntityHandle?
-function CEntityInstance:FindInPrefab(name)
-    return Entities:FindInPrefab(self, name)
-end
-
---#endregion
-
 -------------------
 -- Entity classes
 --#region
@@ -423,23 +385,29 @@ local EntityClass = {}
 ---@class EntityClassBase
 local EntityClassBase = {}
 ---Save all entity data
+---@luadoc-ignore
 function EntityClassBase:Save()
 end
 ---Called automatically if defined
 ---@param loaded boolean
+---@luadoc-ignore
 function EntityClassBase:OnReady(loaded)
 end
 ---Called automatically if defined
 ---@param spawnkeys CScriptKeyValues
+---@luadoc-ignore
 function EntityClassBase:OnSpawn(spawnkeys)
 end
 ---Called automatically if defined
+---@luadoc-ignore
 function EntityClassBase:Think()
 end
 ---Resume the entity think function.
+---@luadoc-ignore
 function EntityClassBase:ResumeThink()
 end
 ---Pause the entity think function.
+---@luadoc-ignore
 function EntityClassBase:PauseThink()
 end
 ---@type boolean
@@ -570,6 +538,7 @@ function entity(name, ...)
 
         end
 
+        ---@luadoc-ignore
         function self:ResumeThink()
             if type(self.Think) == "function" then
                 self:SetContextThink("__EntityThink", function() return self:Think() end, 0)
@@ -580,6 +549,7 @@ function entity(name, ...)
             end
         end
 
+        ---@luadoc-ignore
         function self:PauseThink()
             self:SetContextThink("__EntityThink", nil, 0)
             self.IsThinking = false

@@ -1,5 +1,5 @@
 --[[
-    v1.3.1
+    v1.3.2
     https://github.com/FrostSource/hla_extravaganza
 
     Adds queue behaviour for tables with #queue.items being the front of the queue.
@@ -72,6 +72,7 @@ if pcall(require, "storage") then
     ---@param name string # The name to save as.
     ---@param queue Queue # The stack to save.
     ---@return boolean # If the save was successful.
+    ---@luadoc-ignore
     function QueueClass.__save(handle, name, queue)
         return Storage.SaveTableCustom(handle, name, queue, "Queue")
     end
@@ -84,6 +85,7 @@ if pcall(require, "storage") then
     ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name to load.
     ---@return Queue|nil
+    ---@luadoc-ignore
     function QueueClass.__load(handle, name)
         local queue = Storage.LoadTableCustom(handle, name, "Queue")
         if queue == nil then return nil end
@@ -101,6 +103,7 @@ if pcall(require, "storage") then
     ---@param name string # Name the Queue was saved as.
     ---@param default? T # Optional default value.
     ---@return Queue|T
+    ---@luadoc-ignore
     Storage.LoadQueue = function(handle, name, default)
         local queue = QueueClass.__load(handle, name)
         if queue == nil then

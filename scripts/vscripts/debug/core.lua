@@ -1,5 +1,5 @@
 --[[
-    v1.3.0
+    v1.3.1
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -216,9 +216,7 @@ function Debug.FindEntity(ent, duration)
     DebugDrawCircle(ent:GetOrigin(), Vector(255), 128, radius, true, duration)
     DebugDrawSphere(ent:GetCenter(), Vector(255), 128, radius, true, duration)
 end
-function CBaseEntity:DebugFind(duration)
-    Debug.FindEntity(self, duration)
-end
+CBaseEntity.DebugFind = Debug.FindEntity
 
 ---
 ---Prints all current context criteria for an entity.

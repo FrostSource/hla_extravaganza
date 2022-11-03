@@ -1,5 +1,5 @@
 --[[
-    v1.2.1
+    v1.2.2
     https://github.com/FrostSource/hla_extravaganza
 
     An inventory is a table where each key has an integer value assigned to it.
@@ -75,6 +75,7 @@ if pcall(require, "storage") then
     ---@param name string # The name to save as.
     ---@param inventory Inventory # The inventory to save.
     ---@return boolean # If the save was successful.
+    ---@luadoc-ignore
     function InventoryClass.__save(handle, name, inventory)
         -- Storage.SaveTable(handle, Storage.Join(name, "items"), inventory.items)
         -- Storage.SaveType(handle, name, "util.Inventory")
@@ -90,6 +91,7 @@ if pcall(require, "storage") then
     ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name to load.
     ---@return Inventory|nil
+    ---@luadoc-ignore
     function InventoryClass.__load(handle, name)
         -- local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
         -- if items ~= nil then
@@ -114,6 +116,7 @@ if pcall(require, "storage") then
     ---@param name string # Name the Inventory was saved as.
     ---@param default? T # Optional default value.
     ---@return Inventory|T
+    ---@luadoc-ignore
     Storage.LoadInventory = function(handle, name, default)
         local inventory = InventoryClass.__load(handle, name)
         if inventory == nil then
