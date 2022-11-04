@@ -31,6 +31,8 @@
 # TODO: Only search Lua if using (?)
 # TODO: Generalize the language to simplify rules
 
+import fnmatch
+from glob import glob
 import re
 from zipfile import ZipFile
 import os
@@ -40,40 +42,32 @@ import shutil
 from enum import Enum
 from typing import Union
 from luaparser import ast, astnodes
+import argparse
 
-# https://stackoverflow.com/a/24519338/15190248
-# Extract below into a separate script
-import re
-import codecs
-ESCAPE_SEQUENCE_RE = re.compile(r'''
-    ( \\U........      # 8-digit hex escapes
-    | \\u....          # 4-digit hex escapes
-    | \\x..            # 2-digit hex escapes
-    | \\[0-7]{1,3}     # Octal escapes
-    | \\N\{[^}]+\}     # Unicode characters by name
-    | \\[\\'"abfnrtv]  # Single-character escapes
-    )''', re.UNICODE | re.VERBOSE)
-def decode_escapes(s):
-    def decode_match(match):
-        return codecs.decode(match.group(0), 'unicode-escape')
-    return ESCAPE_SEQUENCE_RE.sub(decode_match, s)
+from tools.lib.util import decode_escapes
+import tools.lib.addon as addon
+import tools.lua_doc_to_html as luadoc
 
 # Script will run without modifying files.
 PRINT_ONLY = False
 
 # More text will show.
-VERBOSE = True
+VERBOSE = False
 
 # Script will not enter the packing stage.
 # Used for debug.
-STOP_AFTER_ASSET_COLLECTION = False
+PACK_ASSETS = False
+
+COPY_UNPACKED_ASSETS = False
 
 # Doesn't work yet
-BACKUP_PREVIOUS_RELEASES = True
+BACKUP_PREVIOUS_RELEASES = False
 
-root = Path(__file__).parent
-# release = root.joinpath('release/')
-release = root.joinpath('test_release/')
+GENERATE_READMES = False
+
+USE_TEST_RELEASE = False
+
+release = addon.root.joinpath('release/')
 
 #region Utility
 
@@ -710,9 +704,10 @@ def generate_releases(asset_categories:AssetCategories):
                 print(' No old zip to delete.')
 
     # Copy unpacked files
-    print(f'Copying {len(all_assets)} unpacked assets...', end='')
-    copy_unpacked_files(all_assets)
-    print(' DONE.')
+    if COPY_UNPACKED_ASSETS:
+        print(f'Copying {len(all_assets)} unpacked assets...', end='')
+        copy_unpacked_files(all_assets)
+        print(' DONE.')
     
     print()
 
@@ -731,10 +726,81 @@ def generate_releases(asset_categories:AssetCategories):
     
     print('\nFinished generating all releases!')
 
+
+# Hardcoded for now, consider extracting to file
+readme_paths = [
+    'scripts/vscripts',
+    'scripts/vscripts/data',
+    'scripts/vscripts/debug',
+    'scripts/vscripts/extensions',
+    'scripts/vscripts/math',
+    'scripts/vscripts/util',
+]
+
+def generate_script_readmes():
+    for path in readme_paths:
+        if USE_TEST_RELEASE:
+            output = addon.root.joinpath('test_release/readmes',path,'README.md')
+        else:
+            output = Path(path).joinpath('README.md')
+        luas = [f for f in glob(os.path.join(path,'*.lua')) if not os.path.basename(f).startswith('__test')]
+        if len(luas) > 0:
+            doc = f'> Last Updated {datetime.datetime.now().strftime("%Y-%m-%d")}\n\n'
+            for lua in luas:
+                doc += f'---\n\n{luadoc.lua_file_to_html(lua)}\n\n'
+            output.parent.mkdir(parents=True,exist_ok=True)
+            with open(output, 'w') as f:
+                f.write(doc)
+            print(output)
+
+    # for path, dirs, files in os.walk(start):
+    #     luas = fnmatch.filter(files, '*.lua')
+    #     print(f'Create readme in {path} for scripts [{", ".join([lua for lua in luas if not lua.startswith("__test")])}]')
+
+# generate_script_readmes(Path('scripts/vscripts'))
+# exit()
 #endregion
 
 if __name__ == '__main__':
+
+    try:
+        parser = argparse.ArgumentParser(
+            prog = 'pack_releases',
+            description='Packs release assets into zips and generates readmes'
+        )
+        parser.add_argument('--debug', action='store_true', help='print information without actually modifying files')
+        parser.add_argument('--verbose', action='store_true', help='print more information')
+        parser.add_argument('--pack', action='store_true', help='pack release assets into zips')
+        parser.add_argument('--copy', action='store_true', help='copy release assets to release folder')
+        parser.add_argument('--readmes', action='store_true', help='readmes will be generated')
+        parser.add_argument('--testrelease', action='store_true', help='files will be generated in test_release folder')
+
+        args = parser.parse_args()
+
+        PRINT_ONLY = args.debug
+        VERBOSE = args.verbose
+        PACK_ASSETS = args.pack
+        COPY_UNPACKED_ASSETS = args.copy
+        GENERATE_READMES = args.readmes
+        USE_TEST_RELEASE = args.testrelease
+
+        if USE_TEST_RELEASE:
+            release = addon.root.joinpath('test_release/')
+        release = addon.root.joinpath('test_release/')
+
         print()
+
+        if not PACK_ASSETS and not GENERATE_READMES and not COPY_UNPACKED_ASSETS and not PRINT_ONLY:
+            parser.print_help()
+            exit()
+
         asset_categories = parse_assets()
-        if not STOP_AFTER_ASSET_COLLECTION:
+        if PACK_ASSETS:
             generate_releases(asset_categories)
+            pass
+        if GENERATE_READMES:
+            generate_script_readmes()
+            pass
+    except Exception as e:
+        print(e)
+        input("Press enter to exit...")
