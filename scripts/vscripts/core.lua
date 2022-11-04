@@ -335,6 +335,67 @@ function RandomFromArray(array, min, max)
     return array[i], i
 end
 
+---@class TraceTableLineExt : TraceTableLine
+---@field ignore (EntityHandle|EntityHandle[])? # Entity or array of entities to ignore.
+---@field ignoreclass (string|string[])? # Class or array of classes to ignore.
+---@field ignorename (string|string[])? # Name or array of names to ignore.
+---@field timeout integer? # Maxmimum number of traces before returning regardless of parameters.
+---@field traces integer # Number of traces done.
+
+---
+---Does a raytrace along a line with extended parameters.
+---You ignore multiple entities as well as classes and names.
+---Because the trace has to be redone multiple times, a `timeout` parameter can be defined to cap the number of traces.
+---
+---@param parameters TraceTableLineExt
+---@return boolean
+function TraceLineExt(parameters)
+    if IsEntity(parameters.ignore) then
+        parameters.ignoreent = {parameters.ignore}
+    else
+        parameters.ignoreent = parameters.ignore
+        parameters.ignore = parameters.ignoreent[1]
+    end
+    if type(parameters.ignoreclass) == "string" then
+        parameters.ignoreclass = {parameters.ignoreclass}
+    end
+    if type(parameters.ignorename) == "string" then
+        parameters.ignorename = {parameters.ignorename}
+    end
+    local forward = (parameters.endpos - parameters.startpos):Normalized()
+    parameters.traces = 0
+    parameters.timeout = parameters.timeout or math.huge
+
+    local result = TraceLine(parameters)
+    -- print(parameters.hit, parameters.enthit)
+    while parameters.traces < parameters.timeout and parameters.hit and
+    (
+        vlua.find(parameters.ignoreent, parameters.enthit)
+        or vlua.find(parameters.ignoreclass, parameters.enthit:GetClassname())
+        or vlua.find(parameters.ignorename, parameters.enthit:GetName())
+    )
+    do
+        --Debug
+        -- local reason = "Unknown reason"
+        -- if vlua.find(parameters.ignoreent, parameters.enthit) then
+        --     reason = "Entity handle is ignored"
+        -- elseif vlua.find(parameters.ignoreclass, parameters.enthit:GetClassname()) then
+        --     reason = "Entity class is ignored"
+        -- elseif vlua.find(parameters.ignorename, parameters.enthit:GetName()) then
+        --     reason = "Entity name is ignored"
+        -- end
+        -- print("TraceLineExt hit: "..parameters.enthit:GetClassname()..", "..parameters.enthit:GetName().." - Ignoring because: ".. reason .."\n")
+        --EndDebug
+        parameters.ignore = parameters.enthit
+        parameters.enthit = nil
+        parameters.traces = parameters.traces + 1
+        parameters.startpos = parameters.pos-- + forward
+        result = TraceLine(parameters)
+    end
+
+    return result
+end
+
 
 --#endregion
 
