@@ -80,8 +80,8 @@ thisEntity = nil
 ---@field pos Vector # Global vector where the trace hit.
 ---@field fraction number # Fraction from the start to end where the trace hit.
 ---@field hit boolean # Whether the trace hit something. Always present.
----@field startsolid boolean # Whether the trace started inside the entity. This parameter is set to nil if it is false.
----@field normal Vector # Global normal vector of the surface hit.
+---@field startsolid boolean? # Whether the trace started inside the entity. This parameter is set to nil if it is false.
+---@field normal Vector? # Global normal vector of the surface hit.
 
 ---@class TraceTableCollideable : TraceTableBase
 ---@field ent EntityHandle # Entity to trace against.
@@ -91,14 +91,14 @@ thisEntity = nil
 ---@class TraceTableHull : TraceTableBase
 ---@field min Vector # Minimum extents of the bounding box.
 ---@field max Vector # Maximum extents of the bounding box.
----@field mask integer # Collision type bitmask.
----@field ignore EntityHandle # Entity to ignore when tracing.
----@field enthit EntityHandle # Handle of the entity the trace hit.
+---@field mask integer? # Collision type bitmask.
+---@field ignore EntityHandle? # Entity to ignore when tracing.
+---@field enthit EntityHandle? # Handle of the entity the trace hit.
 
 ---@class TraceTableLine : TraceTableBase
----@field mask integer # Collision type bitmask.
----@field ignore EntityHandle # Entity to ignore when tracing.
----@field enthit EntityHandle # Handle of the entity the trace hit.
+---@field mask integer? # Collision type bitmask.
+---@field ignore EntityHandle? # Entity to ignore when tracing.
+---@field enthit EntityHandle? # Handle of the entity the trace hit.
 
 --#region Game Events
 
