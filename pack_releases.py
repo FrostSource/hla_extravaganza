@@ -31,7 +31,6 @@
 # TODO: Only search Lua if using (?)
 # TODO: Generalize the language to simplify rules
 
-import fnmatch
 from glob import glob
 import re
 from zipfile import ZipFile
@@ -177,10 +176,8 @@ def get_required_from_lua(lua_file:str)->list[str]:
     abspath = os.path.abspath(lua_file)
     # Return cached files instead of re-parsing the script
     if abspath in lua_cached_files:
-        # print(f'GOT CACHE {lua_file}')
         return list(lua_cached_files[abspath])
     # Get the source string
-    # print(f'ACTUALLY PARSING {lua_file}')
     with open(lua_file) as f:
         src = f.read()
     tree = ast.parse(src)
@@ -258,7 +255,6 @@ def parse_wildcard_path(path:str):
     # Handle any wildcards
     if '*' in path:
         # Replace separators with regex version
-        # line = line.replace('/', os.path.sep).replace('\\', os.path.sep)
         path = '[\\\\/]'.join([re.escape(x) for x in re.split('\\/', path)])
         # Replace wildcard with regex version
         path = '.*'.join(path.split('\\*'))
@@ -279,7 +275,6 @@ class Asset:
         """
         if self.has_reroute():
             return Path(os.path.join(self.reroute, self.file.name))
-            # return Path(self.reroute)
         else:
             return self.file
 
@@ -362,7 +357,6 @@ class AssetCategory:
         Returns:
             _type_: _description_
         """
-
         
         removed = []
         for x in self.assets:
@@ -561,8 +555,6 @@ def zip_files(assets: 'list[Asset]', output_path: Path):
     with ZipFile( output_path , 'w' ) as zip_obj:
         for asset in assets:
             if asset.exists():
-                #print(file.relative_to( root ))
-                # zip_obj.write( file.get_path(), file.relative_to( root ) )
                 zip_obj.write( asset.file, asset.get_path() )
             else:
                 print(f'{asset} File Doesn\'t Exist:', asset)
@@ -631,7 +623,6 @@ def copy_unpacked_files(assets: 'list[Asset]'):
         if unpacked_path.exists():
             shutil.rmtree(unpacked_path)
     for asset in assets:
-        # p = unpacked_path.joinpath(asset.relative_to(root)).parent
         p = unpacked_path.joinpath(asset.get_path()).parent
         if VERBOSE: print(f'Copying unpacked file {asset.file.name} to {p}\n')
         if not PRINT_ONLY:
@@ -752,14 +743,6 @@ def generate_script_readmes():
             with open(output, 'w') as f:
                 f.write(doc)
             print(output)
-
-    # for path, dirs, files in os.walk(start):
-    #     luas = fnmatch.filter(files, '*.lua')
-    #     print(f'Create readme in {path} for scripts [{", ".join([lua for lua in luas if not lua.startswith("__test")])}]')
-
-# generate_script_readmes(Path('scripts/vscripts'))
-# exit()
-#endregion
 
 if __name__ == '__main__':
 

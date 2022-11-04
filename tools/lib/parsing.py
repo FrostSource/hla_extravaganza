@@ -26,15 +26,9 @@ class StringParser:
     
     def _save(self):
         self._cache_stack.append((self.index, self.line_num, self.line_row))
-        # self._cache_index = self.index
-        # self._cache_line_num = self.line_num
-        # self._cache_line_row = self.line_row
     
     def _load(self):
         self.index, self.line_num, self.line_row = self._pop()
-        # self.index = self._cache_index
-        # self.line_num = self._cache_line_num
-        # self.line_row = self._cache_line_row
         self._sub_string = self.string[self.index:]
     
     def _pop(self):
@@ -85,7 +79,6 @@ class StringParser:
         Returns:
             str: Next character(s).
         """
-        # if self.finished(): return ''
         if self.finished():
             raise Exception('Tried to access character past string bounds.')
         _next_str = ''
@@ -93,7 +86,6 @@ class StringParser:
             _next_str += self.__next()
             count -= 1
         return _next_str
-        # return self.string[self.index-count:self.index]
     
     def peek(self, count:int = 1, skip_whitespace = False)->str:
         """Peek at the next character(s).
@@ -110,7 +102,6 @@ class StringParser:
         c = self.next(count)
         self._load()
         return c
-        # return self.string[self.index:self.index+count]
     
     def eat(self, strings:str|list[str]):
         """Eats a string or list of strings in order.
