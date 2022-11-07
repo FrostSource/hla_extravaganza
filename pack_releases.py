@@ -33,6 +33,7 @@
 
 from glob import glob
 import re
+import sys
 from zipfile import ZipFile
 import os
 from pathlib import Path
@@ -42,12 +43,16 @@ from enum import Enum
 from typing import Union
 from luaparser import ast, astnodes
 import argparse
+import time
 
 from tools.lib.util import decode_escapes, print_list
 import tools.lib.addon as addon
 import tools.lua_doc_to_html as luadoc
 
 release_path = addon.root.joinpath('release/')
+
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 #region Parsing
 
@@ -200,7 +205,7 @@ class Asset:
         return os.path.exists(self.original_path)
     
     def relative_to(self, other):
-        return self.file.relative_to(other)
+        return self.file.absolute().relative_to(os.path.abspath(other))
     
     def has_reroute(self)->bool:
         """Get if this asset has a reroute.
@@ -319,7 +324,12 @@ class AssetCategories():
             category.verify()
         
     def all_assets(self) -> list[Asset]:
-        return [asset for category in self.categories for asset in category.assets]
+        all: list[Asset] = []
+        for category in self.categories:
+            for asset in category.assets:
+                if asset not in all:
+                    all.append(asset)
+        return all
     
     def __contains__(self, item):
         for category in self.categories:
@@ -451,6 +461,7 @@ def parse_assets():
             
     return asset_categories
 
+#endregion Parsing
 
 def zip_files(assets: 'list[Asset]', output_path: Path):
     """Zips a list of files to a given output zip file.
@@ -533,7 +544,7 @@ def copy_unpacked_files(assets: 'list[Asset]'):
     for asset in assets:
         rel = os.path.relpath(asset.get_path(), addon.root)
         p = unpacked_path.joinpath(rel).parent
-        if VERBOSE: print(f'  Copying unpacked file {asset.file.name} to {p}')
+        if VERBOSE: print(f'  Copying unpacked file {asset.file.name} to {os.path.relpath(p, addon.root)}')
         if not PRINT_ONLY:
             p.mkdir(parents=True, exist_ok=True)
             shutil.copy(asset.file, p )
@@ -646,6 +657,17 @@ def generate_script_readmes():
                 f.write(doc)
             print('DONE')
 
+def file_mimetype(file) -> str:
+    match os.path.splitext(file)[1]:
+        case '.fgd'|'.lua'|'.md'|'.py'|'.gitignore'|'.gitattributes'|'.bat'|'.yaml':
+            return 'text/plain'
+        case '.json'|'.code-snippets'|'.vrman'|'.vsndevts'|'.vmdl'|'.vmat'|'.rect':
+            return 'text/plain'
+        case _:
+            return None
+            # This is invalid apparently
+            # return 'application/vnd.google-apps.unknown'
+
 if __name__ == '__main__':
 
     try:
@@ -660,6 +682,7 @@ if __name__ == '__main__':
         parser.add_argument('--readmes', action='store_true', help='readmes will be generated')
         parser.add_argument('--testrelease', action='store_true', help='files will be generated in test_release folder')
         parser.add_argument('--pause', action='store_true', help='wait for input after finishing')
+        parser.add_argument('--upload', action='store_true', help='upload assets to google drive')
 
         args = parser.parse_args()
 
@@ -678,32 +701,93 @@ if __name__ == '__main__':
         # Console won't exit immediately
         PAUSE_AT_END = args.pause
         # BACKUP_PREVIOUS_RELEASES = False
+        UPLOAD_TO_DRIVE = args.upload
+
+        # UPLOAD_TO_DRIVE = True
+        # VERBOSE = True
+        # USE_TEST_RELEASE = True
 
         if USE_TEST_RELEASE:
             release_path = addon.root.joinpath('test_release/')
 
         print()
 
-        if not PACK_ASSETS and not GENERATE_READMES and not COPY_UNPACKED_ASSETS and not PRINT_ONLY and not PAUSE_AT_END:
+        if not PACK_ASSETS\
+        and not GENERATE_READMES\
+        and not COPY_UNPACKED_ASSETS\
+        and not PRINT_ONLY\
+        and not PAUSE_AT_END\
+        and not UPLOAD_TO_DRIVE\
+        :
             parser.print_help()
             exit()
 
+        print('Parsing release assets... ', end='')
+        sys.stdout.flush()
         asset_categories = parse_assets()
+        print('DONE\n')
+
         if PACK_ASSETS:
             generate_releases(asset_categories)
             pass
+
+        all = asset_categories.all_assets()
+
         if COPY_UNPACKED_ASSETS:
-            all = asset_categories.all_assets()
             print(f'Copying {len(all)} unpacked assets...', end='')
+            sys.stdout.flush()
             copy_unpacked_files(all)
             print(' DONE.')
         if GENERATE_READMES:
             generate_script_readmes()
             pass
+
+        if UPLOAD_TO_DRIVE:
+            print(f'\nUploading {len(all)} assets to google drive... ', end='')
+            upload_time_start = time.time()
+            gauth = GoogleAuth()
+            drive = GoogleDrive(gauth)
+            if VERBOSE: print()
+            for asset in all:
+                lastid = '1SCVtkcVs6I3Gwhqqehh7NsR74qs_fAq-'
+                rel = asset.relative_to(addon.root)
+                if VERBOSE:
+                    print(f'  Uploading "{rel}" ... ', end='')
+                    sys.stdout.flush()
+                for folder in rel.parts:
+                    if folder == rel.name: break
+                    # Check if the folder exists before creating new one
+                    file_list = drive.ListFile({"q": f"title='{folder}' and '{lastid}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"}).GetList()
+                    if not file_list:
+                        lastfile = drive.CreateFile({
+                            'title': str(folder),
+                            'parents': [{'id': lastid}],
+                            'mimeType': 'application/vnd.google-apps.folder'
+                        })
+                        lastfile.Upload()
+                    else:
+                        lastfile = file_list[0]
+                    lastid = lastfile['id']
+                # Upload actual file
+                file_list = drive.ListFile({"q": f"title='{asset.name}' and '{lastid}' in parents and trashed=false"}).GetList()
+                if not file_list:
+                    gfile = drive.CreateFile({
+                        'title': asset.name,
+                        'parents': [{'id': lastid}],
+                    })
+                else:
+                    gfile = file_list[0]
+                if mime := file_mimetype(asset.name):
+                    gfile['mimeType'] = mime
+                gfile.SetContentFile(str(asset.file))
+                gfile.Upload()
+                if VERBOSE: print('DONE')
+            print(f'DONE - Time taken: {time.time() - upload_time_start}')
             
         if PAUSE_AT_END:
             input("Press enter to exit...")
             
     except Exception as e:
-        print(e)
+        import traceback
+        print(traceback.format_exc())
         input("Press enter to exit...")

@@ -6,3 +6,6 @@ __pycache__
 /test_release/
 __test*
 *.bak
+client_secrets.json
+credentials.json
+settings.yaml
