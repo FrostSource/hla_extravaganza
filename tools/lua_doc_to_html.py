@@ -13,7 +13,7 @@ else:
 
 file_template = '''## {} ({})\n\n{}\n\n'''
 table_template = '''<table><tr><td><b>Function</b></td><td><b>Description</b></td></tr>{}</table>'''
-function_template = '''<tr><td>{}</td><td>{}</td></tr>'''
+function_template = '''<tr><td>\n\n`{}`</td><td>{}</td></tr>'''
 
 def parse_multiline_comment(parser:StringParser)->str:
     comment = ''
@@ -321,7 +321,7 @@ def parse_lua_file(file:str)->tuple[list[LuaFunction],str,str]:
 
 def lua_file_to_html(file:str|os.PathLike)->str:
     functions, header, version = parse_lua_file(str(file))
-    file_documentation = f'## {os.path.basename(file)} (v{version})\n\n'
+    file_documentation = f'# {os.path.basename(file)} (v{version})\n\n'
     file_documentation += header
     file_documentation += '\n\n'
     file_documentation += table_template.format(
