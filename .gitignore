@@ -1,6 +1,11 @@
 
 /_bakeresourcecache/
 *bakeresourcecache.vpk
-__test*
-/release/
 __pycache__
+/release/
+/test_release/
+__test*
+*.bak
+client_secrets.json
+credentials.json
+settings.yaml

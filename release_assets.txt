@@ -1,0 +1,83 @@
+# RULES
+# is a comment. Must be on its own line.
+# Folders will select all files and subfiles.
+# * is a wildcard matching any character.
+#
+# Special Symbols
+# name:         - Define a release category.
+# ~path         - Remove path(s) from the current category.
+# ->path        - Prepend all subsequent paths with this when adding them to a category.
+# <-            - Stop prepending.
+# &name         - Include all paths from a named category in the current category.
+# @path         - Pack paths under this path instead of its original path.
+#                 Use @ on its own to reset.
+# ?path         - Infer paths from files.
+#                 Supported: README.md
+# [exclude]path - Exclude this path when searching wildcard files.
+# [readme]text  - Adds a line of text to a readme that will be zipped in this category.
+#                 Escape sequences are consumed and must be taken into account.
+
+# Paths to ignore
+[exclude].git
+[exclude]_bakeresourcecache
+[exclude]release
+[exclude]test_release
+[exclude]*__test*
+[exclude]*__pycache__*
+
+scripting:
+
+    [README]All scripts and script folders must be placed in the game directory of your addon instead of the content directory.
+    [README]E.g. \"Half-Life Alyx\\game\\hlvr_addons\\my_addon\scripts\\vscripts\"
+    [README]If the folders \"scripts\\vscripts\" do not exist you will need to create them.
+    [README]\n
+
+    .vscode/
+    ~.vscode/extravaganza_tooling.code-snippets
+
+    scripts/vlua_globals.lua
+
+    ->scripts/vscripts/
+
+    core.lua
+    storage.lua
+    player.lua
+    input.lua
+    gesture.lua
+
+    framework/frameworkinit.lua
+
+    util/*.lua
+    math/*.lua
+    extensions/*.lua
+    data/*.lua
+    debug/*.lua
+
+    <-
+
+addon_template:
+    [README]These files exist as a starting point for new addons using extravanganza scripts and utilities.
+    [README]\n
+
+    &scripting
+
+    .gitattributes
+    .gitignore
+
+fgd:
+    @Half-Life Alyx/game/core/
+    fgd/base.fgd
+    @Half-Life Alyx/game/hlvr/
+    fgd/hlvr.fgd
+    @
+
+prefabs:
+    [README]Some prefabs may require scripts in order to function correctly. If this is the case they will need to be placed in the game directory of your addon instead of the content directory.
+    [README]E.g. \"Half-Life Alyx\\game\\hlvr_addons\\my_addon\scripts\\vscripts\"
+    [README]If the folders \"scripts\\vscripts\" do not exist you will need to create them.
+    ?maps/prefabs
+    ~maps/prefabs/logic/logic_player_extension
+
+# This will automatically find required scripts
+entity_mods:
+    scripts/vscripts/entity_mods

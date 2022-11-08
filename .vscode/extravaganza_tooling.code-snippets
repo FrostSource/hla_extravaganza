@@ -1,0 +1,49 @@
+/*
+	v1.0.0
+	https://github.com/FrostSource/hla_extravaganza
+
+	Made for internal use for developing extravaganza tools and assets.
+*/
+{
+	"Script Header":{
+		"scope": "lua",
+		"prefix": ["header_script"],
+		"body": [
+			"--[[",
+			"\tv1.0.0",
+			"\thttps://github.com/FrostSource/hla_extravaganza",
+			"",
+			"\t$0",
+			"]]"
+		],
+		"description": "Header comment for scripts.",
+	},
+
+	"Script Header Section Title":{
+		"scope": "lua",
+		"prefix": ["header_section_title"],
+		"body": [
+			"======================================== ${1:Title} ========================================",
+			"",
+			"$0",
+
+		],
+		"description": "Header comment for scripts.",
+	},
+	
+	"Script Header Not Using Core":{
+		"scope": "lua",
+		"prefix": ["header using core"],
+		"body": [
+			"If not using `vscripts/core.lua`, load this file at game start using the following line:",
+			"",
+			"```lua",
+			"require \"${1:module}\"",
+			"```$0"
+
+		],
+		"description": "Header comment for scripts.",
+	},
+
+	
+}

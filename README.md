@@ -6,11 +6,9 @@ Still in early development.
 
 # Downloads
 
-*Downloads might be out-of-date while repository is undergoing changes.*
-
 Navigate to the release section to download zips of the latest assets: https://github.com/FrostSource/hla_extravaganza/releases
 
-A google drive is also updated for those who have trouble with GitHub, you can also download individual assets this way: https://drive.google.com/drive/folders/1RJi9jYKfPpHuwCR8c3NqfYy5A1A9WkgA
+Or browse the Google drive for those who have trouble with GitHub: https://drive.google.com/drive/folders/1SCVtkcVs6I3Gwhqqehh7NsR74qs_fAq-?usp=sharing
 
 ## Installation
 

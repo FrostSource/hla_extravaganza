@@ -1,11 +1,17 @@
 --[[
-    v1.1.1
+    v1.2.2
     https://github.com/FrostSource/hla_extravaganza
 
     An inventory is a table where each key has an integer value assigned to it.
     When a value hits 0 the key is removed from the table.
 
-    ======================================== Basic Usage ==========================================
+    If not using `vscripts/core.lua`, load this file at game start using the following line:
+    
+    ```lua
+    require "data.inventory"
+    ```
+
+    ======================================== Usage ========================================
 
     ```lua
     -- Create an inventory with 2 initial keys.
@@ -39,13 +45,14 @@
 
     =========================================== Notes =============================================
 
-    This class supports `util.storage` with `Storage.Save(inv)` or if encountered when saving
-    a table.
+    This class supports `storage` with `Storage.SaveInventory()`:
 
     ```lua
-    Storage:Save('inv', inv)
-    inv = Storage:Load('inv')
+    Storage:SaveInventory('inv', inv)
+    inv = Storage:LoadInventory('inv')
     ```
+    
+    Inventories are also natively saved using `Storage.Save()` or if encountered in a table being saved.
 ]]
 
 ---@class Inventory
@@ -56,39 +63,73 @@ local InventoryClass =
 }
 InventoryClass.__index = InventoryClass
 
-if pcall(require, "util.storage") then
-    Storage.RegisterType("util.Inventory", InventoryClass)
+if pcall(require, "storage") then
+    Storage.RegisterType("Inventory", InventoryClass)
+
+    ---
     ---**Static Function**
     ---
     ---Helper function for saving the `inventory`.
+    ---
     ---@param handle EntityHandle # The entity to save on.
     ---@param name string # The name to save as.
     ---@param inventory Inventory # The inventory to save.
     ---@return boolean # If the save was successful.
+    ---@luadoc-ignore
     function InventoryClass.__save(handle, name, inventory)
-        Storage.SaveTable(handle, Storage.Join(name, "items"), inventory.items)
-        Storage.SaveType(handle, name, "util.Inventory")
-        return true
+        -- Storage.SaveTable(handle, Storage.Join(name, "items"), inventory.items)
+        -- Storage.SaveType(handle, name, "util.Inventory")
+        -- return true
+        return Storage.SaveTableCustom(handle, name, inventory, "Inventory")
     end
 
+    ---
     ---**Static Function**
     ---
     ---Helper function for loading the `inventory`.
+    ---
     ---@param handle EntityHandle # Entity to load from.
     ---@param name string # Name to load.
     ---@return Inventory|nil
+    ---@luadoc-ignore
     function InventoryClass.__load(handle, name)
-        local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
-        if items ~= nil then
-            local _inventory = Inventory()
-            _inventory.items = items
-            return _inventory
-        end
-        return nil
+        -- local items = Storage.LoadTable(handle, Storage.Join(name, "items"))
+        -- if items ~= nil then
+        --     local _inventory = Inventory()
+        --     _inventory.items = items
+        --     return _inventory
+        -- end
+        -- return nil
+        local inventory = Storage.LoadTableCustom(handle, name, "Inventory")
+        if inventory == nil then return nil end
+        return setmetatable(inventory, InventoryClass)
     end
+
+    Storage.SaveInventory = InventoryClass.__save
+    CBaseEntity.SaveInventory = Storage.SaveInventory
+
+    ---
+    ---Load an Inventory.
+    ---
+    ---@generic T
+    ---@param handle EntityHandle # Entity to load from.
+    ---@param name string # Name the Inventory was saved as.
+    ---@param default? T # Optional default value.
+    ---@return Inventory|T
+    ---@luadoc-ignore
+    Storage.LoadInventory = function(handle, name, default)
+        local inventory = InventoryClass.__load(handle, name)
+        if inventory == nil then
+            return default
+        end
+        return inventory
+    end
+    CBaseEntity.LoadInventory = Storage.LoadInventory
 end
 
+---
 ---Add a number of values to a key.
+---
 ---@param key any
 ---@param value? integer # Default is 1.
 ---@return number # The value of the key after adding.
@@ -104,7 +145,9 @@ function InventoryClass:Add(key, value)
     end
 end
 
+---
 ---Remove a number of values from a key.
+---
 ---@param key any
 ---@param value? integer # Default is 1.
 ---@return number # The value of the key after removal.
@@ -123,7 +166,9 @@ function InventoryClass:Remove(key, value)
     end
 end
 
+---
 ---Get the value associated with a key. This is *not* the same as `inv.items[key]`.
+---
 ---@param key any
 ---@return integer
 function InventoryClass:Get(key)
@@ -134,7 +179,9 @@ function InventoryClass:Get(key)
     return 0
 end
 
+---
 ---Get the key with the highest value and its value.
+---
 ---@return any # The key with the highest value.
 ---@return integer # The value associated with the key.
 function InventoryClass:Highest()
@@ -148,7 +195,9 @@ function InventoryClass:Highest()
     return best_key, best_value
 end
 
+---
 ---Get the key with the lowest value and its value.
+---
 ---@return any # The key with the lowest value.
 ---@return integer # The value associated with the key.
 function InventoryClass:Lowest()
@@ -163,7 +212,9 @@ function InventoryClass:Lowest()
     return best_key, (best_value or 0)
 end
 
+---
 ---Get if the inventory contains a key with a value greater than 0.
+---
 ---@param key any
 ---@return boolean
 function InventoryClass:Contains(key)
@@ -173,7 +224,9 @@ function InventoryClass:Contains(key)
     return false
 end
 
+---
 ---Return the number of items in the inventory.
+---
 ---@return integer key_sum # Total number of keys in the inventory.
 ---@return integer value_sum # Total number of values assigned to all keys.
 function InventoryClass:Length()
@@ -185,7 +238,9 @@ function InventoryClass:Length()
     return key_sum,value_sum
 end
 
+---
 ---Get if the inventory is empty.
+---
 ---@return boolean
 function InventoryClass:IsEmpty()
     for _, _ in pairs(self.items) do
@@ -194,7 +249,9 @@ function InventoryClass:IsEmpty()
     return true
 end
 
+---
 ---Helper method for looping.
+---
 ---@return fun(table: any[], i: integer):integer, any
 ---@return table<any,integer>
 function InventoryClass:pairs()
@@ -206,8 +263,9 @@ function InventoryClass:__tostring()
 end
 
 
+---
 ---Create a new `Inventory` object.
----First value is at the top.
+---
 ---@param starting_inventory? table<any,integer>
 ---@return Inventory
 function Inventory(starting_inventory)
