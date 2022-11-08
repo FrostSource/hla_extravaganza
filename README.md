@@ -1,4 +1,4 @@
-*NOTE: This repository is going through heavy behind-the-scenes changes and might not be up-to-date with the latest assets.*
+*NOTE: This repository is going through heavy behind-the-scenes changes so the releases section might not be up-to-date with the latest assets. The Google Drive should always be up-to-date now.*
 
 A collection of scripts and resources to improve functionality of Half-Life: Alyx for mappers.
 
