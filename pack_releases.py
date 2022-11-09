@@ -477,7 +477,7 @@ def zip_files(assets: 'list[Asset]', output_path: Path):
             else:
                 print(f'{asset} File Doesn\'t Exist:', asset)
 
-def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
+def compare_zips(new_zip: Path, old_zip: Path|None) -> 'list[str]':
     """Compares two zip files and returns a readable log of changes to the files.
 
     Args:
@@ -487,6 +487,7 @@ def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
     Returns:
         list[str]: List of changes.
     """
+    log = []
     new_assets = {}
     old_assets = {}
     with ZipFile(new_zip, 'r') as zip_obj:
@@ -494,13 +495,13 @@ def compare_zips(new_zip: Path, old_zip: Path) -> 'list[str]':
             new_assets[info.filename] = {
                 'crc': info.CRC
             }
-    with ZipFile(old_zip, 'r') as zip_obj:
-        for info in zip_obj.infolist():
-            old_assets[info.filename] = {
-                'crc': info.CRC
-            }
+    if old_zip is not None and os.path.exists(old_zip):
+        with ZipFile(old_zip, 'r') as zip_obj:
+            for info in zip_obj.infolist():
+                old_assets[info.filename] = {
+                    'crc': info.CRC
+                }
 
-    log = []
     for asset in new_assets:
         # If this asset is in the old assets then it might be updated
         if asset in old_assets:
@@ -591,17 +592,17 @@ def generate_releases(asset_categories:AssetCategories):
         # Compare changes
         if not PRINT_ONLY:
             print('Comparing zips...', end='')
-            if old is not None:
-                log = compare_zips(output, old)
-                changes += len(log)
-                if len(log) > 0:
-                    changelog.append(f'**{category}.zip**')
-                    for message in log:
-                        changelog.append('- ' + message)
-                    changelog.append('')
-                print(f' Found {len(log)} changes.')
-            else:
-                print(' No previous zip to compare to.')
+            # if old is not None:
+            log = compare_zips(output, old)
+            changes += len(log)
+            if len(log) > 0:
+                changelog.append(f'**{category}.zip**')
+                for message in log:
+                    changelog.append('- ' + message)
+                changelog.append('')
+            print(f' Found {len(log)} changes.')
+            # else:
+                # print(' No previous zip to compare to.')
 
         # Clean up
         if not PRINT_ONLY:
@@ -649,13 +650,19 @@ def generate_script_readmes():
         luas = [f for f in glob(os.path.join(path,'*.lua')) if not os.path.basename(f).startswith('__test')]
         if len(luas) > 0:
             print(f'Generating readme in "{os.path.relpath(output.parent, addon.root)}" for {len(luas)} Lua files... ', end='')
-            doc = f'> Last Updated {datetime.datetime.now().strftime("%Y-%m-%d")}\n\n'
+            doc = ''
+            prev_doc = ''
             for lua in luas:
                 doc += f'---\n\n{luadoc.lua_file_to_html(lua)}\n\n'
-            output.parent.mkdir(parents=True,exist_ok=True)
-            with open(output, 'w') as f:
-                f.write(doc)
-            print('DONE')
+            if os.path.exists(output):
+                with open(output, 'r') as f:
+                    prev_doc = f.readlines()
+            if not ''.join(prev_doc[2:]) == doc:
+                with open(output, 'w') as f:
+                    f.write(f'> Last Updated {datetime.datetime.now().strftime("%Y-%m-%d")}\n\n{doc}')
+                print('DONE')
+            else:
+                print('NO CHANGES')
 
 def file_mimetype(file) -> str:
     match os.path.splitext(file)[1]:
@@ -751,9 +758,8 @@ if __name__ == '__main__':
             for asset in all:
                 lastid = '1SCVtkcVs6I3Gwhqqehh7NsR74qs_fAq-'
                 rel = asset.relative_to(addon.root)
-                if VERBOSE:
-                    print(f'  Uploading "{rel}" ... ', end='')
-                    sys.stdout.flush()
+                print(f'  Uploading "{rel}" ... ', end='')
+                sys.stdout.flush()
                 for folder in rel.parts:
                     if folder == rel.name: break
                     # Check if the folder exists before creating new one
@@ -781,7 +787,7 @@ if __name__ == '__main__':
                     gfile['mimeType'] = mime
                 gfile.SetContentFile(str(asset.file))
                 gfile.Upload()
-                if VERBOSE: print('DONE')
+                print('DONE')
             print(f'DONE - Time taken: {time.time() - upload_time_start}')
             
         if PAUSE_AT_END:
