@@ -2259,7 +2259,7 @@ metadata
 	input IgnorePlayer( boolean ): "Ignore Player as a possible Look Target when picking random lookAts."
 	input DisableRandomLookAts( boolean ) : "Disables the AI's random lookAts."
 	input EnableRandomLookAts( boolean ) : "Enables the AI's random lookAts."
-	input ForceLookAtTarget( void ): "Set named actor to be the look at target"
+	input ForceLookAtTarget( target_destination ): "Set named actor to be the look at target"
 	input ClearForcedLookAtTarget( void ): "Clear the look at target set by ForceLookAtTarget"
 	input LookAtIgnoreHands( void ) : "NPC does not look at the player hands"
 	input LookAtUseHands( void ) : "NPC will look at the player hands"
