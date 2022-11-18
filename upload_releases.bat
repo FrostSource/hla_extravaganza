@@ -1,2 +1,2 @@
 @ECHO OFF
-pack_releases.py --upload --verbose --pause
+pack_releases.py --readmes --copy --upload --verbose --pause

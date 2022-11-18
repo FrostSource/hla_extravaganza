@@ -1,2 +1,2 @@
 @ECHO OFF
-pack_releases.py --pack --readmes --upload
+pack_releases.py --pack --copy --readmes --upload

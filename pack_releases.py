@@ -753,6 +753,15 @@ if __name__ == '__main__':
             print(f'\nUploading {len(all)} assets to google drive... ', end='')
             upload_time_start = time.time()
             gauth = GoogleAuth()
+            if gauth.credentials is None:
+                print('Google Drive waiting for authorization...')
+                gauth.LocalWebserverAuth()
+            elif gauth.access_token_expired:
+                print('Google Drive token expired, refreshing...')
+                gauth.Refresh()
+            else:
+                gauth.Authorize()
+            gauth.SaveCredentialsFile('credentials.json')
             drive = GoogleDrive(gauth)
             if VERBOSE: print()
             for asset in all:
