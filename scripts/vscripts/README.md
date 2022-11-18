@@ -1,4 +1,4 @@
-> Last Updated 2022-11-07
+> Last Updated 2022-11-19
 
 ---
 
@@ -376,6 +376,13 @@ local right_hand = Player.RightHand
 
 
 Since this script extends the player entity class directly you can mix and match your scripting style without worrying that you're referencing the wrong player table. 
+
+
+
+```lua
+Entities:GetLocalPlayer() == Player
+```
+
 
 ### Player Callbacks 
 
