@@ -162,6 +162,8 @@ local function resolveHandle(handle)
     local player = GetListenServerHost()
     if not player then
         Warn("Trying to save a global value before player has spawned!")
+        ---Let it fall through and error to signal dev
+        ---@diagnostic disable-next-line: return-type-mismatch
         return nil
     end
     return player

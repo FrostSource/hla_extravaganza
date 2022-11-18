@@ -36,6 +36,9 @@
     Since this script extends the player entity class directly you can mix and match your scripting style
     without worrying that you're referencing the wrong player table.
 
+    ```lua
+    Entities:GetLocalPlayer() == Player
+    ```
     
     ======================================== Player Callbacks ========================================
 
@@ -93,8 +96,6 @@
 require "util.util"
 require "extensions.entity"
 require "storage"
-
----@TODO: Count grenades and pens held towards amount in Player.Items
 
 -----------------------------
 -- Class extension members --
@@ -322,7 +323,7 @@ end
 
 ---Returns the entity the player is looking at directly.
 ---@param maxDistance? number # Max distance the trace can search.
----@return EntityHandle
+---@return EntityHandle?
 function CBasePlayer:GetLookingAt(maxDistance)
     maxDistance = maxDistance or 2048
     ---@type TraceTableLine

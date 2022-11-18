@@ -1069,16 +1069,16 @@ function DestroyDamageInfo(info) end
 ---@param action string
 ---@param value string
 ---@param delay number
----@param activator EntityHandle
----@param caller EntityHandle
+---@param activator EntityHandle|nil
+---@param caller EntityHandle|nil
 function DoEntFire(target, action, value, delay, activator, caller) end
 ---Internal native function for EntFireByHandle().
 ---@param target EntityHandle
 ---@param action string
 ---@param value string
 ---@param delay number
----@param activator EntityHandle?
----@param caller EntityHandle?
+---@param activator EntityHandle|nil
+---@param caller EntityHandle|nil
 function DoEntFireByInstanceHandle(target, action, value, delay, activator, caller) end
 ---Generate an entity I/O event on all entities matching the specified target name. The script scope of the calling entity should be passed to the first parameter.
 ---@param scope ScriptScope
@@ -1867,7 +1867,7 @@ function CBaseEntity:SetOrigin(origin) end
 ---@param owningEntity EntityHandle
 function CBaseEntity:SetOwner(owningEntity) end
 ---Set the parent for this entity. The attachment is optional, pass an empty string to not use it.
----@param parent EntityHandle
+---@param parent EntityHandle|nil
 ---@param attachmentName string|""
 function CBaseEntity:SetParent(parent, attachmentName) end
 ---Set entity team.

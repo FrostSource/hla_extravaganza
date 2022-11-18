@@ -20,6 +20,7 @@
 			"---Any self values set here are automatically saved.",
 			"---@param loaded boolean",
 			"function base:OnReady(loaded)",
+			"\t-- Remove this if your entity does not think automatically",
 			"\tif not loaded then",
 			"\t\tself:ResumeThink()",
 			"\tend",

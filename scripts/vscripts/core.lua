@@ -357,9 +357,11 @@ function TraceLineExt(parameters)
         parameters.ignore = parameters.ignoreent[1]
     end
     if type(parameters.ignoreclass) == "string" then
+        ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignoreclass = {parameters.ignoreclass}
     end
     if type(parameters.ignorename) == "string" then
+        ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignorename = {parameters.ignorename}
     end
     local forward = (parameters.endpos - parameters.startpos):Normalized()
