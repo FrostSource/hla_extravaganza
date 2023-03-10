@@ -436,7 +436,7 @@ metadata
 	set_spawn_ammo(integer) : "Number of bullets in the clip (Default is no clip)" : "-1"
 ]
 
-@PointClass base(Item, VRHandAttachment) model("models/weapons/vr_alyxgun/vr_alyxgun.vmdl")
+@PointClass base(Item, VRHandAttachment) model()
 metadata
 {
 	entity_tool_name = "Generic Pistol"
@@ -465,6 +465,7 @@ metadata
 	bottom_grip_min_dist(float) : "Bottom grip min distance (inches)" : "4.0"
 	bottom_grip_max_dist(float) : "Bottom grip max distance (inches)" : "4.5"
 	bottom_grip_disengage_dist(float): "Bottom grip disengage distance (inches)" : "5.0"
+	model(studio) : "Hammer model" : "models/weapons/vr_alyxgun/vr_alyxgun.vmdl"
 	model_right_handed(resource:model) : "Model right handed" : "models/weapons/vr_alyxgun/vr_alyxgun.vmdl"
 	model_left_handed(resource:model) : "Model left handed" : "models/weapons/vr_alyxgun/vr_alyxgun_lhand.vmdl"
 	slide_model_right_handed(resource:model) : "Slide model right handed" : "models/weapons/vr_alyxgun/vr_alyxgun_slide_anim_interact.vmdl"
@@ -608,7 +609,7 @@ metadata
 	
 ]
 
-@PointClass base(BaseItemPhysics,HLVRAmmo) model("models/weapons/vr_alyxgun/vr_alyxgun_clip.vmdl") 
+@PointClass base(BaseItemPhysics,HLVRAmmo) model() 
 	metadata
 	{
 		entity_tool_name = "Generic Pistol Ammo"
@@ -618,12 +619,13 @@ metadata
 = item_hlvr_clip_generic_pistol
 [
 	ammo_per_clip(integer): "Ammo per clip" : "8"
+	model(studio) : "Hammer model" : "models/weapons/vr_alyxgun/vr_alyxgun_clip.vmdl"
 	model_right_handed(resource:model): "Model right handed" : "models/weapons/vr_alyxgun/vr_alyxgun_clip.vmdl"
 	model_left_handed(resource:model): "Model left handed" : "models/weapons/vr_alyxgun/vr_alyxgun_clip_lhand.vmdl"
 	glow_effect(particlesystem): "Glow effect" : "models/weapons/vr_alyxgun/vr_alyxgun_clip_glow.vpcf"
 ]
 
-@PointClass base(BaseItemPhysics,HLVRAmmo) model("models/weapons/vr_alyxgun/pistol_clip_holder.vmdl")
+@PointClass base(BaseItemPhysics,HLVRAmmo) model()
 	metadata
 	{
 		entity_tool_name = "Generic Pistol Ammo Pack"
@@ -633,6 +635,7 @@ metadata
 = item_hlvr_clip_generic_pistol_multiple
 [
 	ammo_per_clip(integer): "Ammo per clip" : "32"
+	model(studio) : "Hammer model" : "models/weapons/vr_alyxgun/pistol_clip_holder.vmdl"
 	model(resource:model): "Model" : "models/weapons/vr_alyxgun/pistol_clip_holder.vmdl"
 	glow_effect(particlesystem): "Glow effect" : "models/weapons/vr_alyxgun/vr_alyxgun_clip_holder_glow.vpcf"
 ]
