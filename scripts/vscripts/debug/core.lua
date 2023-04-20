@@ -191,6 +191,40 @@ function Debug.PrintTable(tbl, prefix, ignore)
     end
 end
 
+function Debug.PrintList(tbl, prefix)
+    -- local ordered = {}
+    -- local unordered = {}
+    -- for _, value in ipairs(tbl) do
+    --     ordered[#ordered+1] = value
+    -- end
+    -- for _, value in pairs(tbl) do
+    --     if not vlua.find(ordered, value) then
+    --         unordered[#unordered+1] = value
+    --     end
+    -- end
+    -- local frmt = "%-"..(#tostring(#ordered)+1).."s %s"
+    -- for index, value in ipairs(ordered) do
+    --     print(frmt:format(index..".", value))
+    -- end
+    -- for _, value in ipairs(unordered) do
+    --     print(frmt:format("*", value))
+    -- end
+    local m = 0
+    prefix = prefix or ""
+    for key, value in pairs(tbl) do
+        m = max(m, #tostring(key)+1)
+    end
+    m = 0
+    local frmt = "%"..m.."s  %s"
+    for key, value in pairs(tbl) do
+        if type(key) == "number" then
+            print(prefix..frmt:format(key..".", value))
+        else
+            print(prefix..frmt:format(key, value))
+        end
+    end
+end
+
 ---
 ---Draws a debug line to an entity in game.
 ---
@@ -228,6 +262,40 @@ function Debug.PrintEntityCriteria(ent)
     Debug.PrintTable(c)
 end
 CBaseEntity.PrintCriteria = Debug.PrintEntityCriteria
+
+local classes = {
+    [CBaseEntity] = 'CBaseEntity';
+    [CAI_BaseNPC] = 'CAI_BaseNPC';
+    [CBaseAnimating] = 'CBaseAnimating';
+    [CBaseCombatCharacter] = 'CBaseCombatCharacter';
+    [CBaseFlex] = 'CBaseFlex';
+    [CBaseModelEntity] = 'CBaseModelEntity';
+    [CBasePlayer] = 'CBasePlayer';
+    [CBaseTrigger]='CBaseTrigger';
+    [CBodyComponent] = 'CBodyComponent';
+    [CEntityInstance] = 'CEntityInstance';
+    [CEnvEntityMaker] = 'CEnvEntityMaker';
+    [CEnvProjectedTexture] = 'CEnvProjectedTexture';
+    [CEnvTimeOfDay2] = 'CEnvTimeOfDay2';
+    [CHL2_Player] = 'CHL2_Player';
+    [CInfoData] = 'CInfoData';
+    [CInfoWorldLayer] = 'CInfoWorldLayer';
+    [CLogicRelay] = 'CLogicRelay';
+    [CMarkupVolumeTagged] = 'CMarkupVolumeTagged';
+    [CPhysicsProp] = 'CPhysicsProp';
+    [CPointClientUIWorldPanel] = 'CPointClientUIWorldPanel';
+    [CPointTemplate] = 'CPointTemplate';
+    [CPointWorldText] = 'CPointWorldText';
+    [CPropHMDAvatar] = 'CPropHMDAvatar';
+    [CPropVRHand] = 'CPropVRHand';
+    [CSceneEntity] = 'CSceneEntity';
+    [CScriptKeyValues] = 'CScriptKeyValues';
+    [CScriptPrecacheContext] = 'CScriptPrecacheContext';
+}
+
+function Debug.GetClassname(ent)
+    return classes[ent] or "none"
+end
 
 ---
 ---Prints a visual ASCII graph showing the distribution of values between a min/max bound.
@@ -379,37 +447,6 @@ function Debug.PrintGraph(height, min_val, max_val, name_value_pairs)
     end
     print()
 end
-
-local classes = {
-    [CBaseEntity] = 'CBaseEntity',
-    [CAI_BaseNPC] = 'CAI_BaseNPC',
-    [CBaseAnimating] = 'CBaseAnimating',
-    [CBaseCombatCharacter] = 'CBaseCombatCharacter',
-    [CBaseFlex] = 'CBaseFlex',
-    [CBaseModelEntity] = 'CBaseModelEntity',
-    [CBasePlayer] = 'CBasePlayer',
-    [CBaseTrigger]='CBaseTrigger',
-    [CBodyComponent] = 'CBodyComponent',
-    [CEntityInstance] = 'CEntityInstance',
-    [CEnvEntityMaker] = 'CEnvEntityMaker',
-    [CEnvProjectedTexture] = 'CEnvProjectedTexture',
-    [CEnvTimeOfDay2] = 'CEnvTimeOfDay2',
-    [CHL2_Player] = 'CHL2_Player',
-    [CInfoData] = 'CInfoData',
-    [CInfoWorldLayer] = 'CInfoWorldLayer',
-    [CLogicRelay] = 'CLogicRelay',
-    [CMarkupVolumeTagged] = 'CMarkupVolumeTagged',
-    [CPhysicsProp] = 'CPhysicsProp',
-    [CPointClientUIWorldPanel] = 'CPointClientUIWorldPanel',
-    [CPointTemplate] = 'CPointTemplate',
-    [CPointWorldText] = 'CPointWorldText',
-    [CPropHMDAvatar] = 'CPropHMDAvatar',
-    [CPropVRHand] = 'CPropVRHand',
-    [CSceneEntity] = 'CSceneEntity',
-    [CScriptKeyValues] = 'CScriptKeyValues',
-    [CScriptPrecacheContext] = 'CScriptPrecacheContext',
-    [CTakeDamageInfo] = 'CTakeDamageInfo',
-}
 
 ---
 ---Prints a nested list of entity inheritance.
