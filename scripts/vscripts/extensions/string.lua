@@ -17,6 +17,7 @@
 ---@param substr string
 ---@return boolean
 function string:startswith(substr)
+    ---@diagnostic disable-next-line: param-type-mismatch
     return self:sub(1, #substr) == substr
 end
 
@@ -26,6 +27,7 @@ end
 ---@param substr string
 ---@return boolean
 function string:endswith(substr)
+    ---@diagnostic disable-next-line: param-type-mismatch
     return substr == "" or self:sub(-#substr) == substr
 end
 
@@ -41,6 +43,7 @@ function string:split(sep)
         sep = '%s'
     end
     local t = {}
+    ---@diagnostic disable-next-line: param-type-mismatch
     for str in self:gmatch('([^'..sep..']+)') do
         table.insert(t, str)
     end
@@ -57,6 +60,7 @@ end
 function string:truncate(len, replacement)
     replacement = replacement or "..."
     if #self > len then
+        ---@diagnostic disable-next-line: param-type-mismatch
         return self:sub(1, len - #replacement) .. replacement
     end
     return tostring(self)

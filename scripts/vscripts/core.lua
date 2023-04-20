@@ -103,7 +103,7 @@ function GetScriptFile(sep, level)
     sep = sep or "."
     local sys_sep = package.config:sub(1,1)
     local src = debug.getinfo(level or 2,'S').source
-    src = src:match('^.+vscripts[/\\](.+).lua$')--[[@as string]]
+    src = src:match('^.+vscripts[/\\](.+).lua$')
     local split = src:split(sys_sep)
     src = table.concat(split, sep)
     return src
@@ -308,8 +308,12 @@ function DeepCopyTable(tbl)
     local t = {}
     for key, value in pairs(tbl) do
         if type(value) == "table" then
-            -- print("Delving deeper into", key, value)
-            t[key] = DeepCopyTable(value)
+            if IsEntity(value) then
+                t[key] = value
+            else
+                -- print("Delving deeper into", key, value)
+                t[key] = DeepCopyTable(value)
+            end
         elseif IsVector(value) then
             t[key] = Vector(value.x, value.y, value.z)
         elseif IsQAngle(value) then
@@ -391,13 +395,20 @@ function TraceLineExt(parameters)
         parameters.ignore = parameters.enthit
         parameters.enthit = nil
         parameters.traces = parameters.traces + 1
-        parameters.startpos = parameters.pos-- + forward
+        parameters.startpos = parameters.pos
         result = TraceLine(parameters)
     end
 
     return result
 end
 
+---@diagnostic disable-next-line:lowercase-global
+function haskey(tbl, key)
+    for k, _ in pairs(tbl) do
+        if k == key then return true end
+    end
+    return false
+end
 
 --#endregion
 
@@ -413,18 +424,29 @@ EntityClassNameMap = {}
 local function search(k, plist)
     for i = 1, #plist do
         local v = plist[i][k]
-        if not v and type(plist[i].__index) == "table" then
-            v = plist[i].__index[k]
-        end
+        -- print('look for', k, 'in', plist[i])
+        -- if not v and type(plist[i].__index) == "table" then
+        --     v = plist[i].__index[k]
+        -- end
+        -- print('overflow', v)
         if v then return v end
     end
+    -- print('didnt find', k)
 end
 
-local function save_entity_data(self)
-    for key, value in pairs(self) do
-        if not key:startswith("__") and type(value) ~= "function" then
-            -- print("Saving "..key, value)
-            Storage.Save(self, key, value)
+---comment
+---@param self EntityClass
+---@param name? string # Name to save. If not provided then all `self` data will be saved.
+---@param value? any # If not provided then the key in `self` called `name` will be saved.
+local function save_entity_data(self, name, value)
+    if name then
+        Storage.Save(self, name, value or self[name])
+    end
+    -- for key, val in pairs(getmetatable(self).__index) do
+    for key, val in pairs(self) do
+        if not key:startswith("__") and type(val) ~= "function" then
+            -- print("Saving "..key, val)
+            Storage.Save(self, key, val)
         end
     end
 end
@@ -432,11 +454,16 @@ end
 local function load_entity_data(self)
     for key, value in pairs(self) do
         if not key:startswith("__") and type(value) ~= "function" then
+            
             -- print("Loading "..key, "default "..tostring(value))
             self[key] = Storage.Load(self, key, value)
+            -- if key == "TextPanel" then
+            --     print("LOAD " , self[key])
+            -- end
             -- print("Loaded "..key, self[key])
         end
     end
+    -- print("DONE LOADING")
 end
 
 if false then
@@ -479,6 +506,155 @@ EntityClassBase.Initiated = false
 EntityClassBase.IsThinking = false
 end
 
+---comment
+---@param base any
+---@param self EntityClass
+---@param fenv any
+local function _inherit(base, self, fenv)
+    -- Fix for base inheriting itself on load
+    if self.__inherits and vlua.find(self.__inherits, base) then
+        Warning("Trying to inherit an already inherited class\n")
+        return
+    end
+    -- table.insert(base.__inherits, valve_meta)
+    if not self.__inherits then
+        self.__inherits = { setmetatable({},getmetatable(self)) }
+    end
+    table.insert(self.__inherits, base)
+
+    -- local self_proxy_table = {
+    --     __name = self:GetDebugName().."_proxy_table",
+    --     -- __inherits = { valve_meta, base }
+    -- }
+    -- setmetatable(self_proxy_table, {
+    --     __name = self:GetDebugName().."_proxy_table_meta",
+    --     __index = function(t,k)
+    --         -- prints("Trying access",k,"in",t,"from base metatable __index")
+    --         return search(k, self_proxy_table.__inherits)
+    --     end
+    -- })
+
+    -- setmetatable(self, base)
+    -- setmetatable(self, {
+    --     __index = self_proxy_table,
+    --     __newindex = function(t, k, v)
+    --         self_proxy_table[k] = v
+    --         -- print("Proxy table saving", k, v)
+    --         if not k:startswith("__") and type(v) ~= "function" then
+    --             Storage.Save(self, k, v)
+    --         end
+    --     end
+    -- })
+
+    -- self.lol = 5
+    -- self.__inherits = { setmetatable({}, valve_meta), base }
+    setmetatable(self, {
+        __name = self:GetDebugName().."_meta",
+        __index = function(t,k)
+            -- prints("Trying access",k,"in",t,"from base metatable __index")
+            return search(k, self.__inherits)
+        end
+    })
+
+    -- Special functions --
+
+    fenv.Spawn = function(spawnkeys)
+        if type(self.OnSpawn) == "function" then
+            self:OnSpawn(spawnkeys)
+        end
+    end
+
+    fenv.Activate = function(activateType)
+
+        -- Copy base reference data into self
+        -- TODO: Copy inherited references too
+        for key, value in pairs(base) do
+            if not key:startswith("__") and type(value) == "table" then
+                -- print("Deep copying", key, value)
+                self[key] = DeepCopyTable(value)
+            end
+        end
+
+        if activateType == 2 then
+            -- Load all saved entity data
+            -- load_entity_data(self)
+            Storage.LoadAll(self, true)
+        end
+
+        -- Fire custom ready function
+        if type(self.OnReady) == "function" then
+            self:OnReady(activateType == 2)
+        end
+
+        if self.IsThinking then
+            self:ResumeThink()
+        end
+
+        self.Initiated = true
+        self:Save()
+
+    end
+
+    ---@TODO: Consider moving these to a base class
+
+    ---@luadoc-ignore
+    function self:ResumeThink()
+        if type(self.Think) == "function" then
+            self:SetContextThink("__EntityThink", function() return self:Think() end, 0)
+            self.IsThinking = true
+            self:Save()
+        else
+            Warning("Entity does not have base:Think function defined!")
+        end
+    end
+
+    ---@luadoc-ignore
+    function self:PauseThink()
+        self:SetContextThink("__EntityThink", nil, 0)
+        self.IsThinking = false
+        self:Save()
+    end
+
+    -- Define function to save all entity data
+    self.Save = save_entity_data
+
+    local private = self:GetPrivateScriptScope()
+    for k,v in pairs(base.__privates) do
+        private[k] = function(...) v(self, ...) end
+    end
+
+    self.Initiated = false
+    self.IsThinking = false
+end
+
+---@return any # Base class, the newly created class.
+---@return any # Self instance, the entity inheriting `base`.
+---@diagnostic disable-next-line:lowercase-global
+function inherit(script)
+    local fenv = getfenv(2)
+    if fenv.thisEntity == nil then
+        fenv = getfenv(3)
+    end
+    if fenv.thisEntity == nil then
+        error("Could not inherit '"..script.."' because thisEntity could not be found!")
+    end
+    local self = fenv.thisEntity
+    local base = script
+    if type(script) == "string" then
+        if EntityClassNameMap[script] then
+            -- string is defined name
+            base = EntityClassNameMap[script]
+        else
+            -- string is script
+            base = require(script)
+        end
+    end
+
+    _inherit(base, self, fenv)
+
+    return base, self
+end
+
 ---@TODO: Keep a proxy table to track when fields are modified and automatically save.
 
 ---
@@ -496,6 +672,7 @@ end
 ---@return any # Base class, the newly created class.
 ---@return T # Self instance, the entity inheriting `base`.
 ---@return table # Super class, the first inheritance of `base`.
+---@return table # Private table
 ---@diagnostic disable-next-line: lowercase-global
 function entity(name, ...)
 
@@ -525,11 +702,6 @@ function entity(name, ...)
     end
     ---@cast inherits table[]
 
-    -- fenv is the private script scope
-    local fenv = getfenv(2)
-    ---@type EntityClass?
-    local self = fenv.thisEntity
-
     -- if self == nil then
     --     error("`entity` function must be called from a script attached to an entity!")
     -- end
@@ -540,7 +712,8 @@ function entity(name, ...)
         base = {
             __name = name,
             __script_file = GetScriptFile(nil, 3),
-            __inherits = inherits
+            __inherits = inherits,
+            __privates = {},
         }
         -- Meta table to search all inherits
         setmetatable(base, {
@@ -554,80 +727,81 @@ function entity(name, ...)
         EntityClassNameMap[name] = base
     end
 
+    -- fenv is the private script scope
+    local fenv = getfenv(2)
+    ---@type EntityClass?
+    local self = fenv.thisEntity
+
     -- Add base as middleman metatable if script is attached to entity
     local super = inherits[1]
     if self then
-        -- Add this entity's metatable as an inherit
-        local valve_meta = getmetatable(self)
-        table.insert(base.__inherits, valve_meta)
-
-        setmetatable(self, base)
-
-        -- Special functions --
-
-        fenv.Spawn = function(spawnkeys)
-            if type(self.OnSpawn) == "function" then
-                self:OnSpawn(spawnkeys)
-            end
-        end
-
-        fenv.Activate = function(activateType)
-
-            -- Copy base reference data into self
-            -- TODO: Copy inherited references too
-            for key, value in pairs(base) do
-                if not key:startswith("__") and type(value) == "table" then
-                    -- print("Deep copying", key, value)
-                    self[key] = DeepCopyTable(value)
-                end
-            end
-
-            if activateType == 2 then
-                -- Load all saved entity data
-                load_entity_data(self)
-            end
-
-            -- Fire custom ready function
-            if type(self.OnReady) == "function" then
-                self:OnReady(activateType == 2)
-            end
-
-            if self.IsThinking then
-                self:ResumeThink()
-            end
-
-            self.Initiated = true
-            self:Save()
-
-        end
-
-        ---@luadoc-ignore
-        function self:ResumeThink()
-            if type(self.Think) == "function" then
-                self:SetContextThink("__EntityThink", function() return self:Think() end, 0)
-                self.IsThinking = true
-                self:Save()
-            else
-                Warning("Entity does not have self:Think function defined!")
-            end
-        end
-
-        ---@luadoc-ignore
-        function self:PauseThink()
-            self:SetContextThink("__EntityThink", nil, 0)
-            self.IsThinking = false
-            self:Save()
-        end
-
-        -- Define function to save all entity data
-        self.Save = save_entity_data
-
-        self.Initiated = false
-        self.IsThinking = false
+        _inherit(base, self, fenv)
     end
 
-    return base, self, super
+    return base, self, super, base.__privates
 end
+
+-- function getbase(ent)
+--     return getmetatable(getmetatable(ent).__index)
+-- end
+
+local function _getinherits(inherits)
+    local ins = {}
+    if inherits and #inherits ~= 0 then
+        for k,v in pairs(inherits) do
+            vlua.extend(ins, _getinherits(v.__inherits))
+            table.insert(ins, v)
+        end
+    end
+    return ins
+end
+
+local tme = 0
+---@diagnostic disable-next-line:lowercase-global
+function getinherits(ent, nest)
+    -- if ent.__inherits then
+    --     print('sdf')
+    --     return _getinherits(ent.__inherits)
+    -- elseif IsEntity(ent) then
+    --     print(getmetatable(ent))
+    --     print(getmetatable(ent).__inherits)
+    --     return _getinherits(getmetatable(ent).__inherits)
+    -- end
+    -- while ent.__inherits do
+    nest = nest or ''
+    if ent.__inherits then
+        if haskey(ent, "__name") then
+            print(nest.."Name:", ent.__name, ent)
+        else
+            print(nest.."No name")
+        end
+        -- Debug.PrintList(ent.__inherits, nest)
+        if not ent.__inherits or #ent.__inherits == 0 then
+            print(nest.."No inherits")
+        else
+            for key, value in ipairs(ent.__inherits) do
+                if Debug.GetClassname(value.__index) ~= "none" then
+                    print(nest..tostring(value), Debug.GetClassname(value.__index))
+                else
+                    print(nest..tostring(value), value.__name)
+                    -- Debug.PrintList(value, nest)
+                    getinherits(value, nest..'   ')
+                end
+            end
+        end
+    end
+end
+
+---@diagnostic disable-next-line:lowercase-global
+function printmeta(ent)
+    local meta = getmetatable(ent)
+    vlua.tableadd(DeepCopyTable(ent), meta or {})
+    if meta then
+        printmeta(getmetatable(meta))
+    end
+end
+
+
 --#endregion
 
 -------------

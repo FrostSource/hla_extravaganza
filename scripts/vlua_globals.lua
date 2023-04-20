@@ -1583,6 +1583,8 @@ function vlua.select(conditional, valueIfTrue, valueIfFalse) end
 
 --#region CBaseEntity
 
+---Inheritance for CBaseEntity and CEntityInstance might be reversed.
+
 ---The base class for entities.
 ---@class CBaseEntity
 CBaseEntity = {}
