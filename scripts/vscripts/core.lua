@@ -1,5 +1,5 @@
 --[[
-    v1.1.1
+    v1.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.

@@ -1,5 +1,5 @@
 --[[
-    v1.1.1
+    v1.1.2
     https://github.com/FrostSource/hla_extravaganza
 
     Provides string class extension methods.
