@@ -1,5 +1,5 @@
 --[[
-    v2.3.1
+    v2.4.0
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -56,6 +56,13 @@
     name   = Storage:Load("name", name)
     ```
 
+    Entity versions of the functions exist to make saving to a specific entity easier:
+
+    ```lua
+    thisEntity:SaveNumber("hp", thisEntity:GetHealth())
+    thisEntity:SetHealth(thisEntity:LoadNumber("hp"))
+    ```
+
     ======================================= Complex Tables ========================================
 
     Since Lua allows tables to have keys and values to be virtually any value, `Storage.SaveTable`
@@ -78,15 +85,6 @@
     Functions for both key and value are currently not supported and will fail to save but will not
     block the rest of the table from being saved. This means you can save whole class tables and
     restore them with only the relevant saved data.
-
-    ====================================== Entity Functions =======================================
-
-    Entity versions of the functions exist to make saving to a specific entity easier:
-
-    ```lua
-    thisEntity:SaveNumber("hp", thisEntity:GetHealth())
-    thisEntity:SetHealth(thisEntity:LoadNumber("hp"))
-    ```
 
     =================================== Delegate Save Functions ===================================
 
@@ -143,7 +141,7 @@ local debug_allowed = false
 local function Warn(msg)
     -- if debug_allowed and Convars:GetBool( 'developer' ) then
     if debug_allowed then
-        Warning(msg.."\n")
+        print(msg.."\n")
     end
 end
 
@@ -364,7 +362,7 @@ function Storage.SaveTableCustom(handle, name, tbl, T, save_meta)
             end
         end
     end
-    handle:SetContextNum(name_sep.."key_count", actual_saves, 0)
+    handle:SetContextNum(name, actual_saves, 0)
     handle:SetContext(name_sep.."type", T, 0)
     return true
 end
@@ -412,7 +410,7 @@ function Storage.SaveEntity(handle, name, entity)
     entity:Attribute_SetIntValue(uniqueKey, 1)
     -- Setting contexts for saving handle
     Storage.SaveString(handle, name..separator.."targetname", ent_name)
-    handle:SetContext(name..separator.."unique", uniqueKey, 0)
+    handle:SetContext(name, uniqueKey, 0)
     handle:SetContext(name..separator.."type", "entity", 0)
     return true
 end
@@ -584,7 +582,7 @@ function Storage.LoadTableCustom(handle, name, T, default)
     handle = resolveHandle(handle)
     local name_sep = name..separator
     local t = handle:GetContext(name_sep.."type")
-    local key_count = handle:GetContext(name_sep.."key_count")
+    local key_count = handle:GetContext(name)
     if t ~= T or not key_count  then
         Warn("Table " .. name .. " could not be loaded!")
         return default
@@ -624,7 +622,7 @@ end
 function Storage.LoadEntity(handle, name, default)
     handle = resolveHandle(handle)
     local t = handle:GetContext(name..separator.."type")
-    local uniqueKey = handle:GetContext(name..separator.."unique") ---@cast uniqueKey string
+    local uniqueKey = handle:GetContext(name) ---@cast uniqueKey string
     local ent_name = Storage.LoadString(handle, name..separator.."targetname")
     if t ~= "entity" or not ent_name then
         Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")")
@@ -678,6 +676,27 @@ function Storage.Load(handle, name, default)
     end
 end
 
+---Load all values saved to an entity.
+---@param handle EntityHandle # Entity to load from.
+---@param direct? boolean # Optionally load values directly into `handle` instead of a new table.
+---@return table # Table of loaded values (or `handle` if `direct` is true).
+function Storage.LoadAll(handle, direct)
+    local tbl = direct and handle or {}
+    handle = resolveHandle(handle)
+    ---@type table<string,any>
+    local criteria = {}
+    handle:GatherCriteria(criteria)
+    for key, value in pairs(criteria) do
+        if not key:find(separator, 1, true) then
+            local result = Storage.Load(handle, key)
+            if result then
+                tbl[key] = result
+            end
+        end
+    end
+    return tbl
+end
+
 -- Done one by one for code hint purposes
 CBaseEntity.SaveString  = Storage.SaveString
 CBaseEntity.SaveNumber  = Storage.SaveNumber
@@ -696,6 +715,8 @@ CBaseEntity.LoadQAngle  = Storage.LoadQAngle
 CBaseEntity.LoadTable   = Storage.LoadTable
 CBaseEntity.LoadEntity  = Storage.LoadEntity
 CBaseEntity.Load        = Storage.Load
+
+CBaseEntity.LoadAll     = function(self) Storage.LoadAll(self, true) end
 
 
 print("storage.lua initialized...")
