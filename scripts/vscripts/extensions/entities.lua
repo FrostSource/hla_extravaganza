@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     Extensions for the `Entities` class.
@@ -42,15 +42,16 @@ end
 ---@param entity EntityHandle
 ---@param name string
 ---@return EntityHandle?
+---@return string # Prefab part of the name.
 function Entities:FindInPrefab(entity, name)
     local myname = entity:GetName()
     for _,ent in ipairs(Entities:FindAllByName('*' .. name)) do
         local prefab_part = ent:GetName():sub(1, #ent:GetName() - #name)
         if prefab_part == myname:sub(1, #prefab_part) then
-            return ent
+            return ent, prefab_part
         end
     end
-    return nil
+    return nil, ""
 end
 
 ---
@@ -60,6 +61,7 @@ end
 ---
 ---@param name string
 ---@return EntityHandle?
+---@return string # Prefab part of the name.
 function CEntityInstance:FindInPrefab(name)
     return Entities:FindInPrefab(self, name)
 end
