@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.5
+    Version 2.0.6
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -62,7 +62,7 @@ thisEntity = nil
 ---| 0 # SHAKE_START
 ---| 1 # SHAKE_STOP
 
----@class TypeIOInvoke
+---@class IOParams
 ---@field activator EntityHandle
 ---@field caller EntityHandle
 
@@ -1826,7 +1826,7 @@ function CBaseEntity:SetContext(name, value, duration) end
 ---@param duration number
 function CBaseEntity:SetContextNum(name, value, duration) end
 ---Set a context think function on this entity.
----@param thinkName string
+---@param thinkName string|nil
 ---@param thinkFunction function?
 ---@param initialDelay number
 function CBaseEntity:SetContextThink(thinkName, thinkFunction, initialDelay) end
@@ -1866,7 +1866,7 @@ function CBaseEntity:SetMaxHealth(maxHP) end
 ---@param origin Vector
 function CBaseEntity:SetOrigin(origin) end
 ---	Sets this entity's owner.
----@param owningEntity EntityHandle
+---@param owningEntity EntityHandle|nil
 function CBaseEntity:SetOwner(owningEntity) end
 ---Set the parent for this entity. The attachment is optional, pass an empty string to not use it.
 ---@param parent EntityHandle|nil
@@ -2312,6 +2312,7 @@ function CBaseCombatCharacter:ShootPosition(hand, unknown) end
 
 --#region CBodyComponent
 
+---Exists in global environment but doesn't seem to be used by any entity.
 ---No Description Set (inherits from what?)
 ---@class CBodyComponent
 CBodyComponent = {}
