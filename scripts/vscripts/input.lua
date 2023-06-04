@@ -1,5 +1,5 @@
 --[[
-    v1.0.3
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Simplifies the tracking of button presses/releases. This system will automatically
@@ -64,7 +64,6 @@
     ```
 
 ]]
----@TODO: If player sets button callback on primary hand, this will be wrong when they switch primary hand.
 ---@TODO: Allow context to be passed to the callbacks.
 
 ---
@@ -150,8 +149,10 @@ end
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS
 function Input:TrackButton(button)
     tracked_buttons[button] = {
-        [0] = createButtonTable(),
-        [1] = createButtonTable(),
+        [0] = createButtonTable(), -- Left
+        [1] = createButtonTable(), -- Right
+        [2] = createButtonTable(), -- Primary
+        [3] = createButtonTable(), -- Secondary
     }
 end
 
@@ -340,16 +341,23 @@ end
 ---
 ---Register a callback for a specific button press/release.
 ---
----@param kind "press"|"release" # If the callback is registered for press or release.
----@param hand CPropVRHand|-1|0|1 # The ID of the hand to register for (-1 means both).
+---@param kind string # The kind of button interaction.
+---| '"press"' # Button is pressed.
+---| '"release"' # Button is released.
+---@param hand CPropVRHand|integer # The ID of the hand to register for.
+---| `-1` # Both hands.
+---| `0`  # Left Hand.
+---| `1`  # Right Hand.
+---| `2`  # Primary Hand.
+---| `3`  # Secondary Hand.
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS # The button to check.
 ---@param presses integer|nil # Number of times the button must be pressed in quick succession. E.g. 2 for double click. Only applicable for `kind` press.
 ---@param callback function # The function that will be called when conditions are met.
 function Input:RegisterCallback(kind, hand, button, presses, callback)
 
-    -- Quick way to register both hands.
     if type(hand) ~= "number" then
         hand = hand:GetHandID()
+    -- Quick way to register both hands.
     elseif hand == -1 then
         self:RegisterCallback(kind, 0, button, presses, callback)
         self:RegisterCallback(kind, 1, button, presses, callback)
@@ -445,12 +453,31 @@ end
 
 ---@alias INPUT_CALLBACK INPUT_RELEASE_CALLBACK|INPUT_PRESS_CALLBACK
 
+local primary_hand = 1
+local secondary_hand = 0
+
+local function SetPrimaryHand(primary)
+    -- primary_hand = Entities:GetLocalPlayer():GetHMDAvatar():GetVRHand(primary)
+    -- secondary_hand = Entities:GetLocalPlayer():GetHMDAvatar():GetVRHand(1 - primary)
+    primary_hand = primary
+    secondary_hand = 1 - primary
+end
+
+ListenToGameEvent("primary_hand_changed", function(data)
+    ---@cast data GAME_EVENT_PRIMARY_HAND_CHANGED
+    SetPrimaryHand(data.is_primary_left and 0 or 1)
+end)
+
 local function InputThink()
     local player = Entities:GetLocalPlayer()
-    local hmd = player:GetHMDAvatar()--[[@as CPropHMDAvatar]]
+    local hmd = player:GetHMDAvatar()
 
     for button, hands in pairs(tracked_buttons) do
         for handid, data in pairs(hands) do
+            -- Resolve primary/secondary hand into valid hand id
+            if handid == 2 then handid = primary_hand
+            elseif handid == 3 then handid = secondary_hand end
+
             local hand = hmd:GetVRHand(handid)
             if player:IsDigitalActionOnForHand(hand:GetLiteralHandType(), button) then
                 -- print("Held time", Input:ButtonTime(handid, button), Time(), data.press_time)
@@ -543,6 +570,7 @@ ListenToGameEvent("player_activate", function()
                 Warning("Input could not find HMD, make sure VR mode is enabled. Disabling Input...")
                 return nil
             end
+            SetPrimaryHand(Convars:GetBool("hlvr_left_hand_primary") and 0 or 1)
             Input:Start(player)
         end, 0)
     end
