@@ -1,5 +1,5 @@
 /*
-	v1.2.0
+	v1.2.1
 	https://github.com/FrostSource/hla_extravaganza
 */
 {
@@ -26,4 +26,5 @@
     "Lua.hover.expandAlias": false,
     "Lua.hover.previewFields": 1,
     "Lua.type.weakUnionCheck": true,
+    "Lua.type.weakNilCheck": true,
 }
