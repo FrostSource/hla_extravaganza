@@ -53,6 +53,7 @@ release_path = addon.root.joinpath('release/')
 
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+from pydrive.auth import RefreshError
 
 #region Parsing
 
@@ -750,54 +751,71 @@ if __name__ == '__main__':
             pass
 
         if UPLOAD_TO_DRIVE:
-            print(f'\nUploading {len(all)} assets to google drive... ', end='')
-            upload_time_start = time.time()
-            gauth = GoogleAuth()
-            if gauth.credentials is None:
-                print('Google Drive waiting for authorization...')
-                gauth.LocalWebserverAuth()
-            elif gauth.access_token_expired:
-                print('Google Drive token expired, refreshing...')
-                gauth.Refresh()
-            else:
-                gauth.Authorize()
-            gauth.SaveCredentialsFile('credentials.json')
-            drive = GoogleDrive(gauth)
-            if VERBOSE: print()
-            for asset in all:
-                lastid = '1SCVtkcVs6I3Gwhqqehh7NsR74qs_fAq-'
-                rel = asset.relative_to(addon.root)
-                print(f'  Uploading "{rel}" ... ', end='')
-                sys.stdout.flush()
-                for folder in rel.parts:
-                    if folder == rel.name: break
-                    # Check if the folder exists before creating new one
-                    file_list = drive.ListFile({"q": f"title='{folder}' and '{lastid}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"}).GetList()
-                    if not file_list:
-                        lastfile = drive.CreateFile({
-                            'title': str(folder),
-                            'parents': [{'id': lastid}],
-                            'mimeType': 'application/vnd.google-apps.folder'
-                        })
-                        lastfile.Upload()
+            error_count = 0
+            while True:
+                try:
+                    print(f'\nUploading {len(all)} assets to google drive... ', end='')
+                    upload_time_start = time.time()
+                    gauth = GoogleAuth()
+                    if gauth.credentials is None:
+                        print('Google Drive waiting for authorization...')
+                        gauth.LocalWebserverAuth()
+                    elif gauth.access_token_expired:
+                        print('Google Drive token expired, refreshing...')
+                        gauth.Refresh()
                     else:
-                        lastfile = file_list[0]
-                    lastid = lastfile['id']
-                # Upload actual file
-                file_list = drive.ListFile({"q": f"title='{asset.name}' and '{lastid}' in parents and trashed=false"}).GetList()
-                if not file_list:
-                    gfile = drive.CreateFile({
-                        'title': asset.name,
-                        'parents': [{'id': lastid}],
-                    })
-                else:
-                    gfile = file_list[0]
-                if mime := file_mimetype(asset.name):
-                    gfile['mimeType'] = mime
-                gfile.SetContentFile(str(asset.file))
-                gfile.Upload()
-                print('DONE')
-            print(f'DONE - Time taken: {time.time() - upload_time_start}')
+                        gauth.Authorize()
+                    gauth.SaveCredentialsFile('credentials.json')
+                    drive = GoogleDrive(gauth)
+                    if VERBOSE: print()
+                    for asset in all:
+                        lastid = '1SCVtkcVs6I3Gwhqqehh7NsR74qs_fAq-'
+                        rel = asset.relative_to(addon.root)
+                        print(f'  Uploading "{rel}" ... ', end='')
+                        sys.stdout.flush()
+                        for folder in rel.parts:
+                            if folder == rel.name: break
+                            # Check if the folder exists before creating new one
+                            file_list = drive.ListFile({"q": f"title='{folder}' and '{lastid}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"}).GetList()
+                            if not file_list:
+                                lastfile = drive.CreateFile({
+                                    'title': str(folder),
+                                    'parents': [{'id': lastid}],
+                                    'mimeType': 'application/vnd.google-apps.folder'
+                                })
+                                lastfile.Upload()
+                            else:
+                                lastfile = file_list[0]
+                            lastid = lastfile['id']
+                        # Upload actual file
+                        file_list = drive.ListFile({"q": f"title='{asset.name}' and '{lastid}' in parents and trashed=false"}).GetList()
+                        if not file_list:
+                            gfile = drive.CreateFile({
+                                'title': asset.name,
+                                'parents': [{'id': lastid}],
+                            })
+                        else:
+                            gfile = file_list[0]
+                        if mime := file_mimetype(asset.name):
+                            gfile['mimeType'] = mime
+                        gfile.SetContentFile(str(asset.file))
+                        gfile.Upload()
+                        print('DONE')
+                    time_taken = datetime.timedelta(seconds=time.time() - upload_time_start)
+                    print(f'DONE - Time taken: {time_taken}')
+                except RefreshError as e:
+                    if error_count > 0:
+                        print(f'Google Drive encountered another exception so cancelling drive upload. Make sure credentials in settings.yaml are correct: {e}')
+                        break
+                    else:
+                        print(f'Google Drive refresh error occured. Deleting credentials.json to attempt refresh...')
+                        if os.path.exists('credentials.json'):
+                            os.remove('credentials.json')
+                        error_count += 1
+                        continue
+                except Exception as e:
+                    print(f"Google Drive encountered unfixable exception: {e}")
+                    break
             
         if PAUSE_AT_END:
             input("Press enter to exit...")
