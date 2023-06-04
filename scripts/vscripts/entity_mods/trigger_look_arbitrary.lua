@@ -324,7 +324,7 @@ local function Thinker()
 end
 
 ---Output redirected here.
----@param input TypeIOInvoke
+---@param input IOParams
 local function OnStartTouchAll(input)
     current_activator = input.activator
     current_caller = input.caller
@@ -348,7 +348,7 @@ end
 thisEntity:GetPrivateScriptScope().OnStartTouchAll = OnStartTouchAll
 
 ---Output redirected here.
----@param input TypeIOInvoke
+---@param input IOParams
 local function OnEndTouchAll(input)
     start_look_time = -1
     looked_at_target = false
