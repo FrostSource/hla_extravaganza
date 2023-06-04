@@ -1,5 +1,5 @@
 --[[
-    v2.1.4
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -258,14 +258,14 @@ end
 Expose(CBasePlayer.DropSecondaryHand, "DropSecondaryHand", CBasePlayer)
 
 ---Force the player to drop the caller entity if held.
----@param data TypeIOInvoke
+---@param data IOParams
 function CBasePlayer:DropCaller(data)
     self:DropByHandle(data.caller)
 end
 Expose(CBasePlayer.DropCaller, "DropCaller", CBasePlayer)
 
 ---Force the player to drop the activator entity if held.
----@param data TypeIOInvoke
+---@param data IOParams
 function CBasePlayer:DropActivator(data)
     self:DropByHandle(data.activator)
 end
@@ -294,14 +294,14 @@ function CBasePlayer:GrabByHandle(handle, hand)
 end
 
 ---Force the player to grab the caller entity.
----@param data TypeIOInvoke
+---@param data IOParams
 function CBasePlayer:GrabCaller(data)
     self:GrabByHandle(data.caller)
 end
 Expose(CBasePlayer.GrabCaller, "GrabCaller", CBasePlayer)
 
 ---Force the player to grab the activator entity.
----@param data TypeIOInvoke
+---@param data IOParams
 function CBasePlayer:GrabActivator(data)
     self:GrabByHandle(data.activator)
 end
@@ -695,6 +695,16 @@ end
 ---@return boolean
 function CPropVRHand:IsHoldingItem()
     return IsEntity(self.ItemHeld, true)
+end
+
+---Drop the item held by this hand.
+---@return EntityHandle?
+function CPropVRHand:Drop()
+    if self.ItemHeld ~= nil then
+        Player:DropByHandle(self.ItemHeld)
+        ---@TODO: Make sure this doesn't return nil
+        return self.ItemHeld
+    end
 end
 
 ---Get the rendered glove entity for this hand.
