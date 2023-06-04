@@ -1,5 +1,5 @@
 --[[
-    v2.0.1
+    v2.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code and add general miscellaneous functionality.
@@ -139,6 +139,22 @@ function Util.AppendArray(array1, array2)
     return array1
 end
 
+---Append any number of arrays onto `array` and return as a new array.
+---Safe extend function alternative to `vlua.extend`.
+---@param array any[]
+---@param ... any[]
+function Util.AppendArrays(array, ...)
+    local arg = {...}
+    local n = #arg
+    array = vlua.clone(array)
+    for _, arr in ipairs(arg) do
+        for i = 1, #arr do
+            table.insert(array, arr[i])
+        end
+    end
+    return array
+end
+
 ---
 ---Delay some code.
 ---
@@ -148,3 +164,38 @@ function Util.Delay(func, delay)
     GetListenServerHost():SetContextThink(DoUniqueString("delay"), func, delay or 0)
 end
 
+---
+---Get a new `QAngle` from a `Vector`.
+---This simply transfers the raw values from one to the other.
+---
+---@param vec Vector
+---@return QAngle
+function Util.QAngleFromVector(vec)
+    return QAngle(vec.x, vec.y, vec.z)
+end
+
+---Create a constraint between two entity handles.
+---@param entity1 EntityHandle # First entity to attach.
+---@param entity2 EntityHandle|nil # Second entity to attach. Set nil to attach to world.
+---@param class? string # Class of constraint, default is `phys_constraint`.
+---@param properties? table # Key/value property table.
+---@return EntityHandle
+function Util.CreateConstraint(entity1, entity2, class, properties)
+    -- Cache original names
+    local name1 = entity1:GetName()
+    local name2 = entity2 and entity2:GetName() or ""
+
+    -- Assign unique names so constraint can find them on spawn
+    local uname1 = DoUniqueString("")
+    entity1:SetEntityName(uname1)
+    local uname2 = entity2 and DoUniqueString("") or ""
+    if entity2 then entity2:SetEntityName(uname2) end
+
+    properties = vlua.tableadd({attach1 = uname1, attach2 = uname2}, properties or {})
+    local constraint = SpawnEntityFromTableSynchronous(class or "phys_constraint", properties)
+
+    -- Restore original names now that constraint knows their handles
+    entity1:SetEntityName(name1)
+    if entity2 then entity2:SetEntityName(name2) end
+    return constraint
+end
