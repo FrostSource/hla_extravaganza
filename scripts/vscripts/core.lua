@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -112,10 +112,19 @@ end
 ---
 ---Get if the given `handle` value is an entity, regardless of if it's still alive.
 ---
+---A common usage is replacing the often used entity check:
+---
+---    if entity ~= nil and IsValidEntity(entity) then
+---
+---With:
+---
+---    if IsEntity(entity, true) then
+---
 ---@param handle EntityHandle|any
 ---@param checkValidity? boolean # Optionally check validity with IsValidEntity.
 ---@return boolean
 function IsEntity(handle, checkValidity)
+    ---@TODO: User tables might have __self as key, is there anything unique we can look for?
     return (type(handle) == "table" and handle.__self) and (not checkValidity or IsValidEntity(handle))
 end
 
@@ -224,6 +233,18 @@ function prints(...)
 end
 
 ---
+---Prints all arguments on a new line instead of tabs.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function printn(...)
+    local args = {...}
+    for _,v in ipairs(args) do
+        print(v)
+    end
+end
+
+---
 ---Add a function to the calling entity's script scope with alternate casing.
 ---
 ---Makes a function easier to call from Hammer through I/O.
@@ -271,7 +292,7 @@ end
 -- Old name for Expose
 --SanitizeFunctionForHammer = Expose
 
-local base_vector = Vector()
+local base_vector_index = Vector().__index
 
 ---
 ---Get if a value is a `Vector`
@@ -279,10 +300,10 @@ local base_vector = Vector()
 ---@param value any
 ---@return boolean
 function IsVector(value)
-    return type(value) == "userdata" and value.__index==base_vector.__index
+    return type(value) == "userdata" and value.__index==base_vector_index
 end
 
-local base_qangle = QAngle()
+local base_qangle_index = QAngle().__index
 
 ---
 ---Get if a value is a `QAngle`
@@ -290,7 +311,7 @@ local base_qangle = QAngle()
 ---@param value any
 ---@return boolean
 function IsQAngle(value)
-    return type(value) == "userdata" and value.__index==base_qangle.__index
+    return type(value) == "userdata" and value.__index==base_qangle_index
 end
 
 ---
@@ -368,12 +389,10 @@ function TraceLineExt(parameters)
         ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignorename = {parameters.ignorename}
     end
-    local forward = (parameters.endpos - parameters.startpos):Normalized()
     parameters.traces = 0
     parameters.timeout = parameters.timeout or math.huge
 
     local result = TraceLine(parameters)
-    -- print(parameters.hit, parameters.enthit)
     while parameters.traces < parameters.timeout and parameters.hit and
     (
         vlua.find(parameters.ignoreent, parameters.enthit)
@@ -400,6 +419,23 @@ function TraceLineExt(parameters)
     end
 
     return result
+end
+
+---
+---Get if an entity is the world entity.
+---
+---@param entity EntityHandle
+---@return boolean
+function IsWorld(entity)
+    return IsEntity(entity) and entity:GetClassname() == "worldent"
+end
+
+---
+---Get the world entity.
+---
+---@return EntityHandle
+function GetWorld()
+    return Entities:FindByClassname(nil, "worldent")
 end
 
 ---@diagnostic disable-next-line:lowercase-global
@@ -440,7 +476,7 @@ end
 ---@param value? any # If not provided then the key in `self` called `name` will be saved.
 local function save_entity_data(self, name, value)
     if name then
-        Storage.Save(self, name, value or self[name])
+        Storage.Save(self, name, value~=nil and value or self[name])
     end
     -- for key, val in pairs(getmetatable(self).__index) do
     for key, val in pairs(self) do
@@ -468,15 +504,24 @@ end
 
 if false then
 ---Class that inherits all entity classes. Mostly used when creating entity classes.
----`EntityHandle` should still be used when handling and passing entity types.
----@class EntityClass : EntityClassBase,CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CBodyComponent,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
+---`EntityHandle` should still be used when handling and passing generic entity types.
+---@class EntityClass : EntityClassBase,CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
 local EntityClass = {}
 
 ---@class EntityClassBase
 local EntityClassBase = {}
----Save all entity data
+
+---Assign to new value to entity's member `name`.
+---This also saves the member.
+---@param name string
+---@param value any
+function EntityClassBase:Set(name, value)
+end
+---Save entity data. Call with no arguments to save all data.
+---@param name? string # Name of the value to save.
+---@param value? any # Value to save. If not provided the value will be retrieved from the member with the same `name`.
 ---@luadoc-ignore
-function EntityClassBase:Save()
+function EntityClassBase:Save(name, value)
 end
 ---Called automatically if defined
 ---@param loaded boolean
@@ -506,7 +551,7 @@ EntityClassBase.Initiated = false
 EntityClassBase.IsThinking = false
 end
 
----comment
+---Private inherit funcion which is used in both `inherit` and `entity` functions.
 ---@param base any
 ---@param self EntityClass
 ---@param fenv any
@@ -522,36 +567,9 @@ local function _inherit(base, self, fenv)
     end
     table.insert(self.__inherits, base)
 
-    -- local self_proxy_table = {
-    --     __name = self:GetDebugName().."_proxy_table",
-    --     -- __inherits = { valve_meta, base }
-    -- }
-    -- setmetatable(self_proxy_table, {
-    --     __name = self:GetDebugName().."_proxy_table_meta",
-    --     __index = function(t,k)
-    --         -- prints("Trying access",k,"in",t,"from base metatable __index")
-    --         return search(k, self_proxy_table.__inherits)
-    --     end
-    -- })
-
-    -- setmetatable(self, base)
-    -- setmetatable(self, {
-    --     __index = self_proxy_table,
-    --     __newindex = function(t, k, v)
-    --         self_proxy_table[k] = v
-    --         -- print("Proxy table saving", k, v)
-    --         if not k:startswith("__") and type(v) ~= "function" then
-    --             Storage.Save(self, k, v)
-    --         end
-    --     end
-    -- })
-
-    -- self.lol = 5
-    -- self.__inherits = { setmetatable({}, valve_meta), base }
     setmetatable(self, {
         __name = self:GetDebugName().."_meta",
         __index = function(t,k)
-            -- prints("Trying access",k,"in",t,"from base metatable __index")
             return search(k, self.__inherits)
         end
     })
@@ -567,7 +585,7 @@ local function _inherit(base, self, fenv)
     fenv.Activate = function(activateType)
 
         -- Copy base reference data into self
-        -- TODO: Copy inherited references too
+        ---@TODO: Copy inherited references too
         for key, value in pairs(base) do
             if not key:startswith("__") and type(value) == "table" then
                 -- print("Deep copying", key, value)
@@ -618,6 +636,12 @@ local function _inherit(base, self, fenv)
     -- Define function to save all entity data
     self.Save = save_entity_data
 
+    function self:Set(name, value)
+        self[name] = value
+        self:Save(name, value)
+    end
+
+
     local private = self:GetPrivateScriptScope()
     for k,v in pairs(base.__privates) do
         private[k] = function(...) v(self, ...) end
@@ -627,8 +651,11 @@ local function _inherit(base, self, fenv)
     self.IsThinking = false
 end
 
+---Inherit an existing entity class which was defined using `entity` function.
+---@generic T
+---@param script `T`
 ---@return any # Base class, the newly created class.
----@return any # Self instance, the entity inheriting `base`.
+---@return T # Self instance, the entity inheriting `base`.
 ---@diagnostic disable-next-line:lowercase-global
 function inherit(script)
     local fenv = getfenv(2)
@@ -666,7 +693,7 @@ end
 ---The class is only created once so this can be called in entity attached scripts
 ---multiple times and all subsequent calls will return the already created class.
 ---
----@generic      T
+---@generic      T, T2
 ---@param name? `T` # Internal class name
 ---@param ...    string|table # Any inherit classes or scripts.
 ---@return any # Base class, the newly created class.
