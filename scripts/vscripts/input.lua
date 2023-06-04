@@ -470,7 +470,7 @@ end)
 
 local function InputThink()
     local player = Entities:GetLocalPlayer()
-    local hmd = player:GetHMDAvatar()
+    local hmd = player:GetHMDAvatar()--[[@as CPropHMDAvatar]]
 
     for button, hands in pairs(tracked_buttons) do
         for handid, data in pairs(hands) do

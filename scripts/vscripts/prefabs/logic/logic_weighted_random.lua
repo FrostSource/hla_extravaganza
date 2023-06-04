@@ -12,7 +12,7 @@ require "math.weighted_random"
 local wr
 
 ---Pick and fire a random case output.
----@param data TypeIOInvoke
+---@param data IOParams
 local function PickRandomWeight(data)
     thisEntity:FireOutput("On"..wr:Random().case, data.activator, thisEntity, nil, 0)
 end
