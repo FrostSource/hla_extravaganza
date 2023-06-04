@@ -1,8 +1,8 @@
-> Last Updated 2022-11-07
+> Last Updated 2023-06-04
 
 ---
 
-# core.lua (v1.3.1)
+# core.lua (v1.4.0)
 
 Debug utility functions. 
 
@@ -27,9 +27,13 @@ require "debug.core"
 
 `Debug.PrintTable(tbl, prefix, ignore)`</td><td> Prints the keys/values of a table and any tested tables.  This is different from `DeepPrintTable` in that it will not print members of entity handles. </td></tr><tr><td>
 
+`Debug.PrintList()`</td><td></td></tr><tr><td>
+
 `Debug.FindEntity(ent, duration)`</td><td> Draws a debug line to an entity in game. </td></tr><tr><td>
 
 `Debug.PrintEntityCriteria(ent)`</td><td> Prints all current context criteria for an entity. </td></tr><tr><td>
+
+`Debug.GetClassname()`</td><td></td></tr><tr><td>
 
 `Debug.PrintGraph(height, min_val, max_val, name_value_pairs)`</td><td> Prints a visual ASCII graph showing the distribution of values between a min/max bound.  E.g.      Debug.PrintGraph(6, 0, 1, {         val1 = RandomFloat(0, 1),         val2 = RandomFloat(0, 1),         val3 = RandomFloat(0, 1)     })     ->     1^ []              | []    []        | [] [] []        | [] [] []        | [] [] []       0 ---------->        v  v  v           a  a  a           l  l  l           3  1  2        val3 = 0.96067351102829     val1 = 0.5374761223793     val2 = 0.7315416932106 </td></tr><tr><td>
 

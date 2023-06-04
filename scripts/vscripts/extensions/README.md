@@ -1,8 +1,8 @@
-> Last Updated 2022-11-07
+> Last Updated 2023-06-04
 
 ---
 
-# entities.lua (v1.2.0)
+# entities.lua (v1.2.1)
 
 Extensions for the `Entities` class. 
 
@@ -29,7 +29,7 @@ require "extensions.entities"
 
 ---
 
-# entity.lua (v1.1.1)
+# entity.lua (v1.2.0)
 
 Provides base entity extension methods. 
 
@@ -54,15 +54,21 @@ require "extensions.entity"
 
 `CBaseEntity:SetAngle(qangle)`</td><td> Set entity pitch, yaw, roll from a `QAngle`. </td></tr><tr><td>
 
-`CBaseEntity:GetBiggestBounding()`</td><td> Gets the biggest bounding box axis of the entity. </td></tr><tr><td>
+`CBaseEntity:GetSize()`</td><td> Get the bounding size of the entity. </td></tr><tr><td>
 
-`CBaseEntity:DisablePickup()`</td><td> Sends the `DisablePickup` input to the entity. </td></tr><tr><td>
+`CBaseEntity:GetBiggestBounding()`</td><td> Get the biggest bounding box axis of the entity. This will be `size.x`, `size.y` or `size.z`. </td></tr><tr><td>
 
-`CBaseEntity:EnablePickup()`</td><td>Sends the `EnablePickup` input to the entity. </td></tr><tr><td>
+`CBaseEntity:GetRadius()`</td><td> Get the radius of the entity bounding box. This is half the size of the sphere. </td></tr><tr><td>
+
+`CBaseEntity:GetVolume()`</td><td> Get the volume of the entity bounds in inches cubed. </td></tr><tr><td>
+
+`CBaseEntity:DisablePickup()`</td><td> Send the `DisablePickup` input to the entity. </td></tr><tr><td>
+
+`CBaseEntity:EnablePickup()`</td><td> Send the `EnablePickup` input to the entity. </td></tr><tr><td>
 
 `CBaseEntity:Delay(func, delay)`</td><td> Delay some code using this entity. </td></tr><tr><td>
 
-`CBaseEntity:GetParents()`</td><td> Gets all parents in the hierarchy upwards. </td></tr><tr><td>
+`CBaseEntity:GetParents()`</td><td> Get all parents in the hierarchy upwards. </td></tr><tr><td>
 
 `CBaseEntity:DoNotDrop(enabled)`</td><td> Set if the prop is allowed to be dropped. Only works for physics based props. </td></tr></table>
 
@@ -70,7 +76,7 @@ require "extensions.entity"
 
 ---
 
-# string.lua (v1.1.1)
+# string.lua (v1.1.2)
 
 Provides string class extension methods. 
 

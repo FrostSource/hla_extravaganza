@@ -1,4 +1,4 @@
-> Last Updated 2022-11-07
+> Last Updated 2023-06-04
 
 ---
 
@@ -12,7 +12,7 @@
 
 ---
 
-# util.lua (v2.0.1)
+# util.lua (v2.1.0)
 
 This file contains utility functions to help reduce repetitive code and add general miscellaneous functionality. 
 
@@ -41,7 +41,13 @@ require "util.util"
 
 `Util.AppendArray(array1, array2)`</td><td> Appends `array2` onto `array1` as a new array. Safe extend function alternative to `vlua.extend`. </td></tr><tr><td>
 
-`Util.Delay(func, delay)`</td><td> Delay some code. </td></tr></table>
+`Util.AppendArrays(array, ...)`</td><td>Append any number of arrays onto `array` and return as a new array. Safe extend function alternative to `vlua.extend`.</td></tr><tr><td>
+
+`Util.Delay(func, delay)`</td><td> Delay some code. </td></tr><tr><td>
+
+`Util.QAngleFromVector(vec)`</td><td> Get a new `QAngle` from a `Vector`. This simply transfers the raw values from one to the other. </td></tr><tr><td>
+
+`Util.CreateConstraint(entity1, entity2, class, properties)`</td><td>Create a constraint between two entity handles.</td></tr></table>
 
 
 

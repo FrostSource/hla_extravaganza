@@ -1,8 +1,8 @@
-> Last Updated 2022-11-19
+> Last Updated 2023-06-04
 
 ---
 
-# core.lua (v1.1.1)
+# core.lua (v1.3.0)
 
 The main core script provides useful global functions as well as loading any standard libraries that it can find. 
 
@@ -93,7 +93,7 @@ end
 
 `GetScriptFile(sep, level)`</td><td> Get the file name of the current script without folders or extension. E.g. `util.util` </td></tr><tr><td>
 
-`IsEntity(handle, checkValidity)`</td><td> Get if the given `handle` value is an entity, regardless of if it's still alive. </td></tr><tr><td>
+`IsEntity(handle, checkValidity)`</td><td> Get if the given `handle` value is an entity, regardless of if it's still alive.  A common usage is replacing the often used entity check:      if entity ~= nil and IsValidEntity(entity) then  With:      if IsEntity(entity, true) then </td></tr><tr><td>
 
 `AddOutput(handle, output, target, input, parameter, delay, activator, caller, fireOnce)`</td><td> Add an output to a given entity `handle`. </td></tr><tr><td>
 
@@ -107,6 +107,8 @@ end
 
 `prints(...)`</td><td> Prints all arguments with spaces between instead of tabs. </td></tr><tr><td>
 
+`printn(...)`</td><td> Prints all arguments on a new line instead of tabs. </td></tr><tr><td>
+
 `Expose(func, name, scope)`</td><td> Add a function to the calling entity's script scope with alternate casing.  Makes a function easier to call from Hammer through I/O.  E.g.      local function TriggerRelay(io)         DoEntFire("my_relay", "Trigger", "", 0, io.activator, io.caller)     end     Expose(TriggerRelay)     -- Or with alternate name     Expose(TriggerRelay, "RelayInput") </td></tr><tr><td>
 
 `IsVector(value)`</td><td> Get if a value is a `Vector` </td></tr><tr><td>
@@ -119,7 +121,23 @@ end
 
 `TraceLineExt(parameters)`</td><td> Does a raytrace along a line with extended parameters. You ignore multiple entities as well as classes and names. Because the trace has to be redone multiple times, a `timeout` parameter can be defined to cap the number of traces. </td></tr><tr><td>
 
-`entity(name, ...)`</td><td> Creates a new entity class.  If this is called in an entity attached script then the entity automatically inherits the class and the class inherits the entity's metatable.  The class is only created once so this can be called in entity attached scripts multiple times and all subsequent calls will return the already created class. </td></tr></table>
+`IsWorld(entity)`</td><td> Get if an entity is the world entity. </td></tr><tr><td>
+
+`GetWorld()`</td><td> Get the world entity. </td></tr><tr><td>
+
+`haskey()`</td><td></td></tr><tr><td>
+
+`EntityClassBase:Set(name, value)`</td><td>Assign to new value to entity's member `name`. This also saves the member.</td></tr><tr><td>
+
+`self:Set()`</td><td></td></tr><tr><td>
+
+`inherit(script)`</td><td>Inherit an existing entity class which was defined using `entity` function.</td></tr><tr><td>
+
+`entity(name, ...)`</td><td> Creates a new entity class.  If this is called in an entity attached script then the entity automatically inherits the class and the class inherits the entity's metatable.  The class is only created once so this can be called in entity attached scripts multiple times and all subsequent calls will return the already created class. </td></tr><tr><td>
+
+`getinherits()`</td><td></td></tr><tr><td>
+
+`printmeta()`</td><td></td></tr></table>
 
 
 
@@ -212,7 +230,7 @@ end
 
 ---
 
-# input.lua (v1.0.3)
+# input.lua (v1.1.0)
 
 Simplifies the tracking of button presses/releases. This system will automatically start when the player spawns unless told not to before the player spawns. 
 
@@ -315,7 +333,7 @@ if Player.PrimaryHand:ButtonTime(3) >= 5 then end
 
 `Input:GetHandName(hand, use_operant)`</td><td> Get the name of a hand. </td></tr><tr><td>
 
-`Input:RegisterCallback(kind, hand, button, presses, callback)`</td><td> Register a callback for a specific button press/release. </td></tr><tr><td>
+`Input:RegisterCallback(kind, hand, button, presses, callback)`</td><td> Register a callback for a specific button press/release.  | '"press"' # Button is pressed. | '"release"' # Button is released. | `-1` # Both hands. | `0`  # Left Hand. | `1`  # Right Hand. | `2`  # Primary Hand. | `3`  # Secondary Hand.</td></tr><tr><td>
 
 `Input:UnregisterCallback(callback)`</td><td> Unregisters a specific callback from all buttons and hands. </td></tr><tr><td>
 
@@ -335,7 +353,7 @@ if Player.PrimaryHand:ButtonTime(3) >= 5 then end
 
 ---
 
-# player.lua (v2.1.4)
+# player.lua (v2.2.0)
 
 Player script allows for more advanced player manipulation and easier entity access for player related entities by extending the player class. 
 
@@ -523,6 +541,8 @@ The `Player.Items` table keeps track of the ammo and resin the player has in the
 
 `CPropVRHand:IsHoldingItem()`</td><td>Return true if this hand is currently holding a prop.</td></tr><tr><td>
 
+`CPropVRHand:Drop()`</td><td>Drop the item held by this hand.</td></tr><tr><td>
+
 `CPropVRHand:GetGlove()`</td><td>Get the rendered glove entity for this hand.</td></tr><tr><td>
 
 `CPropVRHand:GetGrabbityGlove()`</td><td>Get the entity for this hands grabbity glove (the animated part on the glove).</td></tr><tr><td>
@@ -537,7 +557,7 @@ The `Player.Items` table keeps track of the ammo and resin the player has in the
 
 ---
 
-# storage.lua (v2.3.1)
+# storage.lua (v2.4.1)
 
 Helps with saving/loading values for persistency between game sessions. Data is saved on a specific entity and if the entity is killed the values cannot be retrieved during that game session. 
 
@@ -594,6 +614,16 @@ name   = Storage:Load("name", name)
 ```
 
 
+Entity versions of the functions exist to make saving to a specific entity easier: 
+
+
+
+```lua
+thisEntity:SaveNumber("hp", thisEntity:GetHealth())
+thisEntity:SetHealth(thisEntity:LoadNumber("hp"))
+```
+
+
 ### Complex Tables 
 
 
@@ -618,19 +648,6 @@ setmetatable(thisEntity:LoadTable("MyClass", {}), MyClass)
 
 
 Functions for both key and value are currently not supported and will fail to save but will not block the rest of the table from being saved. This means you can save whole class tables and restore them with only the relevant saved data. 
-
-### Entity Functions 
-
-
-Entity versions of the functions exist to make saving to a specific entity easier: 
-
-
-
-```lua
-thisEntity:SaveNumber("hp", thisEntity:GetHealth())
-thisEntity:SetHealth(thisEntity:LoadNumber("hp"))
-```
-
 
 ### Delegate Save Functions 
 
@@ -720,7 +737,9 @@ Strings longer than 62 characters are split up into multiple saves to work aroun
 
 `Storage.LoadEntity(handle, name, default)`</td><td> Load an entity. </td></tr><tr><td>
 
-`Storage.Load(handle, name, default)`</td><td> Load a value. </td></tr></table>
+`Storage.Load(handle, name, default)`</td><td> Load a value. </td></tr><tr><td>
+
+`Storage.LoadAll(handle, direct)`</td><td>Load all values saved to an entity.</td></tr></table>
 
 
 
