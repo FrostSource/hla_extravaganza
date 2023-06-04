@@ -1,5 +1,5 @@
 --[[
-    v2.4.0
+    v2.4.1
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -300,10 +300,11 @@ function Storage.SaveVector(handle, name, vector)
         Warn("Invalid save handle ("..tostring(handle)..")!")
         return false
     end
+    handle:SetContext(name, "", 0)
     handle:SetContext(name..separator.."type", "vector", 0)
-    Storage.SaveNumber(handle, name .. ".x", vector.x)
-    Storage.SaveNumber(handle, name .. ".y", vector.y)
-    Storage.SaveNumber(handle, name .. ".z", vector.z)
+    Storage.SaveNumber(handle, name..separator.."x", vector.x)
+    Storage.SaveNumber(handle, name..separator.."y", vector.y)
+    Storage.SaveNumber(handle, name..separator.."z", vector.z)
     return true
 end
 
@@ -320,10 +321,11 @@ function Storage.SaveQAngle(handle, name, qangle)
         Warn("Invalid save handle ("..tostring(handle)..")!")
         return false
     end
+    handle:SetContext(name, "", 0)
     handle:SetContext(name..separator.."type", "qangle", 0)
-    Storage.SaveNumber(handle, name .. ".x", qangle.x)
-    Storage.SaveNumber(handle, name .. ".y", qangle.y)
-    Storage.SaveNumber(handle, name .. ".z", qangle.z)
+    Storage.SaveNumber(handle, name..separator.."x", qangle.x)
+    Storage.SaveNumber(handle, name..separator.."y", qangle.y)
+    Storage.SaveNumber(handle, name..separator.."z", qangle.z)
     return true
 end
 
@@ -537,9 +539,9 @@ function Storage.LoadVector(handle, name, default)
         Warn("Vector " .. name .. " could not be loaded!")
         return default
     end
-    local x = handle:GetContext(name .. ".x") or 0
-    local y = handle:GetContext(name .. ".y") or 0
-    local z = handle:GetContext(name .. ".z") or 0
+    local x = handle:GetContext(name..separator.."x") or 0
+    local y = handle:GetContext(name..separator.."y") or 0
+    local z = handle:GetContext(name..separator.."z") or 0
     ---@diagnostic disable-next-line: param-type-mismatch
     return Vector(x, y, z)
 end
@@ -559,9 +561,9 @@ function Storage.LoadQAngle(handle, name, default)
         Warn("QAngle " .. name .. " could not be loaded!")
         return default
     end
-    local x = handle:GetContext(name .. ".x") or 0
-    local y = handle:GetContext(name .. ".y") or 0
-    local z = handle:GetContext(name .. ".z") or 0
+    local x = handle:GetContext(name..separator.."x") or 0
+    local y = handle:GetContext(name..separator.."y") or 0
+    local z = handle:GetContext(name..separator.."z") or 0
     ---@diagnostic disable-next-line: param-type-mismatch
     return QAngle(x, y, z)
 end
