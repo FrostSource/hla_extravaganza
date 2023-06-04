@@ -1,5 +1,5 @@
 --[[
-    v1.1.1
+    v1.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -29,12 +29,12 @@ end
 ---Send an input to this entity.
 ---
 ---@param action string # Input name.
----@param value? string # Parameter override for the input.
+---@param value? any # Parameter override for the input.
 ---@param delay? number # Delay in seconds.
 ---@param activator? EntityHandle
 ---@param caller? EntityHandle
 function CBaseEntity:EntFire(action, value, delay, activator, caller)
-    DoEntFireByInstanceHandle(self, action, value or "", delay or 0, activator or nil, caller or nil)
+    DoEntFireByInstanceHandle(self, action, value and tostring(value) or "", delay or 0, activator or nil, caller or nil)
 end
 
 ---
@@ -74,22 +74,49 @@ function CBaseEntity:SetAngle(qangle)
 end
 
 ---
----Gets the biggest bounding box axis of the entity.
+---Get the bounding size of the entity.
 ---
----@return number
-function CBaseEntity:GetBiggestBounding()
-    return #(self:GetBoundingMaxs() - self:GetBoundingMins())
+---@return Vector
+function CBaseEntity:GetSize()
+    return self:GetBoundingMaxs() - self:GetBoundingMins()
 end
 
 ---
----Sends the `DisablePickup` input to the entity.
+---Get the biggest bounding box axis of the entity.
+---This will be `size.x`, `size.y` or `size.z`.
+---
+---@return number
+function CBaseEntity:GetBiggestBounding()
+    local size = self:GetSize()
+    return math.max(size.x, size.y, size.z)
+end
+
+---
+---Get the radius of the entity bounding box. This is half the size of the sphere.
+---
+---@return number
+function CBaseEntity:GetRadius()
+    return self:GetSize():Length() * 0.5
+end
+
+---
+---Get the volume of the entity bounds in inches cubed.
+---
+---@return number
+function CBaseEntity:GetVolume()
+    local size = self:GetSize()
+    return size.x * size.y * size.z
+end
+
+---
+---Send the `DisablePickup` input to the entity.
 ---
 function CBaseEntity:DisablePickup()
     DoEntFireByInstanceHandle(self, "DisablePickup", "", 0, self, self)
 end
----
 
----Sends the `EnablePickup` input to the entity.
+---
+---Send the `EnablePickup` input to the entity.
 ---
 function CBaseEntity:EnablePickup()
     DoEntFireByInstanceHandle(self, "EnablePickup", "", 0, self, self)
@@ -105,7 +132,7 @@ function CBaseEntity:Delay(func, delay)
 end
 
 ---
----Gets all parents in the hierarchy upwards.
+---Get all parents in the hierarchy upwards.
 ---
 ---@return EntityHandle[]
 function CBaseEntity:GetParents()
