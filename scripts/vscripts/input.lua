@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Simplifies the tracking of button presses/releases. This system will automatically
@@ -71,7 +71,7 @@
 ---
 Input = {}
 Input.__index = Input
-Input.version = "v1.1.0"
+Input.version = "v1.1.1"
 
 ---
 ---If the input system should start automatically on player spawn.

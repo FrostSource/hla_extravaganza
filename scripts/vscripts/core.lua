@@ -1,5 +1,5 @@
 --[[
-    v1.3.0
+    v1.3.1
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v1.3.0"
+local version = "v1.3.1"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 

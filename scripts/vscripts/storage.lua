@@ -1,5 +1,5 @@
 --[[
-    v2.4.1
+    v2.4.2
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -171,7 +171,7 @@ end
 local separator = "::"
 
 Storage = {}
-Storage.version = "v2.4.1"
+Storage.version = "v2.4.2"
 ---Collection of type names associated with a class table.
 ---The table should have both __save() and __load() functions.
 ---@type table<string,table>
