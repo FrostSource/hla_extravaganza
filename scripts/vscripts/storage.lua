@@ -171,6 +171,7 @@ end
 local separator = "::"
 
 Storage = {}
+Storage.version = "v2.4.1"
 ---Collection of type names associated with a class table.
 ---The table should have both __save() and __load() functions.
 ---@type table<string,table>
@@ -721,6 +722,6 @@ CBaseEntity.Load        = Storage.Load
 CBaseEntity.LoadAll     = function(self) Storage.LoadAll(self, true) end
 
 
-print("storage.lua initialized...")
+print("storage.lua ".. Storage.version .." initialized...")
 
 return Storage

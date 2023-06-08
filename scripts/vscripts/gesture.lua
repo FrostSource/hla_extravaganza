@@ -83,6 +83,7 @@
 
 Gesture = {}
 Gesture.__index = Gesture
+Gesture.version = "v1.0.1"
 
 ---
 ---If the gesture system should start automatically on player spawn.
@@ -486,6 +487,6 @@ ListenToGameEvent("player_spawn", function()
 end, nil)
 
 
-print("gesture.lua initialized...")
+print("gesture.lua ".. Gesture.version .." initialized...")
 
 return Gesture

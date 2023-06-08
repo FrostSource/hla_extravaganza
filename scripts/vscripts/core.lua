@@ -84,9 +84,9 @@
 
 ]]
 
+local version = "v1.3.0"
 
-
-Msg("Initializing Extravaganza core system...")
+Msg("Initializing Extravaganza core system ".. version .." ...")
 
 ---------------------
 -- Global functions
@@ -863,3 +863,5 @@ ifrequire 'wrist_pocket.core'
 --#endregion
 
 Msg("...done")
+
+return version

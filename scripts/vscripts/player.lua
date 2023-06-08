@@ -11,6 +11,8 @@
     require "player"
     ```
 
+    This module returns the version string.
+
     ======================================== Usage ========================================
 
     Common method for referencing the player and related entities is:
@@ -96,6 +98,8 @@
 require "util.util"
 require "extensions.entity"
 require "storage"
+
+local version = "v2.2.0"
 
 -----------------------------
 -- Class extension members --
@@ -1270,4 +1274,6 @@ end
 ListenToGameEvent("weapon_switch", listenEventWeaponSwitch, nil)
 
 
-print("player.lua initialized...")
+print("player.lua ".. version .." initialized...")
+
+return version

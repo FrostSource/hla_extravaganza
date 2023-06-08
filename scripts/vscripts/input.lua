@@ -71,6 +71,7 @@
 ---
 Input = {}
 Input.__index = Input
+Input.version = "v1.1.0"
 
 ---
 ---If the input system should start automatically on player spawn.
@@ -577,6 +578,6 @@ ListenToGameEvent("player_activate", function()
 end, nil)
 
 
-print("input.lua initialized...")
+print("input.lua ".. Input.version .." initialized...")
 
 return Input
