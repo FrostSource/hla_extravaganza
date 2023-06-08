@@ -1,5 +1,5 @@
 --[[
-    v2.2.1
+    v2.2.2
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -99,7 +99,7 @@ require "util.util"
 require "extensions.entity"
 require "storage"
 
-local version = "v2.2.1"
+local version = "v2.2.2"
 
 -----------------------------
 -- Class extension members --
@@ -782,6 +782,7 @@ end
 -- Setting up player values.
 local listenEventPlayerActivateID
 local function listenEventPlayerActivate(data)
+    local base_data = vlua.clone(data)
     Player = GetListenServerHost()
     loadPlayerData()
     local player_previously_activated = Storage.LoadBoolean(Player, "PlayerPreviouslyActivated", false)
@@ -852,6 +853,7 @@ local function listenEventPlayerActivate(data)
         end
     end
     StopListeningToGameEvent(listenEventPlayerActivateID)
+    FireGameEvent("player_activate", base_data)
 end
 listenEventPlayerActivateID = ListenToGameEvent("player_activate", listenEventPlayerActivate, nil)
 
