@@ -1,5 +1,5 @@
 --[[
-    v2.2.2
+    v3.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -99,7 +99,7 @@ require "util.util"
 require "extensions.entity"
 require "storage"
 
-local version = "v2.2.2"
+local version = "v3.0.0"
 
 -----------------------------
 -- Class extension members --
@@ -641,7 +641,12 @@ function CBasePlayer:GetWeapon()
     end
 end
 
----@type table<function,table|boolean>[]
+---@class __PlayerRegisteredEventData
+---@field callback function
+---@field context any
+
+local registered_event_index = 1
+---@type table<string,__PlayerRegisteredEventData[]>
 local registered_event_callbacks = {
     novr_player = {},
     player_activate = {},
@@ -653,23 +658,27 @@ local registered_event_callbacks = {
     player_retrieved_backpack_clip = {},
     player_stored_item_in_itemholder = {},
     player_removed_item_from_itemholder = {},
+    player_drop_resin_in_backpack = {},
     weapon_switch = {},
 }
 
 ---Register a callback function with for a player event.
----@param event "novr_player"|"player_activate"|"vr_player_ready"|"item_pickup"|"item_released"|"primary_hand_changed"|"player_drop_ammo_in_backpack"|"player_retrieved_backpack_clip"|"player_stored_item_in_itemholder"|"player_removed_item_from_itemholder"|"weapon_switch"
+---@param event "novr_player"|"player_activate"|"vr_player_ready"|"item_pickup"|"item_released"|"primary_hand_changed"|"player_drop_ammo_in_backpack"|"player_retrieved_backpack_clip"|"player_stored_item_in_itemholder"|"player_removed_item_from_itemholder"|"player_drop_resin_in_backpack"|"weapon_switch"
 ---@param callback function
 ---@param context? table # Optional: The context to pass to the function as `self`. If omitted the context will not passed to the callback.
+---@return integer eventID # ID used to unregister
 function RegisterPlayerEventCallback(event, callback, context)
     print("Registering player callback", event, callback)
-    registered_event_callbacks[event][callback] = context or true
+    registered_event_callbacks[event][registered_event_index] = { callback = callback, context = context}
+    registered_event_index = registered_event_index + 1
+    return registered_event_index - 1
 end
 
 ---Unregisters a callback with a name.
----@param callback function
-function UnregisterPlayerEventCallback(callback)
+---@param eventID integer
+function UnregisterPlayerEventCallback(eventID)
     for _, event in pairs(registered_event_callbacks) do
-        event[callback] = nil
+        event[eventID] = nil
     end
 end
 
@@ -824,20 +833,20 @@ local function listenEventPlayerActivate(data)
                     Player.Items.resin_found = Player.Items.resin
                 end, 0.5)
             end
-            for callback, context in pairs(registered_event_callbacks["vr_player_ready"]) do
-                if context ~= true then
-                    callback(context, data)
+            for id, event_data in pairs(registered_event_callbacks["vr_player_ready"]) do
+                if event_data.context ~= nil then
+                    event_data.callback(event_data.context, data)
                 else
-                    callback(data)
+                    event_data.callback(data)
                 end
             end
         -- Callback for novr player if HMD not found
         else
-            for callback, context in pairs(registered_event_callbacks["novr_player"]) do
-                if context ~= true then
-                    callback(context, data)
+            for id, event_data in pairs(registered_event_callbacks["novr_player"]) do
+                if event_data.context ~= nil then
+                    event_data.callback(event_data.context, data)
                 else
-                    callback(data)
+                    event_data.callback(data)
                 end
             end
         end
@@ -845,11 +854,11 @@ local function listenEventPlayerActivate(data)
     -- Registered callback
     data.player = Player
     data.game_loaded = player_previously_activated
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
     StopListeningToGameEvent(listenEventPlayerActivateID)
@@ -898,11 +907,11 @@ local function listenEventItemPickup(data)
     data.item = ent_held
     data.hand = hand
     data.otherhand = otherhand
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
@@ -946,11 +955,11 @@ local function listenEventItemReleased(data)
     data.item = Player.LastItemDropped
     data.hand = hand
     data.otherhand = otherhand
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
@@ -970,11 +979,11 @@ local function listenEventPrimaryHandChanged(data)
     end
     Player.IsLeftHanded = Convars:GetBool("hlvr_left_hand_primary") --[[@as boolean]]
     -- Registered callback
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
@@ -1050,11 +1059,11 @@ local function listenEventPlayerDropAmmoInBackpack(data)
     -- Registered callback
     data.ammotype = ammotype
     data.ammo_amount = ammo_amount
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
@@ -1096,11 +1105,11 @@ local function listenEventPlayerRetrievedBackpackClip(data)
             -- Registered callback
             data.ammotype = ammotype
             data.ammo_amount = ammo_amount
-            for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-                if context ~= true then
-                    callback(context, data)
+            for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+                if event_data.context ~= nil then
+                    event_data.callback(event_data.context, data)
                 else
-                    callback(data)
+                    event_data.callback(data)
                 end
             end
         end, 0)
@@ -1113,11 +1122,11 @@ local function listenEventPlayerRetrievedBackpackClip(data)
     if do_callback then
         data.ammotype = ammotype
         data.ammo_amount = ammo_amount
-        for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-            if context ~= true then
-                callback(context, data)
+        for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+            if event_data.context ~= nil then
+                event_data.callback(event_data.context, data)
             else
-                callback(data)
+                event_data.callback(data)
             end
         end
     end
@@ -1161,11 +1170,11 @@ local function listenEventPlayerStoredItemInItemholder(data)
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = item
     data.hand = hand
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
@@ -1213,11 +1222,11 @@ local function listenEventPlayerRemovedItemFromItemholder(data)
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = item
     data.hand = hand
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
@@ -1243,6 +1252,14 @@ local function listenEventPlayerDropResinInBackpack(data)
         Player.Items.resin_found = Player.Items.resin_found + resin_added
     end
     last_resin_dropped = nil
+
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
+        else
+            event_data.callback(data)
+        end
+    end
 end
 ListenToGameEvent("player_drop_resin_in_backpack", listenEventPlayerDropResinInBackpack, nil)
 
@@ -1265,11 +1282,11 @@ local function listenEventWeaponSwitch(data)
     end
 
     -- Registered callback
-    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
-        if context ~= true then
-            callback(context, data)
+    for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
+        if event_data.context ~= nil then
+            event_data.callback(event_data.context, data)
         else
-            callback(data)
+            event_data.callback(data)
         end
     end
 end
