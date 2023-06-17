@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.6
+    Version 2.0.7
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -2814,7 +2814,7 @@ function debugoverlay:CircleScreenOriented(origin, radius, red, green, blue, alp
 ---Draws a wireframe cone.
 ---@param pos Vector # Starting tip for the cone.
 ---@param axis Vector # Normalized direction the cone faces.
----@param radius number # Radius of the cone.
+---@param radiusRadians number # Radius of the cone in radians.
 ---@param distance number # How far the cone will draw.
 ---@param red integer
 ---@param green integer
@@ -2822,7 +2822,7 @@ function debugoverlay:CircleScreenOriented(origin, radius, red, green, blue, alp
 ---@param alpha integer
 ---@param noDepthTest boolean
 ---@param seconds number
-function debugoverlay:Cone(pos, axis, radius, distance, red, green, blue, alpha, noDepthTest, seconds) end
+function debugoverlay:Cone(pos, axis, radiusRadians, distance, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a screen-aligned cross. Specify origin in world space.
 ---@param origin Vector
 ---@param radius number
@@ -2958,16 +2958,16 @@ function debugoverlay:PushDebugOverlayScope(utlstringtoken_1) end
 function debugoverlay:RemoveAllInScope(utlstringtoken_1) end
 ---Draws a solid cone. Specify endpoint and direction in world space.
 ---@param startPos Vector
----@param endPos Vector
----@param unknown_1 number
----@param unknown_2 number
+---@param direction Vector
+---@param radiusRadians number # Seems to cap out at 180 which displays 90 deg radius.
+---@param length number
 ---@param red integer
 ---@param green integer
 ---@param blue integer
 ---@param alpha integer
 ---@param noDepthTest boolean
 ---@param seconds number
-function debugoverlay:SolidCone(startPos, endPos, unknown_1, unknown_2, red, green, blue, alpha, noDepthTest, seconds) end
+function debugoverlay:SolidCone(startPos, direction, radiusRadians, length, red, green, blue, alpha, noDepthTest, seconds) end
 ---Draws a wireframe sphere. Specify center in world space.
 ---@param position Vector
 ---@param radius number
@@ -3620,7 +3620,7 @@ function Uint64:ToHexString() end
 ---@field y number Yaw angle.
 ---@field z number Roll angle.
 ---@field __index string
-QAngleClass = {}
+local QAngleClass = {}
 ---Creates a new QAngle.
 ---@param pitch number?
 ---@param yaw number?
@@ -3659,7 +3659,7 @@ function QAngleClass:Up() end
 ---**Bug: This class is broken and cannot be instantiated.**
 ---@class Quaternion
 ---@deprecated
-Quaternion = {}
+local Quaternion = {}
 
 --#endregion
 
@@ -3677,7 +3677,7 @@ Quaternion = {}
 ---@operator mul(Vector|number): Vector Overloaded * returns the vectors multiplied together. can also be used to multiply with scalars.
 ---@operator sub(Vector|number): Vector
 ---@operator unm: Vector
-VectorClass = {}
+local VectorClass = {}
 ---Creates a new vector with the specified Cartesian coordinates.
 ---Can pass zero arguments for a zeroed Vector.
 ---@param x number?
@@ -3690,9 +3690,7 @@ function Vector(x, y, z) end
 ---@return boolean
 function VectorClass:__eq(vector) end
 ---Overloaded .. Converts vectors to strings
----Does not appear to work.
 ---@return string
----@deprecated
 function VectorClass:__tostring() end
 ---Cross product of two vectors.
 ---@param vector Vector
