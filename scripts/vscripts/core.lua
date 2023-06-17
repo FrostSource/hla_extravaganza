@@ -1,5 +1,5 @@
 --[[
-    v1.3.1
+    v1.4.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v1.3.1"
+local version = "v1.4.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -292,7 +292,8 @@ end
 -- Old name for Expose
 --SanitizeFunctionForHammer = Expose
 
-local base_vector_index = Vector().__index
+local base_vector = Vector()
+local vector_meta = getmetatable(base_vector)
 
 ---
 ---Get if a value is a `Vector`
@@ -300,10 +301,11 @@ local base_vector_index = Vector().__index
 ---@param value any
 ---@return boolean
 function IsVector(value)
-    return type(value) == "userdata" and value.__index==base_vector_index
+    return getmetatable(value) == vector_meta
 end
 
-local base_qangle_index = QAngle().__index
+local base_qangle = QAngle()
+local qangle_meta = getmetatable(base_qangle)
 
 ---
 ---Get if a value is a `QAngle`
@@ -311,7 +313,7 @@ local base_qangle_index = QAngle().__index
 ---@param value any
 ---@return boolean
 function IsQAngle(value)
-    return type(value) == "userdata" and value.__index==base_qangle_index
+    return getmetatable(value) == qangle_meta
 end
 
 ---
@@ -366,6 +368,7 @@ end
 ---@field ignorename (string|string[])? # Name or array of names to ignore.
 ---@field timeout integer? # Maxmimum number of traces before returning regardless of parameters.
 ---@field traces integer # Number of traces done.
+---@field dontignore EntityHandle # A single entity to always hit, ignoring if it exists in `ignore`.
 
 ---
 ---Does a raytrace along a line with extended parameters.
@@ -379,7 +382,7 @@ function TraceLineExt(parameters)
         parameters.ignoreent = {parameters.ignore}
     else
         parameters.ignoreent = parameters.ignore
-        parameters.ignore = parameters.ignoreent[1]
+        parameters.ignore = nil
     end
     if type(parameters.ignoreclass) == "string" then
         ---@diagnostic disable-next-line: assign-type-mismatch
@@ -389,11 +392,13 @@ function TraceLineExt(parameters)
         ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignorename = {parameters.ignorename}
     end
-    parameters.traces = 0
+    local forward = (parameters.endpos - parameters.startpos):Normalized()
+    parameters.traces = 1
     parameters.timeout = parameters.timeout or math.huge
 
     local result = TraceLine(parameters)
-    while parameters.traces < parameters.timeout and parameters.hit and
+    -- print(parameters.hit, parameters.enthit)
+    while parameters.traces < parameters.timeout and parameters.hit and parameters.enthit ~= parameters.dontignore and
     (
         vlua.find(parameters.ignoreent, parameters.enthit)
         or vlua.find(parameters.ignoreclass, parameters.enthit:GetClassname())
@@ -411,9 +416,9 @@ function TraceLineExt(parameters)
         -- end
         -- print("TraceLineExt hit: "..parameters.enthit:GetClassname()..", "..parameters.enthit:GetName().." - Ignoring because: ".. reason .."\n")
         --EndDebug
+        parameters.traces = parameters.traces + 1
         parameters.ignore = parameters.enthit
         parameters.enthit = nil
-        parameters.traces = parameters.traces + 1
         parameters.startpos = parameters.pos
         result = TraceLine(parameters)
     end
@@ -502,6 +507,7 @@ local function load_entity_data(self)
     -- print("DONE LOADING")
 end
 
+---@TODO Since entities can inherit multiple classes, let this one be defined and have all classes inherit it
 if false then
 ---Class that inherits all entity classes. Mostly used when creating entity classes.
 ---`EntityHandle` should still be used when handling and passing generic entity types.
@@ -544,6 +550,25 @@ end
 ---Pause the entity think function.
 ---@luadoc-ignore
 function EntityClassBase:PauseThink()
+end
+---Called before the entity is killed.
+---@luadoc-ignore
+function EntityClassBase:UpdateOnRemove()
+end
+---Called when a breakable entity is broken.
+---@param inflictor CBaseEntity
+---@luadoc-ignore
+function EntityClassBase:OnBreak(inflictor)
+end
+---Called when a breakable entity is broken.
+---@param damageTable TypeDamageTable
+---@luadoc-ignore
+function EntityClassBase:OnTakeDamage(damageTable)
+end
+---Called when a breakable entity is broken.
+---@param context CScriptPrecacheContext
+---@luadoc-ignore
+function EntityClassBase:Precache(context)
 end
 ---@type boolean
 EntityClassBase.Initiated = false
@@ -613,6 +638,40 @@ local function _inherit(base, self, fenv)
 
     end
 
+    ---@TODO Consider checking for each function definition and only adding it if found.
+
+    fenv.UpdateOnRemove = function()
+        if type(self.UpdateOnRemove) == "function" then
+            self:UpdateOnRemove()
+        end
+    end
+
+    fenv.OnBreak = function(inflictor)
+        if type(self.OnBreak) == "function" then
+            self:OnBreak(inflictor)
+        end
+    end
+
+    fenv.OnTakeDamage = function(damageTable)
+        if type(self.OnTakeDamage) == "function" then
+            self:OnTakeDamage(damageTable)
+        end
+    end
+
+    ---@TODO Reasonable way to precache only once?
+    fenv.Precache = function(context)
+        if type(self.Precache) == "function" then
+            self:Precache(context)
+        end
+    end
+
+    ---@TODO Not enabled because unsure of performance, test
+    -- fenv.OnEntText = function(damageTable)
+    --     if type(self.OnTakeDamage) == "function" then
+    --         self:OnTakeDamage(damageTable)
+    --     end
+    -- end
+
     ---@TODO: Consider moving these to a base class
 
     ---@luadoc-ignore
@@ -654,7 +713,7 @@ end
 ---Inherit an existing entity class which was defined using `entity` function.
 ---@generic T
 ---@param script `T`
----@return any # Base class, the newly created class.
+---@return T # Base class, the newly created class.
 ---@return T # Self instance, the entity inheriting `base`.
 ---@diagnostic disable-next-line:lowercase-global
 function inherit(script)
@@ -841,6 +900,7 @@ end
 ifrequire 'debug.core'
 ifrequire 'util.util'
 ifrequire 'util.enums'
+ifrequire 'extensions.vector'
 ifrequire 'extensions.entity'
 ifrequire 'extensions.string'
 ifrequire 'extensions.entities'
