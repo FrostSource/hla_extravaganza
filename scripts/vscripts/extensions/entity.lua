@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -10,6 +10,8 @@
     require "extensions.entity"
     ```
 ]]
+
+local version = "v1.3.0"
 
 ---
 ---Get the top level entities parented to this entity. Not children of children.
@@ -104,8 +106,23 @@ end
 ---
 ---@return number
 function CBaseEntity:GetVolume()
-    local size = self:GetSize()
+    local size = self:GetSize() * self:GetAbsScale()
     return size.x * size.y * size.z
+end
+
+function CBaseEntity:GetBoundingCorners()
+    local bounds = self:GetBounds()
+    local origin = self:GetOrigin()
+    return {
+        origin + bounds.Mins * self:GetAbsScale(),
+        origin + bounds.Maxs * self:GetAbsScale(),
+        origin + Vector(bounds.Mins.x, bounds.Mins.y, bounds.Maxs.z) * self:GetAbsScale(),
+        origin + Vector(bounds.Maxs.x, bounds.Mins.y, bounds.Mins.z) * self:GetAbsScale(),
+        origin + Vector(bounds.Mins.x, bounds.Maxs.y, bounds.Mins.z) * self:GetAbsScale(),
+        origin + Vector(bounds.Maxs.x, bounds.Maxs.y, bounds.Mins.z) * self:GetAbsScale(),
+        origin + Vector(bounds.Maxs.x, bounds.Mins.y, bounds.Maxs.z) * self:GetAbsScale(),
+        origin + Vector(bounds.Mins.x, bounds.Maxs.y, bounds.Maxs.z) * self:GetAbsScale(),
+    }
 end
 
 ---
@@ -157,3 +174,4 @@ function CBaseEntity:DoNotDrop(enabled)
     end
 end
 
+return version

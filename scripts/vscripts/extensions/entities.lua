@@ -1,5 +1,5 @@
 --[[
-    v1.2.1
+    v1.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     Extensions for the `Entities` class.
@@ -10,6 +10,8 @@
     require "extensions.entities"
     ```
 ]]
+
+local version = "v1.3.0"
 
 ---
 ---Gets an array of every entity that currently exists.
@@ -65,3 +67,59 @@ end
 function CEntityInstance:FindInPrefab(name)
     return Entities:FindInPrefab(self, name)
 end
+
+
+
+
+
+function Entities:FindAllInCone(origin, direction, maxDistance, maxAngle)
+    local cosMaxAngle = math.cos(math.rad(maxAngle))
+    local entitiesInSphere = Entities:FindAllInSphere(origin, maxDistance)
+
+    -- Filter the entities based on whether they fall within the cone
+    local entitiesInCone = {}
+    for i = 1, #entitiesInSphere do
+        local entity = entitiesInSphere[i]
+        local directionToEntity = (entity:GetAbsOrigin() - origin):Normalized()
+        local dotProduct = direction:Dot(directionToEntity)
+        -- If the dot product is greater than or equal to the cosine of the max angle, the entity is within the cone
+        if dotProduct >= cosMaxAngle then
+            table.insert(entitiesInCone, entity)
+        end
+    end
+
+    return entitiesInCone
+end
+
+
+function Entities:FindAllInConeGenerous(origin, direction, maxDistance, maxAngle)
+    local cosMaxAngle = math.cos(math.rad(maxAngle))
+    local entitiesInSphere = Entities:FindAllInSphere(origin, maxDistance)
+
+    -- Filter the entities based on whether they fall within the cone
+    local entitiesInCone = {}
+    for i = 1, #entitiesInSphere do
+        local entity = entitiesInSphere[i]
+        local directionToEntity = (entity:GetAbsOrigin() - origin):Normalized()
+        local dotProduct = direction:Dot(directionToEntity)
+        -- If the dot product is greater than or equal to the cosine of the max angle, the entity is within the cone
+        if dotProduct >= cosMaxAngle then
+            table.insert(entitiesInCone, entity)
+        else
+            -- Check bounding corners too
+            local corners = entity:GetBoundingCorners()
+            for j = 1, #corners do
+                directionToEntity = (corners[j] - origin):Normalized()
+                dotProduct = direction:Dot(directionToEntity)
+                if dotProduct >= cosMaxAngle then
+                    table.insert(entitiesInCone, entity)
+                    break
+                end
+            end
+        end
+    end
+
+    return entitiesInCone
+end
+
+return version
