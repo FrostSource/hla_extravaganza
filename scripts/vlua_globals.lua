@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.7
+    Version 2.0.8
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -3299,7 +3299,7 @@ function ParticleManager:SetParticleControl(particleID, controlIndex, controlDat
 ---@param controlIndex integer
 ---@param entity EntityHandle
 ---@param attachType ENUM_PATTACH
----@param attachment string
+---@param attachment string|nil # The model attachment to use. Set nil for no attachment instead of blank string to avoid warnings.
 ---@param origin Vector
 ---@param unknown boolean
 function ParticleManager:SetParticleControlEnt(particleID, controlIndex, entity, attachType, attachment, origin, unknown) end
