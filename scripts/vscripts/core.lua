@@ -1,5 +1,5 @@
 --[[
-    v1.4.0
+    v1.5.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v1.4.0"
+local version = "v1.5.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -283,7 +283,9 @@ function Expose(func, name, scope)
         end
     end
     fenv = scope or fenv
-    print("Sanitizing function '"..name.."' for Hammer in scope ["..tostring(fenv).."]")
+    if Convars:GetInt("developer") > 0 then
+        print("Sanitizing function '"..name.."' for Hammer in scope ["..tostring(fenv).."]")
+    end
     fenv[name] = func
     fenv[name:lower()] = func
     fenv[name:upper()] = func
@@ -392,7 +394,6 @@ function TraceLineExt(parameters)
         ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignorename = {parameters.ignorename}
     end
-    local forward = (parameters.endpos - parameters.startpos):Normalized()
     parameters.traces = 1
     parameters.timeout = parameters.timeout or math.huge
 
@@ -512,6 +513,8 @@ if false then
 ---Class that inherits all entity classes. Mostly used when creating entity classes.
 ---`EntityHandle` should still be used when handling and passing generic entity types.
 ---@class EntityClass : EntityClassBase,CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
+---@field __inherits table # Table of inherited classes.
+---@field __name string # Name of the class.
 local EntityClass = {}
 
 ---@class EntityClassBase
@@ -583,7 +586,14 @@ end
 local function _inherit(base, self, fenv)
     -- Fix for base inheriting itself on load
     if self.__inherits and vlua.find(self.__inherits, base) then
-        Warning("Trying to inherit an already inherited class\n")
+        local class_name = tostring(base)
+        for name, class in pairs(EntityClassNameMap) do
+            if class == base then
+                class_name = name
+                break
+            end
+        end
+        Warning("Trying to inherit an already inherited class ( "..class_name.." -> ["..tostring(self)..","..self:GetClassname()..","..self:GetName().."] )\n")
         return
     end
     -- table.insert(base.__inherits, valve_meta)
@@ -720,15 +730,15 @@ function inherit(script)
     local fenv = getfenv(2)
     if fenv.thisEntity == nil then
         fenv = getfenv(3)
-    end
-    if fenv.thisEntity == nil then
-        error("Could not inherit '"..script.."' because thisEntity could not be found!")
+        if fenv.thisEntity == nil then
+            error("Could not inherit '"..script.."' because thisEntity could not be found!")
+        end
     end
     local self = fenv.thisEntity
     local base = script
     if type(script) == "string" then
         if EntityClassNameMap[script] then
-            -- string is defined name
+            -- string is class name
             base = EntityClassNameMap[script]
         else
             -- string is script
@@ -827,33 +837,12 @@ function entity(name, ...)
     return base, self, super, base.__privates
 end
 
--- function getbase(ent)
---     return getmetatable(getmetatable(ent).__index)
--- end
 
-local function _getinherits(inherits)
-    local ins = {}
-    if inherits and #inherits ~= 0 then
-        for k,v in pairs(inherits) do
-            vlua.extend(ins, _getinherits(v.__inherits))
-            table.insert(ins, v)
-        end
-    end
-    return ins
-end
-
-local tme = 0
+---Prints all classes that `ent` inherits.
+---@param ent EntityClass
+---@param nest? string
 ---@diagnostic disable-next-line:lowercase-global
-function getinherits(ent, nest)
-    -- if ent.__inherits then
-    --     print('sdf')
-    --     return _getinherits(ent.__inherits)
-    -- elseif IsEntity(ent) then
-    --     print(getmetatable(ent))
-    --     print(getmetatable(ent).__inherits)
-    --     return _getinherits(getmetatable(ent).__inherits)
-    -- end
-    -- while ent.__inherits do
+function printinherits(ent, nest)
     nest = nest or ''
     if ent.__inherits then
         if haskey(ent, "__name") then
@@ -871,11 +860,38 @@ function getinherits(ent, nest)
                 else
                     print(nest..tostring(value), value.__name)
                     -- Debug.PrintList(value, nest)
-                    getinherits(value, nest..'   ')
+                    printinherits(value, nest..'   ')
                 end
             end
         end
     end
+end
+
+---Get if an `EntityClass` instance inherits a given `class`.
+---@param ent EntityClass|EntityHandle # Entity to check.
+---@param class string|table # Name or class table to check.
+---@return boolean # True if `ent` inherits `class`, false otherwise.
+---@diagnostic disable-next-line:lowercase-global
+function isinstance(ent, class)
+    local inherits = rawget(ent, "__inherits")
+    if inherits then
+        for _, inherit in ipairs(inherits) do
+            if type(class) == "string" then
+                if inherit.__name == class then
+                    return true
+                end
+            else
+                if inherit == class then
+                    return true
+                end
+            end
+            -- Check recursively if no match
+            if isinstance(inherit, class) then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 ---@diagnostic disable-next-line:lowercase-global
