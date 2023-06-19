@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.8
+    Version 2.0.9
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -2029,7 +2029,7 @@ function CBaseModelEntity:SetBodygroup(group, value) end
 function CBaseModelEntity:SetBodygroupByName(group, value) end
 ---Sets the light group of the entity.
 ---@param lightGroup string
-function CBaseModelEntity: SetLightGroup(lightGroup) end
+function CBaseModelEntity:SetLightGroup(lightGroup) end
 ---Set the material group of this entity.
 ---@param name string # Case-insensitive.
 function CBaseModelEntity:SetMaterialGroup(name) end
@@ -2076,10 +2076,10 @@ CBasePlayer = {}
 function CBasePlayer:AreChaperoneBoundsVisible() end
 ---Returns the value of the analog action for the given hand. See Analog Input Actions for action index values and return types.
 ---Note: Only reports input when headset is awake. Will still transmit input when controllers lose tracking.
----@param nLiteralHandType integer
----@param nAnalogAction integer
+---@param literalHandType integer
+---@param analogAction ENUM_ANALOG_INPUT_ACTIONS
 ---@return Vector
-function CBasePlayer:GetAnalogActionPositionForHand(nLiteralHandType, nAnalogAction) end
+function CBasePlayer:GetAnalogActionPositionForHand(literalHandType, analogAction) end
 ---Returns the HMD anchor entity for this player if it exists.
 ---@return CEntityInstance|nil
 function CBasePlayer:GetHMDAnchor() end
@@ -2172,17 +2172,17 @@ CBaseAnimating = {}
 ---@return number
 function CBaseAnimating:ActiveSequenceDuration() end
 ---Get the attachment id's angles as a p,y,r vector
----@param iAttachment integer
+---@param attachmentIndex integer
 ---@return Vector
-function CBaseAnimating:GetAttachmentAngles(iAttachment) end
+function CBaseAnimating:GetAttachmentAngles(attachmentIndex) end
 ---Get the attachment id's forward vector.
----@param iAttachment integer
+---@param attachmentIndex integer
 ---@return Vector
-function CBaseAnimating:GetAttachmentForward(iAttachment) end
+function CBaseAnimating:GetAttachmentForward(attachmentIndex) end
 ---Get the attachment id's origin vector
----@param iAttachment integer
+---@param attachmentIndex integer
 ---@return Vector
-function CBaseAnimating:GetAttachmentOrigin(iAttachment) end
+function CBaseAnimating:GetAttachmentOrigin(attachmentIndex) end
 ---Get the cycle of the animation, a [0-1] range.
 ---@return number
 function CBaseAnimating:GetCycle() end
@@ -2200,57 +2200,57 @@ function CBaseAnimating:GetSequence() end
 ---@return boolean
 function CBaseAnimating:IsSequenceFinished() end
 ---	Registers a listener for string AnimTags, replaces existing script listener if any.
----@param animTagListenerFunc function
+---@param animTagListenerFunc fun(tagName:string, status:integer)
 function CBaseAnimating:RegisterAnimTagListener(animTagListenerFunc) end
 ---Sets the active sequence by name, resetting the current cycle
----@param pSequenceName string
-function CBaseAnimating:ResetSequence(pSequenceName) end
+---@param sequenceName string
+function CBaseAnimating:ResetSequence(sequenceName) end
 ---Get the named attachment id
----@param pAttachmentName string
+---@param attachmentName string
 ---@return integer
-function CBaseAnimating:ScriptLookupAttachment(pAttachmentName) end
+function CBaseAnimating:ScriptLookupAttachment(attachmentName) end
 ---Returns the duration in seconds of the given sequence name.
----@param pSequenceName string
+---@param sequenceName string
 ---@return number
-function CBaseAnimating:SequenceDuration(pSequenceName) end
+function CBaseAnimating:SequenceDuration(sequenceName) end
 ---Pass the desired look target in world space to the graph.
----@param vValue Vector
-function CBaseAnimating:SetGraphLookTarget(vValue) end
+---@param position Vector
+function CBaseAnimating:SetGraphLookTarget(position) end
 ---Set the specific param value, type is inferred from the type in script.
 ---@param pszParam string
 ---@param svArg table
 function CBaseAnimating:SetGraphParameter(pszParam, svArg) end
 ---Set the specific boolean parameter on or off.
----@param szName string
----@param bValue boolean
-function CBaseAnimating:SetGraphParameterBool(szName, bValue) end
+---@param name string
+---@param value boolean
+function CBaseAnimating:SetGraphParameterBool(name, value) end
 ---Pass the enum (int) value to the specified param.
----@param szName string
----@param nValue integer
-function CBaseAnimating:SetGraphParameterEnum(szName, nValue) end
+---@param name string
+---@param value integer
+function CBaseAnimating:SetGraphParameterEnum(name, value) end
 ---Pass the float value to the specified parameter.
----@param szName string
----@param flValue number
-function CBaseAnimating:SetGraphParameterFloat(szName, flValue) end
+---@param name string
+---@param value number
+function CBaseAnimating:SetGraphParameterFloat(name, value) end
 ---Pass the int value to the specified param.
----@param szName string
----@param nValue integer
-function CBaseAnimating:SetGraphParameterInt(szName, nValue) end
+---@param name string
+---@param value integer
+function CBaseAnimating:SetGraphParameterInt(name, value) end
 ---Pass the vector value to the specified param in the graph.
----@param szName string
----@param vValue Vector
-function CBaseAnimating:SetGraphParameterVector(szName, vValue) end
+---@param name string
+---@param value Vector
+function CBaseAnimating:SetGraphParameterVector(name, value) end
 ---Sets the model's scale to scale, so if a unit had its model scale at 1, and you use SetModelScale(10.0), it would set the scale to 10.0.
 ---@param scale number
 function CBaseAnimating:SetModelScale(scale) end
 ---Set the specified pose parameter to the specified value.
----@param szName string
----@param fValue number
+---@param name string
+---@param value number
 ---@return number
-function CBaseAnimating:SetPoseParameter(szName, fValue) end
+function CBaseAnimating:SetPoseParameter(name, value) end
 ---Sets the active sequence by name, keeping the current cycle.
----@param pSequenceName string
-function CBaseAnimating:SetSequence(pSequenceName) end
+---@param sequenceName string
+function CBaseAnimating:SetSequence(sequenceName) end
 ---Stop the current animation by setting playback rate to 0.0.
 function CBaseAnimating:StopAnimation() end
 ---Unregisters the current string AnimTag listener, if any
@@ -2498,10 +2498,10 @@ CAI_BaseNPC = {}
 ---@return table
 function CAI_BaseNPC:GetSquad() end
 ---Set a position goal and start moving.
----@param vPos Vector
----@param bRun boolean
----@param flSuccessTolerance number
-function CAI_BaseNPC:NpcForceGoPosition(vPos, bRun, flSuccessTolerance) end
+---@param pos Vector
+---@param run boolean
+---@param successTolerance number
+function CAI_BaseNPC:NpcForceGoPosition(pos, run, successTolerance) end
 ---Removes the NPC's current goal.
 function CAI_BaseNPC:NpcNavClearGoal() end
 ---Get the position of the current goal.
@@ -2562,8 +2562,8 @@ function CEnvEntityMaker:SpawnEntityAtEntityOrigin(entity) end
 ---@param angles Vector
 function CEnvEntityMaker:SpawnEntityAtLocation(origin, angles) end
 ---Create an entity at the location of a named entity
----@param pszName string
-function CEnvEntityMaker:SpawnEntityAtNamedEntityOrigin(pszName) end
+---@param name string
+function CEnvEntityMaker:SpawnEntityAtNamedEntityOrigin(name) end
 
 --#endregion
 
@@ -2574,7 +2574,6 @@ function CEnvEntityMaker:SpawnEntityAtNamedEntityOrigin(pszName) end
 ---@class CEntityScriptFramework
 -- No methods available.
 EntityFramework = {}
---TEST HOOKS
 
 --#endregion
 
@@ -2596,9 +2595,9 @@ function CInfoWorldLayer:ShowWorldLayer() end
 ---@class CLogicRelay : CEntityInstance
 CLogicRelay = {}
 ---Trigger(hActivator, hCaller) : Triggers the logic_relay
----@param hActivator EntityHandle
----@param hCaller EntityHandle
-function CLogicRelay:Trigger(hActivator, hCaller) end
+---@param activator EntityHandle|nil
+---@param caller EntityHandle|nil
+function CLogicRelay:Trigger(activator, caller) end
 
 --#endregion
 
@@ -2875,21 +2874,21 @@ function debugoverlay:EntityAttachments(ehandle, size, seconds) end
 ---Draws the axis of the entity origin
 ---@param ehandle EHANDLE
 ---@param size number
----@param unknown boolean # False made it draw
+---@param noDepthTest boolean
 ---@param seconds number
-function debugoverlay:EntityAxis(ehandle, size, unknown, seconds) end
+function debugoverlay:EntityAxis(ehandle, size, noDepthTest, seconds) end
 ---Draws bounds of an entity.
 ---How does this work?
----@param ehandle_1 EHANDLE
----@param int_2 integer
----@param int_3 integer
----@param int_4 integer
----@param int_5 integer
----@param bool_6 boolean
----@param float_7 number
-function debugoverlay:EntityBounds(ehandle_1, int_2, int_3, int_4, int_5, bool_6, float_7) end
----Draws the skeleton of the entity
 ---@param ehandle EHANDLE
+---@param red integer
+---@param green integer
+---@param blue integer
+---@param alpha integer
+---@param noDepthTest boolean
+---@param seconds number
+function debugoverlay:EntityBounds(ehandle, red, green, blue, alpha, noDepthTest, seconds) end
+---Draws the skeleton of the entity
+---@param ehandle EHANDLE # Use entity:GetEntityHandle()
 ---@param seconds number
 function debugoverlay:EntitySkeleton(ehandle, seconds) end
 ---Draws text on an entity
@@ -2948,14 +2947,14 @@ function debugoverlay:Line2D(Vector2D_1, Vector2D_2, int_3, int_4, int_5, int_6,
 ---Pops the identifier used to group overlays. Overlays marked with this identifier can be deleted in a big batch.
 function debugoverlay:PopDebugOverlayScope() end
 ---Pushes an identifier used to group overlays. Deletes all existing overlays using this overlay id.
----@param utlstringtoken_1 string
-function debugoverlay:PushAndClearDebugOverlayScope(utlstringtoken_1) end
+---@param scopeName string
+function debugoverlay:PushAndClearDebugOverlayScope(scopeName) end
 ---Pushes an identifier used to group overlays. Overlays marked with this identifier can be deleted in a big batch.
----@param utlstringtoken_1 string
-function debugoverlay:PushDebugOverlayScope(utlstringtoken_1) end
+---@param scopeName string
+function debugoverlay:PushDebugOverlayScope(scopeName) end
 ---Removes all overlays marked with a specific identifier, regardless of their lifetime.
----@param utlstringtoken_1 string
-function debugoverlay:RemoveAllInScope(utlstringtoken_1) end
+---@param scopeName string
+function debugoverlay:RemoveAllInScope(scopeName) end
 ---Draws a solid cone. Specify endpoint and direction in world space.
 ---@param startPos Vector
 ---@param direction Vector
