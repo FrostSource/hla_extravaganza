@@ -520,15 +520,15 @@ local EntityClass = {}
 ---@class EntityClassBase
 local EntityClassBase = {}
 
----Assign to new value to entity's member `name`.
----This also saves the member.
+---Assign a new value to entity's field `name`.
+---This also saves the field.
 ---@param name string
 ---@param value any
 function EntityClassBase:Set(name, value)
 end
----Save entity data. Call with no arguments to save all data.
----@param name? string # Name of the value to save.
----@param value? any # Value to save. If not provided the value will be retrieved from the member with the same `name`.
+---Save a given entity field. Call with no arguments to save all data.
+---@param name? string # Name of the field to save.
+---@param value? any # Value to save. If not provided the value will be retrieved from the field with the same `name`.
 ---@luadoc-ignore
 function EntityClassBase:Save(name, value)
 end
