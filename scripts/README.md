@@ -56,11 +56,11 @@ The function returns:
 ### The basic initialization line for a class is as follows:
 
 ```lua
----@class MyClass
+---@class MyClass : EntityClass
 local base, self, super = entity("MyClass")
 ```
 
-- `---@class MyClass` is Lua Language Server's way to defining a class and associating it with the next variable `base`. This is how we get code completion.
+- `---@class MyClass : EntityClass` is Lua Language Server's way to defining a class and associating it with the next variable `base`. This is how we get code completion. We need to inherit EntityClass as it provides special members that are added to the class behind the scenes.
 - `base` holds the class table that is returned by `entity` and will be what we define functions and fields on.
 - `self` will be the same as thisEntity if this script is attached to an entity, otherwise it will be nil.
 - `super` holds the first extension class if any are provided, which none were in the example line.
