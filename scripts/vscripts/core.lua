@@ -1,5 +1,5 @@
 --[[
-    v1.6.0
+    v1.6.1
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v1.5.0"
+local version = "v1.6.1"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -486,7 +486,7 @@ local function search(k, plist)
         --     v = plist[i].__index[k]
         -- end
         -- print('overflow', v)
-        if v then return v end
+        if v ~= nil then return v end
     end
     -- print('didnt find', k)
 end
