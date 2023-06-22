@@ -1,5 +1,5 @@
 --[[
-    v1.5.0
+    v1.6.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -424,6 +424,21 @@ function TraceLineExt(parameters)
         result = TraceLine(parameters)
     end
 
+    return result
+end
+
+---
+---Does a raytrace along a line until it hits or the world or reaches the end of the line.
+---
+---@param parameters TraceTableLine
+function TraceLineWorld(parameters)
+    local result = TraceLine(parameters)
+    while parameters.hit and parameters.enthit:GetClassname() ~= "worldent" do
+        parameters.ignore = parameters.enthit
+        parameters.enthit = nil
+        parameters.startpos = parameters.pos
+        result = TraceLine(parameters)
+    end
     return result
 end
 
