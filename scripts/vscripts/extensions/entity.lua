@@ -1,5 +1,5 @@
 --[[
-    v1.3.0
+    v2.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v1.3.0"
+local version = "v2.0.0"
 
 ---
 ---Get the top level entities parented to this entity. Not children of children.
@@ -71,8 +71,19 @@ end
 ---Set entity pitch, yaw, roll from a `QAngle`.
 ---
 ---@param qangle QAngle
-function CBaseEntity:SetAngle(qangle)
+function CBaseEntity:SetQAngles(qangle)
     self:SetAngles(qangle.x, qangle.y, qangle.z)
+end
+
+---
+---Set entity pitch, yaw or roll. Supply `nil` for any parameter to leave it unchanged.
+---
+---@param pitch number|nil
+---@param yaw number|nil
+---@param roll number|nil
+function CBaseEntity:SetAngle(pitch, yaw, roll)
+    local angles = self:GetAngles()
+    self:SetAngles(pitch or angles.x, yaw or angles.y, roll or angles.z)
 end
 
 ---
