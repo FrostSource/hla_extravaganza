@@ -1,5 +1,5 @@
 --[[
-    v1.4.0
+    v1.5.0
     https://github.com/FrostSource/hla_extravaganza
 
     Extensions for the `Entities` class.
@@ -12,7 +12,7 @@
 ]]
 require "extensions.entity"
 
-local version = "v1.4.0"
+local version = "v1.5.0"
 
 ---
 ---Gets an array of every entity that currently exists.
@@ -156,6 +156,28 @@ end
 ---@return EntityHandle[] # List of entities found.
 function Entities:FindAllInCube(origin, size)
     return Entities:FindAllInBox(origin, size, size, size)
+end
+
+---
+---Find the nearest entity to a world position.
+---
+---@param origin Vector # Position to check from.
+---@param maxRadius number # Maximum radius to check from `origin`.
+---@return EntityHandle? # The nearest entity found, or nil if none found.
+function Entities:FindNearest(origin, maxRadius)
+    local nearestEntity = nil
+    local nearestDistanceSq = math.huge
+    local maxRadiusSq = maxRadius * maxRadius
+
+    for _, entity in ipairs(Entities:FindAllInSphere(origin, maxRadius)) do
+        local distanceSq = VectorDistanceSq(entity:GetOrigin(), origin)
+        if distanceSq <= maxRadiusSq and distanceSq < nearestDistanceSq then
+            nearestEntity = entity
+            nearestDistanceSq = distanceSq
+        end
+    end
+
+    return nearestEntity
 end
 
 return version
