@@ -1,5 +1,5 @@
 --[[
-    v2.0.0
+    v2.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v2.0.0"
+local version = "v2.1.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -508,9 +508,15 @@ local function _inherit(base, self, fenv)
         Warning("Trying to inherit an already inherited class ( "..class_name.." -> ["..tostring(self)..","..self:GetClassname()..","..self:GetName().."] )\n")
         return
     end
-    -- table.insert(base.__inherits, valve_meta)
+
+    -- Define variable so we can tell valve metatable apart later
+    local valveMetaIntermediary = {}
+    rawset(valveMetaIntermediary, "valveMeta", true)
+
     if not self.__inherits then
-        self.__inherits = { setmetatable({},getmetatable(self)) }
+        -- Valve meta gets assigned to blank table so its metamethods work like normal
+        -- take this into account when looking for the valve meta
+        self.__inherits = { setmetatable(valveMetaIntermediary, getmetatable(self)) }
     end
     table.insert(self.__inherits, base)
 
@@ -547,16 +553,42 @@ local function _inherit(base, self, fenv)
         if type(self.OnSpawn) == "function" then
             self:OnSpawn(spawnkeys)
         end
+        ---@TODO Test closure solving and impact it has
+        fenv.Spawn = nil
     end
 
     fenv.Activate = function(activateType)
 
-        -- Copy base reference data into self
-        ---@TODO: Copy inherited references too
-        for key, value in pairs(base) do
-            if not key:startswith("__") and type(value) == "table" then
-                -- print("Deep copying", key, value)
-                self[key] = DeepCopyTable(value)
+        local allinherits = getinherits(self)
+
+        for i = 1, #allinherits do
+            local inherit = allinherits[i]
+
+            -- Clone mutable data into entity so class won't get modified
+            for key, value in pairs(inherit) do
+                if not key:startswith("__") then
+
+                    if IsVector(value) then
+                        self[key] = Vector(value.x, value.y, value.z)
+                    elseif IsQAngle(value) then
+                        self[key] = QAngle(value.x, value.y, value.z)
+                    elseif type(value) == "table" then
+                        -- print("Deep copying", key, value)
+                        self[key] = DeepCopyTable(value)
+                    end
+
+                end
+            end
+
+            -- Redirect defined output functions
+            for output, func in pairs(inherit.__outputs) do
+                -- Define the function regardless of load state because it still needs to exist
+                rawset(self, output, func)
+                -- But don't do it on a game load to avoid doubling up
+                if activateType ~= 2 then
+                    print("Redirecting output \""..output.."\" to func ["..tostring(func).."]")
+                    self:RedirectOutput(output, output, self)
+                end
             end
         end
 
@@ -714,6 +746,7 @@ function entity(name, ...)
             __script_file = GetScriptFile(nil, 3),
             __inherits = inherits,
             __privates = {},
+            __outputs = {}
         }
         -- Meta table to search all inherits
         setmetatable(base, {
@@ -747,6 +780,7 @@ end
 ---@class EntityClass : CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
 ---@field __inherits table # Table of inherited classes.
 ---@field __name string # Name of the class.
+---@field __outputs table<string, function> # Map of output names to functions that will be connected on spawn.
 ---@field Initiated boolean # If the class entity has been activated.
 ---@field IsThinking boolean # If the entity is currently thinking with `Think` function.
 ---@field OnReady fun(self: EntityClass, loaded: boolean) # Called automatically on `Activate` if defined.
@@ -804,6 +838,13 @@ function EntityClass:PauseThink()
     self.IsThinking = false
 end
 
+---Define a function to redirected to `output` on spawn.
+---@param output string
+---@param func function
+function EntityClass:Output(output, func)
+    self.__outputs[output] = func
+end
+
 --#endregion
 
 
@@ -836,6 +877,40 @@ function printinherits(ent, nest)
     end
 end
 
+---Get the original metatable that Valve assigns to the entity.
+---@param ent EntityClass # The entity search.
+---@return table? # Metatable originally assigned to `ent`.
+---@diagnostic disable-next-line:lowercase-global
+function getvalvemeta(ent)
+    local inherits = rawget(ent, "__inherits")
+    if inherits then
+        for _, inherit in ipairs(inherits) do
+            if rawget(inherit, "valveMeta") then
+                return getmetatable(inherit)
+            end
+        end
+    end
+end
+
+---Get a list of all classes that `class` inherits.
+---@param class EntityClass # The entity or class to search.
+---@return EntityClass[] # List of class tables.
+---@diagnostic disable-next-line:lowercase-global
+function getinherits(class)
+    local foundinherits = {}
+    local inherits = rawget(class, "__inherits")
+    if inherits then
+        for _, inherit in ipairs(inherits) do
+            -- Exclude valve meta because it doesn't have fields we are looking for
+            if not rawget(inherit, "valveMeta") then
+                table.insert(foundinherits, inherit)
+                vlua.extend(foundinherits, getinherits(inherit))
+            end
+        end
+    end
+    return foundinherits
+end
+
 ---Get if an `EntityClass` instance inherits a given `class`.
 ---@param ent EntityClass|EntityHandle # Entity to check.
 ---@param class string|table # Name or class table to check.
@@ -863,6 +938,7 @@ function isinstance(ent, class)
     return false
 end
 
+---@luadoc-ignore
 ---@diagnostic disable-next-line:lowercase-global
 function printmeta(ent)
     local meta = getmetatable(ent)
