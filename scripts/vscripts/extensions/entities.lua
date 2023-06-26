@@ -1,5 +1,5 @@
 --[[
-    v1.3.0
+    v1.4.0
     https://github.com/FrostSource/hla_extravaganza
 
     Extensions for the `Entities` class.
@@ -10,8 +10,9 @@
     require "extensions.entities"
     ```
 ]]
+require "extensions.entity"
 
-local version = "v1.3.0"
+local version = "v1.4.0"
 
 ---
 ---Gets an array of every entity that currently exists.
@@ -68,11 +69,16 @@ function CEntityInstance:FindInPrefab(name)
     return Entities:FindInPrefab(self, name)
 end
 
-
-
-
-
-function Entities:FindAllInCone(origin, direction, maxDistance, maxAngle)
+---
+---Find all entities with a cone.
+---
+---@param origin Vector # Origin of the cone in worldspace.
+---@param direction Vector # Normalized direction vector.
+---@param maxDistance number # Max distance the cone will extend towards `direction`.
+---@param maxAngle number # Field-of-view in degrees that the cone can see, [0-180].
+---@param checkEntityBounds boolean # If true the entity bounding box will be tested as well as the origin.
+---@return EntityHandle[] # List of entities found within the cone.
+function Entities:FindAllInCone(origin, direction, maxDistance, maxAngle, checkEntityBounds)
     local cosMaxAngle = math.cos(math.rad(maxAngle))
     local entitiesInSphere = Entities:FindAllInSphere(origin, maxDistance)
 
@@ -85,27 +91,7 @@ function Entities:FindAllInCone(origin, direction, maxDistance, maxAngle)
         -- If the dot product is greater than or equal to the cosine of the max angle, the entity is within the cone
         if dotProduct >= cosMaxAngle then
             table.insert(entitiesInCone, entity)
-        end
-    end
-
-    return entitiesInCone
-end
-
-
-function Entities:FindAllInConeGenerous(origin, direction, maxDistance, maxAngle)
-    local cosMaxAngle = math.cos(math.rad(maxAngle))
-    local entitiesInSphere = Entities:FindAllInSphere(origin, maxDistance)
-
-    -- Filter the entities based on whether they fall within the cone
-    local entitiesInCone = {}
-    for i = 1, #entitiesInSphere do
-        local entity = entitiesInSphere[i]
-        local directionToEntity = (entity:GetAbsOrigin() - origin):Normalized()
-        local dotProduct = direction:Dot(directionToEntity)
-        -- If the dot product is greater than or equal to the cosine of the max angle, the entity is within the cone
-        if dotProduct >= cosMaxAngle then
-            table.insert(entitiesInCone, entity)
-        else
+        elseif checkEntityBounds then
             -- Check bounding corners too
             local corners = entity:GetBoundingCorners()
             for j = 1, #corners do
@@ -120,6 +106,56 @@ function Entities:FindAllInConeGenerous(origin, direction, maxDistance, maxAngle
     end
 
     return entitiesInCone
+end
+
+---
+---Find all entities within `mins` and `maxs` bounding box.
+---
+---@param mins Vector # Mins vector in world-space.
+---@param maxs Vector # Maxs vector in world-space.
+---@param checkEntityBounds? boolean # If true the entity bounding boxes will be used for the check instead of the origin.
+---@return EntityHandle[] # List of entities found.
+function Entities:FindAllInBounds(mins, maxs, checkEntityBounds)
+    local center = (mins + maxs) / 2
+    local maxRadius = (maxs - center):Length()
+
+    local entitiesInBounds = {}
+    local potentialEntities = Entities:FindAllInSphere(center, maxRadius)
+
+    for i = 1, #potentialEntities do
+        local ent = potentialEntities[i]
+
+        if ent:IsWithinBounds(mins, maxs, checkEntityBounds)
+        then
+            table.insert(entitiesInBounds, ent)
+        end
+    end
+
+    return entitiesInBounds
+end
+
+---
+---Find all entities within an `origin` centered box.
+---
+---@param width number # Size of the box on the X axis.
+---@param length number # Size of the box on the Y axis.
+---@param height number # Size of the box on the Z axis.
+---@return EntityHandle[] # List of entities found.
+function Entities:FindAllInBox(origin, width, length, height)
+    return Entities:FindAllInBounds(
+        Vector(origin - width, origin - length, origin - height),
+        Vector(origin + width, origin + length, origin + height)
+    )
+end
+
+---
+---Find all entities within an `origin` centered cube of a given `size.`
+---
+---@param origin Vector # World space cube position.
+---@param size number # Size of the cube in all directions.
+---@return EntityHandle[] # List of entities found.
+function Entities:FindAllInCube(origin, size)
+    return Entities:FindAllInBox(origin, size, size, size)
 end
 
 return version
