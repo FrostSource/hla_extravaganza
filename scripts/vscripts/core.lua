@@ -1,5 +1,5 @@
 --[[
-    v1.6.1
+    v2.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,9 +84,14 @@
 
 ]]
 
-local version = "v1.6.1"
+local version = "v2.1.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
+
+-- These are expected by core
+require 'util.util'
+require 'extensions.string'
+require 'storage'
 
 ---------------------
 -- Global functions
@@ -459,6 +464,7 @@ function GetWorld()
     return Entities:FindByClassname(nil, "worldent")
 end
 
+---@luadoc-ignore
 ---@diagnostic disable-next-line:lowercase-global
 function haskey(tbl, key)
     for k, _ in pairs(tbl) do
@@ -481,117 +487,8 @@ EntityClassNameMap = {}
 local function search(k, plist)
     for i = 1, #plist do
         local v = plist[i][k]
-        -- print('look for', k, 'in', plist[i])
-        -- if not v and type(plist[i].__index) == "table" then
-        --     v = plist[i].__index[k]
-        -- end
-        -- print('overflow', v)
         if v ~= nil then return v end
     end
-    -- print('didnt find', k)
-end
-
----comment
----@param self EntityClass
----@param name? string # Name to save. If not provided then all `self` data will be saved.
----@param value? any # If not provided then the key in `self` called `name` will be saved.
-local function save_entity_data(self, name, value)
-    if name then
-        Storage.Save(self, name, value~=nil and value or self[name])
-    end
-    -- for key, val in pairs(getmetatable(self).__index) do
-    for key, val in pairs(self) do
-        if not key:startswith("__") and type(val) ~= "function" then
-            -- print("Saving "..key, val)
-            Storage.Save(self, key, val)
-        end
-    end
-end
-
-local function load_entity_data(self)
-    for key, value in pairs(self) do
-        if not key:startswith("__") and type(value) ~= "function" then
-            
-            -- print("Loading "..key, "default "..tostring(value))
-            self[key] = Storage.Load(self, key, value)
-            -- if key == "TextPanel" then
-            --     print("LOAD " , self[key])
-            -- end
-            -- print("Loaded "..key, self[key])
-        end
-    end
-    -- print("DONE LOADING")
-end
-
----@TODO Since entities can inherit multiple classes, let this one be defined and have all classes inherit it
-if false then
----Class that inherits all entity classes. Mostly used when creating entity classes.
----`EntityHandle` should still be used when handling and passing generic entity types.
----@class EntityClass : EntityClassBase,CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
----@field __inherits table # Table of inherited classes.
----@field __name string # Name of the class.
-local EntityClass = {}
-
----@class EntityClassBase
-local EntityClassBase = {}
-
----Assign a new value to entity's field `name`.
----This also saves the field.
----@param name string
----@param value any
-function EntityClassBase:Set(name, value)
-end
----Save a given entity field. Call with no arguments to save all data.
----@param name? string # Name of the field to save.
----@param value? any # Value to save. If not provided the value will be retrieved from the field with the same `name`.
----@luadoc-ignore
-function EntityClassBase:Save(name, value)
-end
----Called automatically if defined
----@param loaded boolean
----@luadoc-ignore
-function EntityClassBase:OnReady(loaded)
-end
----Called automatically if defined
----@param spawnkeys CScriptKeyValues
----@luadoc-ignore
-function EntityClassBase:OnSpawn(spawnkeys)
-end
----Called automatically if defined
----@luadoc-ignore
-function EntityClassBase:Think()
-end
----Resume the entity think function.
----@luadoc-ignore
-function EntityClassBase:ResumeThink()
-end
----Pause the entity think function.
----@luadoc-ignore
-function EntityClassBase:PauseThink()
-end
----Called before the entity is killed.
----@luadoc-ignore
-function EntityClassBase:UpdateOnRemove()
-end
----Called when a breakable entity is broken.
----@param inflictor CBaseEntity
----@luadoc-ignore
-function EntityClassBase:OnBreak(inflictor)
-end
----Called when a breakable entity is broken.
----@param damageTable TypeDamageTable
----@luadoc-ignore
-function EntityClassBase:OnTakeDamage(damageTable)
-end
----Called when a breakable entity is broken.
----@param context CScriptPrecacheContext
----@luadoc-ignore
-function EntityClassBase:Precache(context)
-end
----@type boolean
-EntityClassBase.Initiated = false
----@type boolean
-EntityClassBase.IsThinking = false
 end
 
 ---Private inherit funcion which is used in both `inherit` and `entity` functions.
@@ -611,18 +508,44 @@ local function _inherit(base, self, fenv)
         Warning("Trying to inherit an already inherited class ( "..class_name.." -> ["..tostring(self)..","..self:GetClassname()..","..self:GetName().."] )\n")
         return
     end
-    -- table.insert(base.__inherits, valve_meta)
+
+    -- Define variable so we can tell valve metatable apart later
+    local valveMetaIntermediary = {}
+    rawset(valveMetaIntermediary, "valveMeta", true)
+
     if not self.__inherits then
-        self.__inherits = { setmetatable({},getmetatable(self)) }
+        -- Valve meta gets assigned to blank table so its metamethods work like normal
+        -- take this into account when looking for the valve meta
+        self.__inherits = { setmetatable(valveMetaIntermediary, getmetatable(self)) }
     end
     table.insert(self.__inherits, base)
 
-    setmetatable(self, {
+    local meta = {
         __name = self:GetDebugName().."_meta",
-        __index = function(t,k)
-            return search(k, self.__inherits)
+        -- Raw value table allows for checking when value changes
+        __values = {},
+    }
+    -- Used to automatically save values
+    meta.__newindex = function(table, key, value)
+        if not key:startswith("__") and type(value) ~= "function" then
+            meta.__values[key] = value
+            self:Save(key, value)
+        else
+            rawset(table, key, value)
         end
-    })
+    end
+    -- Used to search inherted values
+    meta.__index = function(table, key)
+        -- check entity values
+        if meta.__values[key] ~= nil then
+            return meta.__values[key]
+        end
+
+        -- check inherits
+        return search(key, self.__inherits)
+    end
+
+    setmetatable(self, meta)
 
     -- Special functions --
 
@@ -630,22 +553,47 @@ local function _inherit(base, self, fenv)
         if type(self.OnSpawn) == "function" then
             self:OnSpawn(spawnkeys)
         end
+        ---@TODO Test closure solving and impact it has
+        fenv.Spawn = nil
     end
 
     fenv.Activate = function(activateType)
 
-        -- Copy base reference data into self
-        ---@TODO: Copy inherited references too
-        for key, value in pairs(base) do
-            if not key:startswith("__") and type(value) == "table" then
-                -- print("Deep copying", key, value)
-                self[key] = DeepCopyTable(value)
+        local allinherits = getinherits(self)
+
+        for i = 1, #allinherits do
+            local inherit = allinherits[i]
+
+            -- Clone mutable data into entity so class won't get modified
+            for key, value in pairs(inherit) do
+                if not key:startswith("__") then
+
+                    if IsVector(value) then
+                        self[key] = Vector(value.x, value.y, value.z)
+                    elseif IsQAngle(value) then
+                        self[key] = QAngle(value.x, value.y, value.z)
+                    elseif type(value) == "table" then
+                        -- print("Deep copying", key, value)
+                        self[key] = DeepCopyTable(value)
+                    end
+
+                end
+            end
+
+            -- Redirect defined output functions
+            for output, func in pairs(inherit.__outputs) do
+                -- Define the function regardless of load state because it still needs to exist
+                rawset(self, output, func)
+                -- But don't do it on a game load to avoid doubling up
+                if activateType ~= 2 then
+                    print("Redirecting output \""..output.."\" to func ["..tostring(func).."]")
+                    self:RedirectOutput(output, output, self)
+                end
             end
         end
 
         if activateType == 2 then
             -- Load all saved entity data
-            -- load_entity_data(self)
             Storage.LoadAll(self, true)
         end
 
@@ -697,34 +645,7 @@ local function _inherit(base, self, fenv)
     --     end
     -- end
 
-    ---@TODO: Consider moving these to a base class
-
-    ---@luadoc-ignore
-    function self:ResumeThink()
-        if type(self.Think) == "function" then
-            self:SetContextThink("__EntityThink", function() return self:Think() end, 0)
-            self.IsThinking = true
-            self:Save()
-        else
-            Warning("Entity does not have base:Think function defined!")
-        end
-    end
-
-    ---@luadoc-ignore
-    function self:PauseThink()
-        self:SetContextThink("__EntityThink", nil, 0)
-        self.IsThinking = false
-        self:Save()
-    end
-
-    -- Define function to save all entity data
-    self.Save = save_entity_data
-
-    function self:Set(name, value)
-        self[name] = value
-        self:Save(name, value)
-    end
-
+    self.Save = EntityClass.Save
 
     local private = self:GetPrivateScriptScope()
     for k,v in pairs(base.__privates) do
@@ -766,8 +687,6 @@ function inherit(script)
     return base, self
 end
 
----@TODO: Keep a proxy table to track when fields are modified and automatically save.
-
 ---
 ---Creates a new entity class.
 ---
@@ -788,6 +707,12 @@ end
 function entity(name, ...)
 
     local inherits = {...}
+
+    -- If no inherits are provided then this is a top-level class
+    -- and needs to inherit the main EntityClass table.
+    if #inherits == 0 then
+        table.insert(inherits, EntityClass)
+    end
 
     -- Check if name is actually an inherit (class name was omitted)
     if type(name) ~= "string" and (type(name) == "table" or module_exists(name)) then
@@ -813,10 +738,6 @@ function entity(name, ...)
     end
     ---@cast inherits table[]
 
-    -- if self == nil then
-    --     error("`entity` function must be called from a script attached to an entity!")
-    -- end
-
     -- Try to retrieve cached class
     local base = EntityClassNameMap[name]
     if not base then
@@ -825,6 +746,7 @@ function entity(name, ...)
             __script_file = GetScriptFile(nil, 3),
             __inherits = inherits,
             __privates = {},
+            __outputs = {}
         }
         -- Meta table to search all inherits
         setmetatable(base, {
@@ -851,6 +773,79 @@ function entity(name, ...)
 
     return base, self, super, base.__privates
 end
+
+--#region EntityClass Definition
+
+---The top-level entity class that provides base functionality.
+---@class EntityClass : CBaseEntity,CEntityInstance,CBaseModelEntity,CBasePlayer,CHL2_Player,CBaseAnimating,CBaseFlex,CBaseCombatCharacter,CAI_BaseNPC,CBaseTrigger,CEnvEntityMaker,CInfoWorldLayer,CLogicRelay,CMarkupVolumeTagged,CEnvProjectedTexture,CPhysicsProp,CSceneEntity,CPointClientUIWorldPanel,CPointTemplate,CPointWorldText,CPropHMDAvatar,CPropVRHand
+---@field __inherits table # Table of inherited classes.
+---@field __name string # Name of the class.
+---@field __outputs table<string, function> # Map of output names to functions that will be connected on spawn.
+---@field Initiated boolean # If the class entity has been activated.
+---@field IsThinking boolean # If the entity is currently thinking with `Think` function.
+---@field OnReady fun(self: EntityClass, loaded: boolean) # Called automatically on `Activate` if defined.
+---@field OnSpawn fun(self: EntityClass, spawnkeys: CScriptKeyValues) # Called automatically on `Spawn` if defined.
+---@field UpdateOnRemove fun(self: EntityClass) # Called before the entity is killed.
+---@field OnBreak fun(self: EntityClass, inflictor: EntityHandle) # Called when a breakable entity is broken.
+---@field OnTakeDamage fun(self: EntityClass, damageTable: TypeDamageTable) # Called when entity takes damage.
+---@field Precache fun(self: EntityClass, context: CScriptPrecacheContext) # Called before Spawn for precaching.
+EntityClass = entity("EntityClass")
+
+---Assign a new value to entity's field `name`.
+---This also saves the field.
+---@param name string
+---@param value any
+---@deprecated
+function EntityClass:Set(name, value)
+    -- self[name] = value
+    ---@TODO Unsure if there's a reasonable difference between this and normal assignment
+    rawset(self, name, value)
+    self:Save(name, value)
+end
+
+---Save a given entity field. Call with no arguments to save all data.
+---@param name? string # Name of the field to save.
+---@param value? any # Value to save. If not provided the value will be retrieved from the field with the same `name`.
+---@luadoc-ignore
+function EntityClass:Save(name, value)
+    if name then
+        Storage.Save(self, name, value~=nil and value or self[name])
+    end
+    for key, val in pairs(self) do
+        if not key:startswith("__") and type(val) ~= "function" then
+            Storage.Save(self, key, val)
+        end
+    end
+end
+
+---Main entity think function which auto resumes on game load.
+---@luadoc-ignore
+function EntityClass:Think()
+    Warning("Trying to think on entity class with no think defined ["..self.__name.."]\n")
+end
+
+---Resume the entity think function.
+---@luadoc-ignore
+function EntityClass:ResumeThink()
+    self:SetContextThink("__EntityThink", function() return self:Think() end, 0)
+    self.IsThinking = true
+end
+
+---Pause the entity think function.
+---@luadoc-ignore
+function EntityClass:PauseThink()
+    self:SetContextThink("__EntityThink", nil, 0)
+    self.IsThinking = false
+end
+
+---Define a function to redirected to `output` on spawn.
+---@param output string
+---@param func function
+function EntityClass:Output(output, func)
+    self.__outputs[output] = func
+end
+
+--#endregion
 
 
 ---Prints all classes that `ent` inherits.
@@ -882,6 +877,40 @@ function printinherits(ent, nest)
     end
 end
 
+---Get the original metatable that Valve assigns to the entity.
+---@param ent EntityClass # The entity search.
+---@return table? # Metatable originally assigned to `ent`.
+---@diagnostic disable-next-line:lowercase-global
+function getvalvemeta(ent)
+    local inherits = rawget(ent, "__inherits")
+    if inherits then
+        for _, inherit in ipairs(inherits) do
+            if rawget(inherit, "valveMeta") then
+                return getmetatable(inherit)
+            end
+        end
+    end
+end
+
+---Get a list of all classes that `class` inherits.
+---@param class EntityClass # The entity or class to search.
+---@return EntityClass[] # List of class tables.
+---@diagnostic disable-next-line:lowercase-global
+function getinherits(class)
+    local foundinherits = {}
+    local inherits = rawget(class, "__inherits")
+    if inherits then
+        for _, inherit in ipairs(inherits) do
+            -- Exclude valve meta because it doesn't have fields we are looking for
+            if not rawget(inherit, "valveMeta") then
+                table.insert(foundinherits, inherit)
+                vlua.extend(foundinherits, getinherits(inherit))
+            end
+        end
+    end
+    return foundinherits
+end
+
 ---Get if an `EntityClass` instance inherits a given `class`.
 ---@param ent EntityClass|EntityHandle # Entity to check.
 ---@param class string|table # Name or class table to check.
@@ -909,6 +938,7 @@ function isinstance(ent, class)
     return false
 end
 
+---@luadoc-ignore
 ---@diagnostic disable-next-line:lowercase-global
 function printmeta(ent)
     local meta = getmetatable(ent)
@@ -929,11 +959,9 @@ end
 -- Base libraries
 
 ifrequire 'debug.core'
-ifrequire 'util.util'
 ifrequire 'util.enums'
 ifrequire 'extensions.vector'
 ifrequire 'extensions.entity'
-ifrequire 'extensions.string'
 ifrequire 'extensions.entities'
 ifrequire 'math.core'
 ifrequire 'data.queue'
@@ -942,7 +970,6 @@ ifrequire 'data.inventory'
 
 -- Useful extravaganza libraries
 
-ifrequire 'storage'
 ifrequire 'input'
 ifrequire 'gesture'
 ifrequire 'player'
