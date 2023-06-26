@@ -1,5 +1,5 @@
 --[[
-    v1.0.0
+    v1.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides Vector class extension methods.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v1.0.0"
+local version = "v1.1.0"
 
 ---@class Vector
 local meta = getmetatable(Vector())
@@ -58,6 +58,24 @@ function meta:IsParallel(vector)
     end
 
     return self:Normalized() == vector:Normalized() or self:Normalized() == -vector:Normalized()
+end
+
+---Spherical linear interpolation between the calling vector and the target vector over t = [0, 1].
+---@param target Vector # The target vector to interpolate towards.
+---@param t number # The interpolation factor, ranging from 0 to 1.
+---@return Vector # The resulting vector after spherical linear interpolation.
+function meta:Slerp(target, t)
+    local dot = self:Dot(target)
+    dot = math.max(-1, math.min(1, dot))
+
+    local theta = math.acos(dot) * t
+    local relative = target - (self * dot)
+    relative = relative:Normalized()
+
+    local a = self * math.cos(theta)
+    local b = relative * math.sin(theta)
+
+    return a + b
 end
 
 return version
