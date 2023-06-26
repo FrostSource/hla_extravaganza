@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.9
+    Version 2.0.10
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -2187,9 +2187,9 @@ function CBaseAnimating:GetAttachmentOrigin(attachmentIndex) end
 ---@return number
 function CBaseAnimating:GetCycle() end
 ---Get the value of the given animGraph parameter.
----@param pszParam string
----@return table
-function CBaseAnimating:GetGraphParameter(pszParam) end
+---@param paramName string
+---@return any
+function CBaseAnimating:GetGraphParameter(paramName) end
 ---Get scale of entity's model.
 ---@return number
 function CBaseAnimating:GetModelScale() end
@@ -3706,9 +3706,9 @@ function VectorClass:Length() end
 ---@return number
 function VectorClass:Length2D() end
 ---Linear interpolation between the vector and the passed in target over t = [0,1].
----@param target Vector
----@param t number
----@return Vector
+---@param target Vector # The target vector to interpolate towards.
+---@param t number # The interpolation factor, ranging from 0 to 1.
+---@return Vector # The resulting vector after linear interpolation.
 function VectorClass:Lerp(target, t) end
 ---Returns the vector normalized.
 ---@return Vector
