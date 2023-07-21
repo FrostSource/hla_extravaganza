@@ -467,7 +467,7 @@ end
 ListenToGameEvent("primary_hand_changed", function(data)
     ---@cast data GAME_EVENT_PRIMARY_HAND_CHANGED
     SetPrimaryHand(data.is_primary_left and 0 or 1)
-end)
+end, nil)
 
 local function InputThink()
     local player = Entities:GetLocalPlayer()
