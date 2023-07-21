@@ -147,3 +147,17 @@ function CAI_BaseNPC:EstimateEnemyTarget(distanceTolerance)
     return nil
 end
 
+---@alias RelationshipDisposition
+---| "D_HT" # Hate
+---| "D_FR" # Fear
+---| "D_LI" # Like
+---| "D_NU" # Neutral
+
+---Set the relationship of this NPC with a targetname or classname.
+---@param target string # Targetname or classname.
+---@param disposition RelationshipDisposition # Type of relationship with `target`.
+---@param priority? number # How much the Subject(s) should Like/Hate/Fear the Target(s). Higher priority = stronger feeling. Default is 0.
+function CAI_BaseNPC:SetRelationship(target, disposition, priority)
+    priority = priority or 0
+    self:EntFire("SetRelationship", target .. " " .. disposition .. " " .. priority)
+end
