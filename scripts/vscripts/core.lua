@@ -355,7 +355,7 @@ function Expose(func, name, scope)
     end
     fenv = scope or fenv
     if Convars:GetInt("developer") > 0 then
-        print("Sanitizing function '"..name.."' for Hammer in scope ["..tostring(fenv).."]")
+        devprint2("Sanitizing function '"..name.."' for Hammer in scope ["..tostring(fenv).."]")
     end
     fenv[name] = func
     fenv[name:lower()] = func
