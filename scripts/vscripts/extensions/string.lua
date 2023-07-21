@@ -33,6 +33,20 @@ function string.endswith(s, substr)
 end
 
 ---
+---Split an input string using a raw pattern string. No changes are made to the pattern.
+---
+---@param s string
+---@param pattern string # Split pattern.
+---@return string[]
+function string.splitraw(s, pattern)
+    local t = {}
+    for str in s:gmatch(pattern) do
+        table.insert(t, str)
+    end
+    return t
+end
+
+---
 ---Split an input string using a separator string.
 ---
 ---Found at https://stackoverflow.com/a/7615129
