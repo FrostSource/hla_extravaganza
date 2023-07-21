@@ -1,5 +1,5 @@
 --[[
-    v2.1.0
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v2.1.0"
+local version = "v2.2.0"
 
 ---
 ---Get the top level entities parented to this entity. Not children of children.
@@ -222,6 +222,14 @@ function CBaseEntity:DoNotDrop(enabled)
     else
         self:DeleteAttribute("DoNotDrop")
     end
+end
+
+---Get all criteria as a table.
+---@return CriteriaTable
+function CBaseEntity:GetCriteria()
+    local c = {}
+    self:GatherCriteria(c)
+    return c
 end
 
 return version
