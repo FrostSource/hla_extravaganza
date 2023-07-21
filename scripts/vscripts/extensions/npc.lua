@@ -34,7 +34,7 @@ Schedule = {
     },
     ---@enum ScheduleState
     State = {
-        None = 10,
+        None = 0,
         Idle = 1,
         Alert = 2,
         Combat = 3,
