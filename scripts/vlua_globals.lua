@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.10
+    Version 2.0.11
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -1499,7 +1499,7 @@ function vlua.contains(t, key) end
 ---@param key any
 ---@return integer
 function vlua.delete(t, key) end
----Implements Squirrel clone operator.
+---Implements Squirrel clone operator. This is shallow clone and will also assign the metatable.
 ---@param t table
 ---@return table
 function vlua.clone(t) end
@@ -3175,8 +3175,8 @@ function CPointTemplate:ForceSpawn() end
 ---GetSpawnedEntities() : Get the list of the most recent spawned entities
 function CPointTemplate:GetSpawnedEntities() end
 ---SetSpawnCallback( hCallbackFunc, hCallbackScope, hCallbackData ) : Set a callback for when the template spawns entities. The spawned entities will be passed in as an array.
----@param hCallbackFunc handle
----@param hCallbackScope handle
+---@param hCallbackFunc fun(context: table|EntityHandle[], entities: EntityHandle[]|nil)
+---@param hCallbackScope handle|nil
 function CPointTemplate:SetSpawnCallback(hCallbackFunc, hCallbackScope) end
 
 --#endregion
@@ -3486,9 +3486,9 @@ function Convars:GetInt(name) end
 ---@param name string
 ---@return string|nil
 function Convars:GetStr(name) end
----RegisterCommand(name, fn, helpString, flags) : register a console command.
----@param name string
----@param callback function
+---Register a console command with a callback function.
+---@param name string # Name of the command as it appears in the console.
+---@param callback fun(_:string, ...:string) # Callback function. Command name is passed to first function and all others are passed after.
 ---@param helpText string
 ---@param flags integer
 function Convars:RegisterCommand(name, callback, helpText, flags) end
