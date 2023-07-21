@@ -1,5 +1,5 @@
 --[[
-    v2.3.0
+    v2.4.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v2.3.0"
+local version = "v2.4.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -455,6 +455,19 @@ function RandomFromTable(tbl)
     end
 
     return selectedKey, tbl[selectedKey]
+end
+
+---
+---Shuffles a given array.
+---
+---@source https://stackoverflow.com/a/68486276
+---
+---@param t any[]
+function ShuffleArray(t)
+    for i = #t, 2, -1 do
+        local j = RandomInt(1, i)
+        t[i], t[j] = t[j], t[i]
+    end
 end
 
 ---@class TraceTableLineExt : TraceTableLine
