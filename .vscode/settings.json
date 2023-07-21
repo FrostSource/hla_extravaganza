@@ -27,4 +27,9 @@
     "Lua.hover.previewFields": 1,
     "Lua.type.weakUnionCheck": true,
     "Lua.type.weakNilCheck": true,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/_bakeresourcecache": true,
+        "**/*.bak": true
+    },
 }
