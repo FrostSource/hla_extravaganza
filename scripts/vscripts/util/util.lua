@@ -12,6 +12,7 @@
 ]]
 
 Util = {}
+Util.version = "v2.1.0"
 
 ---
 ---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
