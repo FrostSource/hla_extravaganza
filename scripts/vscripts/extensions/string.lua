@@ -11,6 +11,8 @@
     ```
 ]]
 
+local version = "v1.2.0"
+
 ---
 ---Gets if a string starts with a substring.
 ---@param s string
@@ -86,3 +88,4 @@ function string.trimright(s, char)
     local index = s:find(char)
     return index and s:sub(1, index - 1) or s
 end
+
