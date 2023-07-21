@@ -1,5 +1,5 @@
 --[[
-    v2.4.2
+    v2.5.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v2.4.2"
+local version = "v2.5.0"
 
 print("Initializing Extravaganza core system ".. version .." ...")
 
