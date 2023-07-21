@@ -1,5 +1,5 @@
 --[[
-    v2.4.0
+    v2.4.1
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v2.4.0"
+local version = "v2.4.1"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -683,12 +683,14 @@ local function _inherit(base, self, fenv)
 
             -- Redirect defined output functions
             for output, func in pairs(inherit.__outputs) do
+                -- Function needs a different name because some outputs do actions when called for some reason
+                local newname = output .. "_Func"
                 -- Define the function regardless of load state because it still needs to exist
-                rawset(self, output, func)
+                rawset(self, newname, func)
                 -- But don't do it on a game load to avoid doubling up
                 if activateType ~= 2 then
-                    print("Redirecting output \""..output.."\" to func ["..tostring(func).."]")
-                    self:RedirectOutput(output, output, self)
+                    devprint2("Redirecting output \""..output.."\" to func ["..tostring(func).."] as '"..newname.."'")
+                    self:RedirectOutput(output, newname, self)
                 end
             end
         end
