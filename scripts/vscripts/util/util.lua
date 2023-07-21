@@ -200,3 +200,19 @@ function Util.CreateConstraint(entity1, entity2, class, properties)
     if entity2 then entity2:SetEntityName(name2) end
     return constraint
 end
+
+---Choose and return a random argument.
+---@generic T
+---@param ... T
+---@return T
+function Util.Choose(...)
+    local args = {...}
+    local numArgs = #args
+    if numArgs == 0 then
+        return nil
+    elseif numArgs == 1 then
+        return args[1]
+    else
+        return args[RandomInt(1, numArgs)]
+    end
+end
