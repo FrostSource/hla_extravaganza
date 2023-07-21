@@ -1,5 +1,5 @@
 --[[
-    v2.2.0
+    v2.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v2.2.0"
+local version = "v2.3.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -433,6 +433,28 @@ end
 function RandomFromArray(array, min, max)
     local i = RandomInt(min or 1, max or #array)
     return array[i], i
+end
+
+---
+---Returns a random key/value pair from a unordered table.
+---
+---@param tbl table # Table to get a random pair from.
+---@return any key # Random key selected.
+---@return any value # Value linked to the random key.
+function RandomFromTable(tbl)
+    local count = 0
+    local selectedKey
+
+    for key in pairs(tbl) do
+        count = count + 1
+
+        -- Randomly select a key with 1/count probability
+        if RandomFloat(0, 1) < 1 / count then
+            selectedKey = key
+        end
+    end
+
+    return selectedKey, tbl[selectedKey]
 end
 
 ---@class TraceTableLineExt : TraceTableLine
