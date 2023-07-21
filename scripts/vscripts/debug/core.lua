@@ -1,5 +1,5 @@
 --[[
-    v1.4.0
+    v1.5.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -12,6 +12,7 @@
 
 ]]
 Debug = {}
+Debug.version = "v1.5.0"
 
 ---
 ---Prints useful entity information about a list of entities, such as classname and model.
@@ -154,7 +155,8 @@ local current_print_count = 0
 ---@param tbl table # Table to print.
 ---@param prefix? string # Optional prefix for each line.
 ---@param ignore? any[] # Optional nested tables to ignore.
-function Debug.PrintTable(tbl, prefix, ignore)
+---@param meta? boolean # If meta tables should be printed.
+function Debug.PrintTable(tbl, prefix, ignore, meta)
     if type(tbl) ~= "table" then return end
     prefix = prefix or ""
     ignore = ignore or {tbl}
@@ -175,11 +177,19 @@ function Debug.PrintTable(tbl, prefix, ignore)
             local ts = " ("..(IsEntity(value) and "entity" or type(value))..")"
             print( string.format( "\t%s%-32s %s", prefix, key, "= " .. format_string(vs) .. ts ) )
             if type(value) == "table" and not IsEntity(value) and not vlua.find(ignore, value) then
-                ignore[#ignore+1] = value
+                table.insert(ignore, value)
                 current_recursion_level = current_recursion_level + 1
-                Debug.PrintTable(value, prefix.."\t", ignore)
+                Debug.PrintTable(value, prefix.."\t", ignore, meta)
                 current_recursion_level = current_recursion_level - 1
             end
+        end
+    end
+    if meta then
+        local foundmeta = getmetatable(tbl)
+        if foundmeta then
+            print( string.format( "\t%s%-32s %s", prefix, "[#metatable]", "", "" ))
+            table.insert(ignore, foundmeta)
+            Debug.PrintTable(foundmeta, prefix.."\t", ignore, meta)
         end
     end
     if current_print_count ~= -1 then
