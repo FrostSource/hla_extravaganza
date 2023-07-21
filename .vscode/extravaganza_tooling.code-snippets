@@ -28,7 +28,7 @@
 			"$0",
 
 		],
-		"description": "Header comment for scripts.",
+		"description": "Header section for scripts.",
 	},
 	
 	"Script Header Not Using Core":{
@@ -42,8 +42,22 @@
 			"```$0"
 
 		],
-		"description": "Header comment for scripts.",
+		"description": "Header requirement for scripts.",
+	},
+	
+	"Script Footer Initialized":{
+		"scope": "lua",
+		"prefix": ["footer initialized"],
+		"body": [
+			"print(\"${1:name}.lua \".. ${2:version} ..\" initialized...\")",
+			"",
+			"return ${2:version}",
+		],
+		"description": "Footer initialization printing.",
 	},
 
 	
 }
+
+
+
