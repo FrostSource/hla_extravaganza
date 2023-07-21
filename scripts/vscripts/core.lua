@@ -1,5 +1,5 @@
 --[[
-    v2.4.1
+    v2.4.2
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,9 +84,9 @@
 
 ]]
 
-local version = "v2.4.1"
+local version = "v2.4.2"
 
-Msg("Initializing Extravaganza core system ".. version .." ...")
+print("Initializing Extravaganza core system ".. version .." ...")
 
 -- These are expected by core
 require 'util.util'
@@ -1083,6 +1083,6 @@ ifrequire 'wrist_pocket.core'
 
 --#endregion
 
-Msg("...done")
+print("...done")
 
 return version
