@@ -1,5 +1,5 @@
 --[[
-    v1.5.0
+    v1.6.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -12,7 +12,7 @@
 
 ]]
 Debug = {}
-Debug.version = "v1.5.0"
+Debug.version = "v1.6.0"
 
 ---
 ---Prints useful entity information about a list of entities, such as classname and model.
@@ -272,6 +272,23 @@ function Debug.PrintEntityCriteria(ent)
     Debug.PrintTable(c)
 end
 CBaseEntity.PrintCriteria = Debug.PrintEntityCriteria
+
+---
+---Prints current context criteria for an entity except for values saved using `storage.lua`.
+---
+---@param ent EntityHandle
+function Debug.PrintEntityBaseCriteria(ent)
+    ---@type table<string, any>
+    local c, d = {}, {}
+    ent:GatherCriteria(c)
+    for key, value in pairs(c) do
+        if not key:find("::") then
+            d[key] = value
+        end
+    end
+    Debug.PrintTable(d)
+end
+CBaseEntity.PrintBaseCriteria = Debug.PrintEntityBaseCriteria
 
 local classes = {
     [CBaseEntity] = 'CBaseEntity';
