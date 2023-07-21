@@ -11,7 +11,7 @@
     require "extensions.npc"
     ```
 ]]
-require "core"
+
 require "extensions.entity"
 require "extensions.entities"
 
