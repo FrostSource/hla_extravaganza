@@ -17,8 +17,8 @@ local version = "v1.1.0"
 local meta = getmetatable(Vector())
 
 local zero = Vector(0, 0, 0)
-local up = Vector(0, 0, 1)
-local right = Vector(0, 1, 0)
+-- local up = Vector(0, 0, 1)
+-- local right = Vector(0, 1, 0)
 
 ---
 ---Calculates the perpendicular vector to the current vector.
@@ -60,7 +60,9 @@ function meta:IsParallel(vector)
     return self:Normalized() == vector:Normalized() or self:Normalized() == -vector:Normalized()
 end
 
+---
 ---Spherical linear interpolation between the calling vector and the target vector over t = [0, 1].
+---
 ---@param target Vector # The target vector to interpolate towards.
 ---@param t number # The interpolation factor, ranging from 0 to 1.
 ---@return Vector # The resulting vector after spherical linear interpolation.
