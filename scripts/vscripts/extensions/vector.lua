@@ -80,4 +80,22 @@ function meta:Slerp(target, t)
     return a + b
 end
 
+---
+---Translates the vector in a local coordinate system.
+---
+---@param offset Vector # The translation offset vector.
+---@param forward Vector # The forward direction of the local coordinate system.
+---@param right Vector # The right direction of the local coordinate system.
+---@param up Vector # The up direction of the local coordinate system.
+---@return Vector # The translated 3D vector.
+function meta:LocalTranslate(offset, forward, right, up)
+    local x = self.x + offset.x * forward.x + offset.y * right.x + offset.z * up.x
+    local y = self.y + offset.x * forward.y + offset.y * right.y + offset.z * up.y
+    local z = self.z + offset.x * forward.z + offset.y * right.z + offset.z * up.z
+    -- local x = self.x + offset.x * right.x + offset.y * up.x + offset.z * forward.x
+    -- local y = self.y + offset.x * right.y + offset.y * up.y + offset.z * forward.y
+    -- local z = self.y + offset.x * right.z + offset.y * up.z + offset.z * forward.z
+    return Vector(x, y, z)
+end
+
 return version
