@@ -105,6 +105,12 @@ function CAI_BaseNPC:StopSchedule(schedule, dontKill)
     end
 end
 
+---Set state of the NPC.
+---@param state ScheduleState
+function CAI_BaseNPC:SetState(state)
+    local schedule = self:StartSchedule(state, 0, 0, false, self)
+end
+
 ---
 ---Get if this combine has an enemy target.
 ---
