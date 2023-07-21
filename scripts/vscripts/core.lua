@@ -1,5 +1,5 @@
 --[[
-    v2.1.0
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -84,7 +84,7 @@
 
 ]]
 
-local version = "v2.1.0"
+local version = "v2.2.0"
 
 Msg("Initializing Extravaganza core system ".. version .." ...")
 
@@ -246,6 +246,72 @@ function printn(...)
     local args = {...}
     for _,v in ipairs(args) do
         print(v)
+    end
+end
+
+---
+---Prints all arguments if convar "developer" is greater than 0.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function devprint(...)
+    if Convars:GetInt("developer") > 0 then
+        print(...)
+    end
+end
+
+---
+---Prints all arguments on a new line instead of tabs if convar "developer" is greater than 0.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function devprints(...)
+    if Convars:GetInt("developer") > 0 then
+        prints(...)
+    end
+end
+
+---
+---Prints all arguments with spaces between instead of tabs if convar "developer" is greater than 0.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function devprintn(...)
+    if Convars:GetInt("developer") > 0 then
+        printn(...)
+    end
+end
+
+---
+---Prints all arguments if convar "developer" is greater than 1.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function devprint2(...)
+    if Convars:GetInt("developer") > 1 then
+        print(...)
+    end
+end
+
+---
+---Prints all arguments on a new line instead of tabs if convar "developer" is greater than 1.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function devprints2(...)
+    if Convars:GetInt("developer") > 1 then
+        prints(...)
+    end
+end
+
+---
+---Prints all arguments with spaces between instead of tabs if convar "developer" is greater than 1.
+---
+---@param ... any
+---@diagnostic disable-next-line: lowercase-global
+function devprintn2(...)
+    if Convars:GetInt("developer") > 1 then
+        printn(...)
     end
 end
 
