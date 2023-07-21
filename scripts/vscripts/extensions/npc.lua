@@ -112,27 +112,38 @@ function CAI_BaseNPC:SetState(state)
 end
 
 ---
----Get if this combine has an enemy target.
+---Get if this NPC has an enemy target.
 ---
----This function only works with `npc_combine_s` entities.
----@return boolean # True if the combine has an enemy.
+---This function only works with entities that have `enemy` or `distancetoenemy` criteria.
+---
+---@return boolean # True if the NPC has an enemy target.
 function CAI_BaseNPC:HasEnemyTarget()
-    return self:GetGraphParameter('f_enemy_distance') ~= -1
+    local criteria = self:GetCriteria()
+    return criteria.enemy ~= nil or criteria.distancetoenemy ~= 16384
 end
 
 ---
----Estimate the nearest enemy that this combine is fighting using its animgraph parameters.
+---Estimate the enemy that this NPC is fighting using its criteria values.
 ---
----This function only works with `npc_combine_s` entities.
+---This function only works with entities that have `enemy` criteria; "npc_combine_s", "npc_zombine", "npc_zombie_blind".
 ---
----**NOTE: This function will not work correctly without a modified version of the combine animgraph that extends the maximum enemy distance!**
----
----@param maxRadius number # Maximum radius to estimate around. Default = 64.
+---@param distanceTolerance? number # Discrepancy allowed when comparing distance to enemy. Default 1
 ---@return EntityHandle? # Estimated enemy target.
-function CAI_BaseNPC:EstimateEnemyTarget(maxRadius)
-    local heading = self:GetGraphParameter('f_enemy_heading')
-    local distance = self:GetGraphParameter('f_enemy_distance')
-    local at = self:GetOrigin() + RotatePosition(Vector(), QAngle(0, heading, 0), self:GetForwardVector()) * distance
-    return Entities:FindNearest(at, maxRadius or 64)
+function CAI_BaseNPC:EstimateEnemyTarget(distanceTolerance)
+    distanceTolerance = distanceTolerance or 1
+    local criteria = self:GetCriteria()
+    local enemyClass = criteria.enemy
+
+    if enemyClass then
+        for _, npc in ipairs(Entities:FindAllByClassnameWithin(enemyClass, self:GetOrigin(), criteria.distancetoenemy)) do
+            if npc ~= self then
+                local dist = VectorDistance(npc:GetOrigin(), self:GetOrigin())
+                if math.abs(dist - criteria.distancetoenemy) < distanceTolerance then
+                    return npc
+                end
+            end
+        end
+    end
+    return nil
 end
 
