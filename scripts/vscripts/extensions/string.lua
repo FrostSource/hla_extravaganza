@@ -49,7 +49,7 @@ end
 ---
 ---Split an input string using a separator string.
 ---
----Found at https://stackoverflow.com/a/7615129
+---@link https://stackoverflow.com/a/7615129
 ---
 ---@param s string
 ---@param sep string? # String to split by. Default is whitespace.
@@ -58,11 +58,7 @@ function string.split(s, sep)
     if sep == nil then
         sep = '%s'
     end
-    local t = {}
-    for str in s:gmatch('([^'..sep..']+)') do
-        table.insert(t, str)
-    end
-    return t
+    return string.splitraw(s, '([^'..sep..']+)')
 end
 
 ---
@@ -103,3 +99,4 @@ function string.trimright(s, char)
     return index and s:sub(1, index - 1) or s
 end
 
+return version
