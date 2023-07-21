@@ -100,7 +100,7 @@ function CAI_BaseNPC:StopSchedule(schedule, dontKill)
     if IsEntity(schedule, true) then
         schedule:EntFire("StopSchedule")
         if not dontKill then
-            schedule:Kill()
+            schedule:EntFire("Kill")
         end
     end
 end
