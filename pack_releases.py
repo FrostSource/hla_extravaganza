@@ -649,6 +649,7 @@ def generate_script_readmes():
         else:
             output = Path(path).joinpath('README.md')
         luas = [f for f in glob(os.path.join(path,'*.lua')) if not os.path.basename(f).startswith('__test')]
+        luas.sort()
         if len(luas) > 0:
             print(f'Generating readme in "{os.path.relpath(output.parent, addon.root)}" for {len(luas)} Lua files... ', end='')
             doc = ''
@@ -660,7 +661,8 @@ def generate_script_readmes():
                     prev_doc = f.readlines()
             if not ''.join(prev_doc[2:]) == doc:
                 with open(output, 'w') as f:
-                    f.write(f'> Last Updated {datetime.datetime.now().strftime("%Y-%m-%d")}\n\n{doc}')
+                    index = "## Index\n" + "\n".join(f"{i}. [{os.path.basename(lua)}](#{os.path.basename(lua).replace('.','')})" for i, lua in enumerate(luas, 1))
+                    f.write(f'> Last Updated {datetime.datetime.now().strftime("%Y-%m-%d")}\n\n{index}\n\n{doc}')
                 print('DONE')
             else:
                 print('NO CHANGES')
