@@ -12,6 +12,8 @@
 
 ]]
 require "util.globals"
+require "extensions.entity"
+require "math.core"
 
 Debug = {}
 Debug.version = "v1.6.0"
@@ -275,7 +277,6 @@ function Debug.FindEntity(ent, duration)
     end
     DebugDrawLine(from, ent:GetOrigin(), 255, 0, 0, true, duration)
     local radius = ent:GetBiggestBounding()/2
-    print(radius)
     if radius == 0 then radius = 16 end
     DebugDrawCircle(ent:GetOrigin(), Vector(255), 128, radius, true, duration)
     DebugDrawSphere(ent:GetCenter(), Vector(255), 128, radius, true, duration)

@@ -13,7 +13,6 @@
 
 -- These are expected by globals
 require 'util.util'
-require 'extensions.string'
 
 ---
 ---Get the file name of the current script without folders or extension. E.g. `util.util`

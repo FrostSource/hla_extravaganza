@@ -10,6 +10,7 @@
     require "extensions.vector"
     ```
 ]]
+require "math.core"
 
 local version = "v1.1.0"
 
