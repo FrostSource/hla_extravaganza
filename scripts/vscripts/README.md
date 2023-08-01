@@ -1,23 +1,25 @@
-> Last Updated 2023-06-04
+> Last Updated 2023-08-01
+
+## Index
+1. [class.lua](#classlua)
+2. [core.lua](#corelua)
+3. [gesture.lua](#gesturelua)
+4. [input.lua](#inputlua)
+5. [player.lua](#playerlua)
+6. [storage.lua](#storagelua)
 
 ---
 
-# core.lua (v1.3.0)
+# class.lua
 
-The main core script provides useful global functions as well as loading any standard libraries that it can find. 
+> v1.0.0
 
-The two main purposes are: 
-
-1. Automatically load libraries to simplify the process for users.
-2. Provide entity class functions to emulate OOP programming.
-
-
-Load this script into the global scope using the following line: 
+If not using `vscripts/core.lua`, load this file at game start using the following line: 
 
 
 
 ```lua
-require "core"
+require "class"
 ```
 
 
@@ -89,61 +91,62 @@ end
 ```
 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
-
-`GetScriptFile(sep, level)`</td><td> Get the file name of the current script without folders or extension. E.g. `util.util` </td></tr><tr><td>
-
-`IsEntity(handle, checkValidity)`</td><td> Get if the given `handle` value is an entity, regardless of if it's still alive.  A common usage is replacing the often used entity check:      if entity ~= nil and IsValidEntity(entity) then  With:      if IsEntity(entity, true) then </td></tr><tr><td>
-
-`AddOutput(handle, output, target, input, parameter, delay, activator, caller, fireOnce)`</td><td> Add an output to a given entity `handle`. </td></tr><tr><td>
-
-`module_exists(name)`</td><td> Checks if the module/script exists. </td></tr><tr><td>
-
-`ifrequire(modname, callback)`</td><td> Loads the given module, returns any value returned by the given module(`true` when module returns nothing).  Then runs the given callback function.  If the module fails to load then the callback is not executed and no error is thrown. </td></tr><tr><td>
-
-`IncludeScript(scriptFileName, scope)`</td><td> Execute a script file. Included in the current scope by default. </td></tr><tr><td>
-
-`IsVREnabled()`</td><td> Gets if the game was started in VR mode. </td></tr><tr><td>
-
-`prints(...)`</td><td> Prints all arguments with spaces between instead of tabs. </td></tr><tr><td>
-
-`printn(...)`</td><td> Prints all arguments on a new line instead of tabs. </td></tr><tr><td>
-
-`Expose(func, name, scope)`</td><td> Add a function to the calling entity's script scope with alternate casing.  Makes a function easier to call from Hammer through I/O.  E.g.      local function TriggerRelay(io)         DoEntFire("my_relay", "Trigger", "", 0, io.activator, io.caller)     end     Expose(TriggerRelay)     -- Or with alternate name     Expose(TriggerRelay, "RelayInput") </td></tr><tr><td>
-
-`IsVector(value)`</td><td> Get if a value is a `Vector` </td></tr><tr><td>
-
-`IsQAngle(value)`</td><td> Get if a value is a `QAngle` </td></tr><tr><td>
-
-`DeepCopyTable(tbl)`</td><td> Copy all keys from `tbl` and any nested tables into a brand new table and return it. This is a good way to get a unique reference with matching data.  Any functions and userdata will be copied by reference, except for: `Vector`, `QAngle` </td></tr><tr><td>
-
-`RandomFromArray(array, min, max)`</td><td> Returns a random value from an array. </td></tr><tr><td>
-
-`TraceLineExt(parameters)`</td><td> Does a raytrace along a line with extended parameters. You ignore multiple entities as well as classes and names. Because the trace has to be redone multiple times, a `timeout` parameter can be defined to cap the number of traces. </td></tr><tr><td>
-
-`IsWorld(entity)`</td><td> Get if an entity is the world entity. </td></tr><tr><td>
-
-`GetWorld()`</td><td> Get the world entity. </td></tr><tr><td>
-
-`haskey()`</td><td></td></tr><tr><td>
-
-`EntityClassBase:Set(name, value)`</td><td>Assign to new value to entity's member `name`. This also saves the member.</td></tr><tr><td>
-
-`self:Set()`</td><td></td></tr><tr><td>
 
 `inherit(script)`</td><td>Inherit an existing entity class which was defined using `entity` function.</td></tr><tr><td>
 
 `entity(name, ...)`</td><td> Creates a new entity class.  If this is called in an entity attached script then the entity automatically inherits the class and the class inherits the entity's metatable.  The class is only created once so this can be called in entity attached scripts multiple times and all subsequent calls will return the already created class. </td></tr><tr><td>
 
-`getinherits()`</td><td></td></tr><tr><td>
+`EntityClass:Set(name, value)`</td><td>Assign a new value to entity's field `name`. This also saves the field.</td></tr><tr><td>
 
-`printmeta()`</td><td></td></tr></table>
+`EntityClass:Output(output, func)`</td><td>Define a function to redirected to `output` on spawn.</td></tr><tr><td>
+
+`printinherits(ent, nest)`</td><td>Prints all classes that `ent` inherits.</td></tr><tr><td>
+
+`getvalvemeta(ent)`</td><td>Get the original metatable that Valve assigns to the entity.</td></tr><tr><td>
+
+`getinherits(class)`</td><td>Get a list of all classes that `class` inherits.</td></tr><tr><td>
+
+`isinstance(ent, class)`</td><td>Get if an `EntityClass` instance inherits a given `class`.</td></tr></table>
 
 
 
 ---
 
-# gesture.lua (v1.0.1)
+# core.lua
+
+> v3.0.0
+
+The main core script provides useful global functions as well as loading any standard libraries that it can find. 
+
+The two main purposes are: 
+
+1. Automatically load libraries to simplify the process for users.
+2. Provide entity class functions to emulate OOP programming.
+
+
+Load this script into the global scope using the following line: 
+
+
+
+```lua
+require "core"
+```
+
+
+## Functions
+
+<table><tr><td><b>Function</b></td><td><b>Description</b></td></tr></table>
+
+
+
+---
+
+# gesture.lua
+
+> v1.1.0
 
 Provides a system for tracking simple hand poses and gestures. 
 
@@ -206,6 +209,8 @@ end
 ```
 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
 `Gesture:AddGesture(name, index, middle, ring, pinky, thumb)`</td><td> Add a new gesture to watch for.  If a finger position is nil then the finger isn't taken into consideration. </td></tr><tr><td>
@@ -230,7 +235,9 @@ end
 
 ---
 
-# input.lua (v1.1.0)
+# input.lua
+
+> v1.1.2
 
 Simplifies the tracking of button presses/releases. This system will automatically start when the player spawns unless told not to before the player spawns. 
 
@@ -307,6 +314,8 @@ if Player.PrimaryHand:ButtonTime(3) >= 5 then end
 ```
 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
 `Input:TrackButton(button)`</td><td> Set a button to be tracked. </td></tr><tr><td>
@@ -353,7 +362,9 @@ if Player.PrimaryHand:ButtonTime(3) >= 5 then end
 
 ---
 
-# player.lua (v2.2.0)
+# player.lua
+
+> v3.1.0
 
 Player script allows for more advanced player manipulation and easier entity access for player related entities by extending the player class. 
 
@@ -365,6 +376,8 @@ If not using `vscripts/core.lua`, load this file at game start using the followi
 require "player"
 ```
 
+
+This module returns the version string. 
 
 ### Usage 
 
@@ -463,6 +476,8 @@ end
 
 The `Player.Items` table keeps track of the ammo and resin the player has in the backpack. One addition value tracked is `resin_found` which is the amount of resin the player has collected regardless of removing from backpack or spending on upgrades. 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
 `CBasePlayer:DropByHandle(handle)`</td><td>Force the player to drop an entity if held.</td></tr><tr><td>
@@ -533,9 +548,11 @@ The `Player.Items` table keeps track of the ammo and resin the player has in the
 
 `CBasePlayer:GetWeapon()`</td><td>Get the entity handle of the currently equipped weapon/item. If nothing is equipped this will return the primary hand entity.</td></tr><tr><td>
 
+`CBasePlayer:GetWorldForward()`</td><td>Get the forward vector of the player in world space coordinates (z is zeroed).</td></tr><tr><td>
+
 `RegisterPlayerEventCallback(event, callback, context)`</td><td>Register a callback function with for a player event.</td></tr><tr><td>
 
-`UnregisterPlayerEventCallback(callback)`</td><td>Unregisters a callback with a name.</td></tr><tr><td>
+`UnregisterPlayerEventCallback(eventID)`</td><td>Unregisters a callback with a name.</td></tr><tr><td>
 
 `CPropVRHand:MergeProp(prop, hide_hand)`</td><td>Merge an existing prop with this hand.</td></tr><tr><td>
 
@@ -543,7 +560,7 @@ The `Player.Items` table keeps track of the ammo and resin the player has in the
 
 `CPropVRHand:Drop()`</td><td>Drop the item held by this hand.</td></tr><tr><td>
 
-`CPropVRHand:GetGlove()`</td><td>Get the rendered glove entity for this hand.</td></tr><tr><td>
+`CPropVRHand:GetGlove()`</td><td>Get the rendered glove entity for this hand, i.e. the first `hlvr_prop_renderable_glove` class.</td></tr><tr><td>
 
 `CPropVRHand:GetGrabbityGlove()`</td><td>Get the entity for this hands grabbity glove (the animated part on the glove).</td></tr><tr><td>
 
@@ -557,7 +574,9 @@ The `Player.Items` table keeps track of the ammo and resin the player has in the
 
 ---
 
-# storage.lua (v2.4.1)
+# storage.lua
+
+> v3.0.1
 
 Helps with saving/loading values for persistency between game sessions. Data is saved on a specific entity and if the entity is killed the values cannot be retrieved during that game session. 
 
@@ -692,6 +711,8 @@ Storage.Save and Storage.Load will now invoke these functions when appropriate.
 
 
 Strings longer than 62 characters are split up into multiple saves to work around the 64 character limit. This is handled automatically but should be taken into consideration when saving long strings. This limit does not apply to names. 
+
+## Functions
 
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 

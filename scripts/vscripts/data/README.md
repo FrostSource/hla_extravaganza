@@ -1,8 +1,75 @@
-> Last Updated 2022-11-07
+> Last Updated 2023-08-01
+
+## Index
+1. [color.lua](#colorlua)
+2. [inventory.lua](#inventorylua)
+3. [queue.lua](#queuelua)
+4. [stack.lua](#stacklua)
 
 ---
 
-# inventory.lua (v1.2.2)
+# color.lua
+
+> v1.0.0
+
+If not using `vscripts/core.lua`, load this file at game start using the following line: 
+
+
+
+```lua
+require "data.color"
+```
+
+
+### Usage 
+
+
+
+
+```lua
+    -- Create a red color
+local red = Color(255, 0, 0, 255)
+-- Implicit 0 for blue and green, and 255 for alpha
+red = Color(255)
+-- Same implicit values for green
+local green = Color(nil, 255)
+    
+-- Make the color 50% darker
+green:SetHSL(nil, nil, green.lightness * 0.5)
+```
+
+
+## Functions
+
+<table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
+
+`ColorClass.__newindex(color, key, value)`</td><td>Update the raw color values when selecting named color keys.</td></tr><tr><td>
+
+`ColorClass.__tostring()`</td><td></td></tr><tr><td>
+
+`ColorClass:ToHexString()`</td><td> Converts this `Color` to a hexadecimal representation. The hexadecimal format is in the format #RRGGBB. </td></tr><tr><td>
+
+`ColorClass:ToVector()`</td><td>Get a `Vector` from this `Color` in the form of [x=r, y=g, z=b].</td></tr><tr><td>
+
+`ColorClass:ToDecimalVector()`</td><td>Get a `Vector` from this `Color` in the form of [x=r, y=g, z=b] but with ranges [0-1].</td></tr><tr><td>
+
+`ColorClass:SetRGB(r, g, b, a)`</td><td> Sets the color based on the provided RGB (Red, Green, Blue) components and an optional alpha component. If any of the provided values have fractional parts, they will all be normalized to the range [0, 255]. If any of the provided values are nil or omitted, the corresponding component of the color will remain unchanged. </td></tr><tr><td>
+
+`ColorClass:GetHSL()`</td><td>Get the HSL color values from this `Color`.</td></tr><tr><td>
+
+`ColorClass:SetHSL(h, s, l)`</td><td> Sets the color based on the provided HSL (Hue, Saturation, Lightness) components. The method accepts values for hue, saturation, and lightness in their respective ranges and updates the color accordingly.  If any of the provided values have fractional parts, they will be normalized to their appropriate ranges (0 to 360 for hue, 0 to 100 for saturation and lightness). If any of the provided values are nil or omitted, the corresponding component of the color will remain unchanged.</td></tr><tr><td>
+
+`Color(r, g, b, a)`</td><td> Create a new `Color` instance using range [0-1] or [0-255]. </td></tr><tr><td>
+
+`IsColor(value)`</td><td> Get if a value is a `Color`. </td></tr></table>
+
+
+
+---
+
+# inventory.lua
+
+> v1.2.2
 
 An inventory is a table where each key has an integer value assigned to it. When a value hits 0 the key is removed from the table. 
 
@@ -66,6 +133,8 @@ inv = Storage:LoadInventory('inv')
 
 Inventories are also natively saved using `Storage.Save()` or if encountered in a table being saved. 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
 `InventoryClass:Remove(key, value)`</td><td> Remove a number of values from a key. </td></tr><tr><td>
@@ -92,7 +161,9 @@ Inventories are also natively saved using `Storage.Save()` or if encountered in 
 
 ---
 
-# queue.lua (v1.3.2)
+# queue.lua
+
+> v1.3.2
 
 Adds queue behaviour for tables with #queue.items being the front of the queue. 
 
@@ -154,6 +225,8 @@ queue = Storage:LoadQueue('queue')
 
 Queues are also natively saved using `Storage.Save()` or if encountered in a table being saved. 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
 `QueueClass:Dequeue(count)`</td><td>Get a number of values in reverse order of the queue.</td></tr><tr><td>
@@ -184,7 +257,9 @@ Queues are also natively saved using `Storage.Save()` or if encountered in a tab
 
 ---
 
-# stack.lua (v1.2.2)
+# stack.lua
+
+> v1.2.2
 
 Adds stack behaviour for tables with index 1 as the top of the stack. 
 
@@ -245,6 +320,8 @@ stack = Storage:LoadStack('stack')
 
 
 Stacks are also natively saved using `Storage.Save()` or if encountered in a table being saved. 
+
+## Functions
 
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 

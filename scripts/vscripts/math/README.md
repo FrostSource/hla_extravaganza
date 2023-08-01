@@ -1,8 +1,14 @@
-> Last Updated 2022-11-07
+> Last Updated 2023-08-01
+
+## Index
+1. [common.lua](#commonlua)
+2. [weighted_random.lua](#weighted_randomlua)
 
 ---
 
-# core.lua (v1.0.1)
+# common.lua
+
+> v1.2.0
 
 The core math extension script. 
 
@@ -15,15 +21,27 @@ require "math.core"
 ```
 
 
+## Functions
+
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
-`math.sign(x)`</td><td> Get the sign of a number. </td></tr></table>
+`math.sign(x)`</td><td> Get the sign of a number. </td></tr><tr><td>
+
+`math.trunc(number, places)`</td><td> Truncates a number to the specified number of decimal places. </td></tr><tr><td>
+
+`math.round(number, decimals)`</td><td> Rounds a number to the specified number of decimal places. </td></tr><tr><td>
+
+`math.isclose(a, b, rel_tol, abs_tol)`</td><td> Check if two numbers are close to each other within a specified tolerance. </td></tr><tr><td>
+
+`math.has_frac(number)`</td><td> Checks if a given number has a fractional part (decimal part). </td></tr></table>
 
 
 
 ---
 
-# weighted_random.lua (v1.2.2)
+# weighted_random.lua
+
+> v1.2.2
 
 Weighted random allows you to assign chances to tables. 
 
@@ -59,6 +77,8 @@ for i = 1, 20 do
 end
 ```
 
+
+## Functions
 
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
