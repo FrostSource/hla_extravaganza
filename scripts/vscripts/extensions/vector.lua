@@ -38,12 +38,14 @@ function meta:Perpendicular()
 end
 
 ---
----Checks if the current vector is perpendicular to the given vector.
+---Check if the current vector is perpendicular to another vector.
 ---
----@param vector Vector # The vector to compare with.
+---@param vector Vector # The other vector to check perpendicularity against.
+---@param tolerance? number # (optional) The tolerance value for the dot product comparison. Default is 1e-8.
 ---@return boolean # True if the vectors are perpendicular, false otherwise.
-function meta:IsPerpendicular(vector)
-    return self:Dot(vector) == 0
+function meta:IsPerpendicularTo(vector, tolerance)
+    tolerance = tolerance or 1e-8
+    return math.abs(self:Dot(vector)) <= tolerance
 end
 
 ---
@@ -51,7 +53,7 @@ end
 ---
 ---@param vector Vector # The vector to compare with.
 ---@return boolean # True if the vectors are parallel, false otherwise.
-function meta:IsParallel(vector)
+function meta:IsParallelTo(vector)
     -- Treat zero vectors as parallel to any vector
     if self == zero or vector == zero then
         return true
