@@ -71,7 +71,7 @@ end
 ---Set entity pitch, yaw, roll from a `QAngle`.
 ---
 ---@param qangle QAngle
-function CBaseEntity:SetQAngles(qangle)
+function CBaseEntity:SetQAngle(qangle)
     self:SetAngles(qangle.x, qangle.y, qangle.z)
 end
 
