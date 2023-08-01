@@ -498,3 +498,10 @@ function Debug.PrintInheritance(ent)
         prefix = prefix .. "  "
     end
 end
+
+---Returns a simplified vector string with decimal places truncated.
+---@param vector Vector
+---@return string
+function Debug.SimpleVector(vector)
+    return "[" .. math.trunc(vector.x, 3) .. " " .. math.trunc(vector.y, 3) .. " " .. math.trunc(vector.z, 3) .. "]"
+end
