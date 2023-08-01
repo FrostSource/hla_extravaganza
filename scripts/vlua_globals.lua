@@ -1179,8 +1179,8 @@ function SetRenderingEnabled(EHANDLE, enabled) end
 ---Asynchronously spawns a single entity from a table. A callback will be triggered when the spawning is complete, passing the handle of the entity as a parameter.
 ---@param classname string
 ---@param spawnKeys table
----@param callback function
----@param unknown unknown
+---@param callback fun(spawnedEnt: EntityHandle)
+---@param unknown unknown|`nil`
 function SpawnEntityFromTableAsynchronous(classname, spawnKeys, callback, unknown) end
 ---Synchronously spawns a single entity from a table
 ---@param classname string
