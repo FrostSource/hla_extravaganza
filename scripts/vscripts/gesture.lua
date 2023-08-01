@@ -472,7 +472,14 @@ function Gesture:Stop()
     end
 end
 
-ListenToGameEvent("player_spawn", function()
+local listenFor = "player_spawn"
+local listenFunc = ListenToGameEvent
+if package.loaded["player"] then
+    listenFunc = RegisterPlayerEventCallback
+    listenFor = "player_activate"
+end
+
+listenFunc(listenFor, function(params)
     if Gesture.AutoStart then
         -- Delay init to get hmd
         local player = Entities:GetLocalPlayer()
