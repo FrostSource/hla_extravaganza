@@ -144,6 +144,11 @@ local function _inherit(base, self, fenv)
         return search(key, self.__inherits)
     end
 
+    -- Custom rawget function to get a value from meta.__values without checking inherits
+    self.__rawget = function(table, key)
+        return meta.__values[key]
+    end
+
     setmetatable(self, meta)
 
     -- Special functions --
@@ -165,14 +170,13 @@ local function _inherit(base, self, fenv)
 
             -- Clone mutable data into entity so class won't get modified
             for key, value in pairs(inherit) do
-                if not key:startswith("__") then
+                if not key:startswith("__") and self:__rawget(key) == nil then
 
                     if IsVector(value) then
                         self[key] = Vector(value.x, value.y, value.z)
                     elseif IsQAngle(value) then
                         self[key] = QAngle(value.x, value.y, value.z)
                     elseif type(value) == "table" then
-                        -- print("Deep copying", key, value)
                         self[key] = DeepCopyTable(value)
                     end
 
