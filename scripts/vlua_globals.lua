@@ -666,6 +666,19 @@ thisEntity = nil
 ---@param tbl table
 function DeepPrintTable(tbl) end
 
+---Returns a string like "foo.nut:53"
+---with the source file and line number of its caller.
+---returns the empty string if it couldn't get the source file and line number of its caller.
+---@return string
+function _sourceline() end
+
+---A function to re-lookup a function by name every time.
+---Outside of developer mode this just returns the function.
+---Unsure of its use outside of dev mode.
+---@param scope table # Scope/context that the named function belongs in.
+---@param name string # Name of the function to wrap.
+function Dynamic_Wrap(scope, name) end
+
 --#region Math
 
 ---Returns the number of degrees difference between two yaw angles
