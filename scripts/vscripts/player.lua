@@ -641,6 +641,14 @@ function CBasePlayer:GetWeapon()
     end
 end
 
+---Get the forward vector of the player in world space coordinates (z is zeroed).
+---@return Vector
+function CBasePlayer:GetWorldForward()
+    local f = self:GetForwardVector()
+    f.z = 0
+    return f
+end
+
 ---@class __PlayerRegisteredEventData
 ---@field callback function
 ---@field context any
