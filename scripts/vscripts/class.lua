@@ -78,7 +78,7 @@ local version = "v1.0.0"
 
 require "storage"
 require "util.globals"
-require "debug.core"
+require "debug.common"
 
 ---@type table<string, table>
 EntityClassNameMap = {}
