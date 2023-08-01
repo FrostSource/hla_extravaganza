@@ -811,7 +811,7 @@ function Deg2Rad(deg) end
 ---Convert radians to degrees.
 ---@param rad number
 ---@return number
-function Deg2Rad(rad) end
+function Rad2Deg(rad) end
 ---Linear interpolation of float values a and b over t [0,1].
 ---@param t number
 ---@param a number
