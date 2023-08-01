@@ -1,0 +1,35 @@
+name: Release To Main
+on:
+    pull_request:
+        types:
+            -   closed
+        branches:
+            -   main
+
+jobs:
+    generate_readmes:
+        if: github.event.pull_request.merged == true
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v3
+
+            -   name: Set up Python
+                uses: actions/setup-python@v4
+                with:
+                    python-version: 3.x
+            
+            -   name: Install dependencies
+                run: pip install -r .github/workflows/requirements.txt
+
+            -   name: Run Python script
+                run: |
+                    python pack_releases.py --readmes --verbose
+                    git config user.name github-actions
+                    git config user.email github-actions@github.com
+                    git add .
+                    git commit -m "Generate readmes"
+                    git pull
+                    git push
+    
