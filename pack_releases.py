@@ -807,6 +807,7 @@ if __name__ == '__main__':
                             print('DONE')
                         time_taken = datetime.timedelta(seconds=time.time() - upload_time_start)
                         print(f'DONE - Time taken: {time_taken}')
+                        break
                     except RefreshError as e:
                         if error_count > 0:
                             print(f'Google Drive encountered another exception so cancelling drive upload. Make sure credentials in settings.yaml are correct: {e}')
