@@ -100,4 +100,34 @@ function meta:LocalTranslate(offset, forward, right, up)
     return Vector(x, y, z)
 end
 
+---
+---Calculates the angle difference between the calling vector and the given vector. This is always the smallest angle.
+---
+---@param vector Vector # The vector to calculate the angle difference with.
+---@return number # Angle difference in degrees.
+function meta:AngleDiff(vector)
+    local denominator = math.sqrt(self:Length() * vector:Length())
+    if denominator < 1e-15 then
+        return 0
+    end
+    local dot = Clamp(self:Dot(vector) / denominator, -1, 1)
+    return Rad2Deg(math.acos(dot))
+end
+
+---
+---Calculates the signed angle difference between the calling vector and the given vector around the specified axis.
+---
+--- @param vector Vector # The vector to calculate the angle difference with.
+--- @param axis? Vector # The axis of rotation around which the angle difference is calculated.
+--- @return number # The signed angle difference in degrees.
+function meta:SignedAngleDiff(vector, axis)
+    axis = axis or Vector(0, 0, 1)
+    local unsignedAngle = self:AngleDiff(vector)
+
+    local cross = self:Cross(vector)
+    local sign = math.sign(axis:Dot(cross))
+
+    return unsignedAngle * sign
+end
+
 return version
