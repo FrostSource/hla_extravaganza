@@ -7,7 +7,7 @@
 {
 	"Script Header":{
 		"scope": "lua",
-		"prefix": ["header_script"],
+		"prefix": ["snippet", "tool", "header_script"],
 		"body": [
 			"--[[",
 			"\tv1.0.0",
@@ -21,7 +21,7 @@
 
 	"Script Header Section Title":{
 		"scope": "lua",
-		"prefix": ["header_section_title"],
+		"prefix": ["snippet", "tool", "header_section_title"],
 		"body": [
 			"======================================== ${1:Title} ========================================",
 			"",
@@ -33,7 +33,7 @@
 	
 	"Script Header Not Using Core":{
 		"scope": "lua",
-		"prefix": ["header using core"],
+		"prefix": ["snippet", "tool", "header using core"],
 		"body": [
 			"If not using `vscripts/core.lua`, load this file at game start using the following line:",
 			"",
@@ -47,7 +47,7 @@
 	
 	"Script Footer Initialized":{
 		"scope": "lua",
-		"prefix": ["footer initialized"],
+		"prefix": ["snippet", "tool", "footer initialized"],
 		"body": [
 			"print(\"${1:name}.lua \".. ${2:version} ..\" initialized...\")",
 			"",
