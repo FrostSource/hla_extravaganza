@@ -12,7 +12,7 @@
 ]]
 
 -- These are expected by globals
-require 'util.util'
+require 'util.common'
 
 ---
 ---Get the file name of the current script without folders or extension. E.g. `util.util`

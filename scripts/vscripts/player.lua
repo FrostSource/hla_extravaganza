@@ -95,7 +95,7 @@
     collected regardless of removing from backpack or spending on upgrades.
 
 ]]
-require "util.util"
+require "util.common"
 require "util.globals"
 require "extensions.entity"
 require "storage"
