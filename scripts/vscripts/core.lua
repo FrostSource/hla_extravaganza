@@ -515,16 +515,6 @@ function haskey(tbl, key)
     return false
 end
 
----@luadoc-ignore
----@diagnostic disable-next-line:lowercase-global
-function printmeta(ent)
-    local meta = getmetatable(ent)
-    vlua.tableadd(DeepCopyTable(ent), meta or {})
-    if meta then
-        printmeta(getmetatable(meta))
-    end
-end
-
 ---Check if a value is truthy or falsy.
 ---@param value any # The value to be checked.
 ---@return boolean # Returns true if the value is truthy, false otherwise.
@@ -553,6 +543,7 @@ ifrequire 'math.core'
 ifrequire 'data.queue'
 ifrequire 'data.stack'
 ifrequire 'data.inventory'
+ifrequire 'data.color'
 
 -- Useful extravaganza libraries
 
