@@ -77,6 +77,7 @@
 local version = "v1.0.0"
 
 require "storage"
+require "util.globals"
 require "debug.core"
 
 ---@type table<string, table>

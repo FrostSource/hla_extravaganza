@@ -12,6 +12,7 @@
     ```
 ]]
 
+require "util.globals"
 require "extensions.entity"
 require "extensions.entities"
 

@@ -11,6 +11,8 @@
     ```
 
 ]]
+require "util.globals"
+
 Debug = {}
 Debug.version = "v1.6.0"
 

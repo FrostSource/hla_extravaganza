@@ -96,6 +96,7 @@
 
 ]]
 require "util.util"
+require "util.globals"
 require "extensions.entity"
 require "storage"
 

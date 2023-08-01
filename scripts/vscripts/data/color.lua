@@ -22,8 +22,9 @@
 	green:SetHSL(nil, nil, green.lightness * 0.5)
     ```
 ]]
-
+require "util.globals"
 require "math.core"
+
 local hasfrac = math.has_frac
 
 ---Get the memory address part of a table string.
