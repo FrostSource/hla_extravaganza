@@ -1,5 +1,5 @@
 --[[
-    v3.0.0
+    v3.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -100,7 +100,7 @@ require "util.globals"
 require "extensions.entity"
 require "storage"
 
-local version = "v3.0.0"
+local version = "v3.1.0"
 
 -----------------------------
 -- Class extension members --

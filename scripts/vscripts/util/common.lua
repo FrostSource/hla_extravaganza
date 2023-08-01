@@ -1,5 +1,5 @@
 --[[
-    v2.1.0
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code and add general miscellaneous functionality.
@@ -12,7 +12,7 @@
 ]]
 
 Util = {}
-Util.version = "v2.1.0"
+Util.version = "v2.2.0"
 
 ---
 ---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.

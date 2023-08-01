@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     The core math extension script.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v1.1.0"
+local version = "v1.2.0"
 
 ---
 ---Get the sign of a number.
