@@ -15,31 +15,40 @@ game_path:Path = None
 # actual content/game paths will be resolved from this
 root:Path = None
 
-__p = __script_dir.parent
-while __p.name != '':
-    if __p.parent.name == 'hlvr_addons':
-        name = __p.name
-        root = __p
-    elif __p.parent.name == 'Half-Life Alyx':
-        if __p.name == 'content':
-            script_is_in_content = True
-            content_path = root
-        elif __p.name == 'game':
-            script_is_in_content = False
-            game_path = root
-        # Break here unless folders above are important
-        break
-    __p = __p.parent
+if os.getenv("GITHUB_ACTIONS") == "true":
+    print("USING GITHUB ACTIONS")
+    script_is_in_content = True
+    content_path = __script_dir.parent.parent.parent
+    root = content_path
+else:
+    __p = __script_dir.parent
+    while __p.name != '':
+        if __p.parent.name == 'hlvr_addons':
+            name = __p.name
+            root = __p
+        elif __p.parent.name == 'Half-Life Alyx':
+            if __p.name == 'content':
+                script_is_in_content = True
+                content_path = root
+            elif __p.name == 'game':
+                script_is_in_content = False
+                game_path = root
+            # Break here unless folders above are important
+            break
+        __p = __p.parent
 
-if script_is_in_content:
+if content_path is None and game_path is None:
+    content_path = __script_dir.parent.parent.parent
+    root = content_path
+elif script_is_in_content:
     # Find game path
     game_path = content_path.joinpath(f'../../../game/hlvr_addons/{name}')
 else:
     # Find content path
     content_path = game_path.joinpath(f'../../../content/hlvr_addons/{name}')
 
-content_path = content_path.resolve()
-game_path = game_path.resolve()
+if content_path: content_path = content_path.resolve()
+if game_path: game_path = game_path.resolve()
 
 __ignore_paths = [
     '.git'
@@ -53,8 +62,10 @@ def __get_files(start: str) -> list[Path]:
         file_list.extend([Path(os.path.join(dirpath, file)) for file in files])
     return file_list
 
-content_files = __get_files(content_path)
-game_files = __get_files(game_path)
+content_files: list[Path] = []
+game_files: list[Path] = []
+if content_path: content_files = __get_files(content_path)
+if game_path: game_files = __get_files(game_path)
 
 def find_files(files: list[Path|str], pattern: AnyStr, relative_to: Path|str = content_path):
     if os.path.isdir(pattern): pattern = os.path.join(pattern, '*')
