@@ -216,3 +216,14 @@ function Util.Choose(...)
         return args[RandomInt(1, numArgs)]
     end
 end
+
+---Turns a string of up to three numbers into a vector.
+---@param str string # Should have a format of "x y z"
+---@return Vector
+function Util.VectorFromString(str)
+    if type(str) ~= "string" then
+        return Vector()
+    end
+    local x, y, z = str:match("(%d+)[^%d]+(%d*)[^%d]+(%d*)")
+    return Vector(tonumber(x), tonumber(y), tonumber(z))
+end
