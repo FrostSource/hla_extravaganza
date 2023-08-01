@@ -13,7 +13,7 @@
 ]]
 require "util.globals"
 require "extensions.entity"
-require "math.core"
+require "math.common"
 
 Debug = {}
 Debug.version = "v1.6.0"

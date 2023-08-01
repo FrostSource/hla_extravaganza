@@ -23,7 +23,7 @@
     ```
 ]]
 require "util.globals"
-require "math.core"
+require "math.common"
 
 local hasfrac = math.has_frac
 
