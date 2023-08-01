@@ -66,8 +66,7 @@ end
 ---@param checkValidity? boolean # Optionally check validity with IsValidEntity.
 ---@return boolean
 function IsEntity(handle, checkValidity)
-    ---@TODO: User tables might have __self as key, is there anything unique we can look for?
-    return (type(handle) == "table" and handle.__self) and (not checkValidity or IsValidEntity(handle))
+    return (type(handle) == "table" and handle.__self and type(handle.__self) == "userdata") and (not checkValidity or IsValidEntity(handle))
 end
 
 ---
