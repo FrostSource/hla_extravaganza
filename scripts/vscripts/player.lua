@@ -1,5 +1,5 @@
 --[[
-    v3.0.0
+    v3.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -95,11 +95,12 @@
     collected regardless of removing from backpack or spending on upgrades.
 
 ]]
-require "util.util"
+require "util.common"
+require "util.globals"
 require "extensions.entity"
 require "storage"
 
-local version = "v3.0.0"
+local version = "v3.1.0"
 
 -----------------------------
 -- Class extension members --
@@ -604,8 +605,7 @@ end
 ---Calling this will update `Player.Items.resin`
 ---@return number
 function CBasePlayer:GetResin()
-    ---@type CriteriaTable
-    local t = {}
+    local t = ({}) --[[@as CriteriaTable]]
     self:GatherCriteria(t)
     local r = t.current_crafting_currency
     if Player.Items.resin ~= r then
@@ -641,6 +641,14 @@ function CBasePlayer:GetWeapon()
     end
 end
 
+---Get the forward vector of the player in world space coordinates (z is zeroed).
+---@return Vector
+function CBasePlayer:GetWorldForward()
+    local f = self:GetForwardVector()
+    f.z = 0
+    return f
+end
+
 ---@class __PlayerRegisteredEventData
 ---@field callback function
 ---@field context any
@@ -664,7 +672,7 @@ local registered_event_callbacks = {
 
 ---Register a callback function with for a player event.
 ---@param event "novr_player"|"player_activate"|"vr_player_ready"|"item_pickup"|"item_released"|"primary_hand_changed"|"player_drop_ammo_in_backpack"|"player_retrieved_backpack_clip"|"player_stored_item_in_itemholder"|"player_removed_item_from_itemholder"|"player_drop_resin_in_backpack"|"weapon_switch"
----@param callback function
+---@param callback fun(params)
 ---@param context? table # Optional: The context to pass to the function as `self`. If omitted the context will not passed to the callback.
 ---@return integer eventID # ID used to unregister
 function RegisterPlayerEventCallback(event, callback, context)
@@ -720,7 +728,7 @@ function CPropVRHand:Drop()
     end
 end
 
----Get the rendered glove entity for this hand.
+---Get the rendered glove entity for this hand, i.e. the first `hlvr_prop_renderable_glove` class.
 ---@return EntityHandle|nil
 function CPropVRHand:GetGlove()
     return self.GetFirstChildWithClassname(self, "hlvr_prop_renderable_glove")

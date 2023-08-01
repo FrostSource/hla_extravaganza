@@ -321,10 +321,10 @@ def parse_lua_file(file:str)->tuple[list[LuaFunction],str,str]:
 
 def lua_file_to_html(file:str|os.PathLike)->str:
     functions, header, version = parse_lua_file(str(file))
-    file_documentation = f'# {os.path.basename(file)} (v{version})\n\n'
+    file_documentation = f'# {os.path.basename(file)}\n\n> v{version}\n\n'
     file_documentation += header
     file_documentation += '\n\n'
-    file_documentation += table_template.format(
+    file_documentation += "## Functions\n\n" + table_template.format(
         ''.join([function_template.format(
             f'{func.name}({", ".join([param.name for param in func.params.values()])})',
             func.doc_str())

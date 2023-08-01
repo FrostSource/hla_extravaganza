@@ -1,5 +1,5 @@
 --[[
-    v1.1.1
+    v1.1.2
     https://github.com/FrostSource/hla_extravaganza
 
     Simplifies the tracking of button presses/releases. This system will automatically
@@ -71,7 +71,7 @@
 ---
 Input = {}
 Input.__index = Input
-Input.version = "v1.1.1"
+Input.version = "v1.1.2"
 
 ---
 ---If the input system should start automatically on player spawn.
@@ -467,7 +467,7 @@ end
 ListenToGameEvent("primary_hand_changed", function(data)
     ---@cast data GAME_EVENT_PRIMARY_HAND_CHANGED
     SetPrimaryHand(data.is_primary_left and 0 or 1)
-end)
+end, nil)
 
 local function InputThink()
     local player = Entities:GetLocalPlayer()

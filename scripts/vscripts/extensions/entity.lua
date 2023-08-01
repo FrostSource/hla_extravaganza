@@ -1,5 +1,5 @@
 --[[
-    v2.0.0
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v2.0.0"
+local version = "v2.2.0"
 
 ---
 ---Get the top level entities parented to this entity. Not children of children.
@@ -71,7 +71,7 @@ end
 ---Set entity pitch, yaw, roll from a `QAngle`.
 ---
 ---@param qangle QAngle
-function CBaseEntity:SetQAngles(qangle)
+function CBaseEntity:SetQAngle(qangle)
     self:SetAngles(qangle.x, qangle.y, qangle.z)
 end
 
@@ -121,10 +121,15 @@ function CBaseEntity:GetVolume()
     return size.x * size.y * size.z
 end
 
-function CBaseEntity:GetBoundingCorners()
+---
+---Get each corner of the entity's bounding box.
+---
+---@param rotated? boolean # If the corners should be rotated with the entity angle.
+---@return Vector[]
+function CBaseEntity:GetBoundingCorners(rotated)
     local bounds = self:GetBounds()
     local origin = self:GetOrigin()
-    return {
+    local corners = {
         origin + bounds.Mins * self:GetAbsScale(),
         origin + bounds.Maxs * self:GetAbsScale(),
         origin + Vector(bounds.Mins.x, bounds.Mins.y, bounds.Maxs.z) * self:GetAbsScale(),
@@ -134,6 +139,40 @@ function CBaseEntity:GetBoundingCorners()
         origin + Vector(bounds.Maxs.x, bounds.Mins.y, bounds.Maxs.z) * self:GetAbsScale(),
         origin + Vector(bounds.Mins.x, bounds.Maxs.y, bounds.Maxs.z) * self:GetAbsScale(),
     }
+
+    if rotated then
+        local angle = self:GetAngles()
+        for k, v in pairs(corners) do
+            corners[k] = RotatePosition(origin, angle, v)
+        end
+    end
+
+    return corners
+end
+
+---
+---Check if entity is within the given worldspace bounds.
+---
+---@param mins Vector # Worldspace minimum vector for the bounds.
+---@param maxs Vector # Worldspace minimum vector for the bounds.
+---@param checkEntityBounds? boolean # If true the entity bounding box will be used for the check instead of its origin.
+---@return boolean # True if the entity is within the bounds, false otherwise.
+function CBaseEntity:IsWithinBounds(mins, maxs, checkEntityBounds)
+    local selfMins, selfMaxs
+    if checkEntityBounds then
+        selfMins = self:GetOrigin() + self:GetBoundingMins()
+        selfMaxs = self:GetOrigin() + self:GetBoundingMaxs()
+    else
+        selfMins = self:GetOrigin()
+        selfMaxs = selfMins
+    end
+    if selfMins.x <= maxs.x and selfMaxs.x >= mins.x
+    and selfMins.y <= maxs.y and selfMaxs.y >= mins.y
+    and selfMins.z <= maxs.z and selfMaxs.z >= mins.z
+    then
+        return true
+    end
+    return false
 end
 
 ---
@@ -183,6 +222,14 @@ function CBaseEntity:DoNotDrop(enabled)
     else
         self:DeleteAttribute("DoNotDrop")
     end
+end
+
+---Get all criteria as a table.
+---@return CriteriaTable
+function CBaseEntity:GetCriteria()
+    local c = {}
+    self:GatherCriteria(c)
+    return c
 end
 
 return version

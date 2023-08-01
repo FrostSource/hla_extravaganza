@@ -1,5 +1,5 @@
 --[[
-    v1.4.0
+    v1.6.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -11,7 +11,12 @@
     ```
 
 ]]
+require "util.globals"
+require "extensions.entity"
+require "math.common"
+
 Debug = {}
+Debug.version = "v1.6.0"
 
 ---
 ---Prints useful entity information about a list of entities, such as classname and model.
@@ -130,6 +135,13 @@ local bailout_count = 9000
 local current_recursion_level = 0
 local current_print_count = 0
 
+local function printKeyValue(key, value, prefix)
+    prefix = prefix or ""
+    local vs = (type(value) == "string" and ("\"" .. tostring(value) .. "\"") or tostring(value))
+    local ts = " ("..(IsEntity(value) and "entity" or type(value))..")"
+    print( string.format( "\t%s%-32s %s", prefix, key, "= " .. format_string(vs) .. ts ) )
+end
+
 -- local function table_level(level, count, m)
 --     local tbl = {}
 --     local val
@@ -154,7 +166,8 @@ local current_print_count = 0
 ---@param tbl table # Table to print.
 ---@param prefix? string # Optional prefix for each line.
 ---@param ignore? any[] # Optional nested tables to ignore.
-function Debug.PrintTable(tbl, prefix, ignore)
+---@param meta? boolean # If meta tables should be printed.
+function Debug.PrintTable(tbl, prefix, ignore, meta)
     if type(tbl) ~= "table" then return end
     prefix = prefix or ""
     ignore = ignore or {tbl}
@@ -171,15 +184,21 @@ function Debug.PrintTable(tbl, prefix, ignore)
         end
         if not ignore_fdesc or key ~= "FDesc" then
             current_print_count = current_print_count + 1
-            local vs = (type(value) == "string" and ("\"" .. tostring(value) .. "\"") or tostring(value))
-            local ts = " ("..(IsEntity(value) and "entity" or type(value))..")"
-            print( string.format( "\t%s%-32s %s", prefix, key, "= " .. format_string(vs) .. ts ) )
+            printKeyValue(key, value, prefix)
             if type(value) == "table" and not IsEntity(value) and not vlua.find(ignore, value) then
-                ignore[#ignore+1] = value
+                table.insert(ignore, value)
                 current_recursion_level = current_recursion_level + 1
-                Debug.PrintTable(value, prefix.."\t", ignore)
+                Debug.PrintTable(value, prefix.."\t", ignore, meta)
                 current_recursion_level = current_recursion_level - 1
             end
+        end
+    end
+    if meta then
+        local foundmeta = getmetatable(tbl)
+        if foundmeta then
+            print( string.format( "\t%s%-32s %s", prefix, "[#metatable]", "", "" ))
+            table.insert(ignore, foundmeta)
+            Debug.PrintTable(foundmeta, prefix.."\t", ignore, meta)
         end
     end
     if current_print_count ~= -1 then
@@ -189,6 +208,19 @@ function Debug.PrintTable(tbl, prefix, ignore)
         current_recursion_level = 0
         current_print_count = 0
     end
+end
+
+---
+---Prints the keys/values of a table but not any tested tables.
+---
+---@param tbl table # Table to print.
+function Debug.PrintTableShallow(tbl)
+    if type(tbl) ~= "table" then return end
+    print("{")
+    for key, value in pairs(tbl) do
+        printKeyValue(key, value)
+    end
+    print("}")
 end
 
 function Debug.PrintList(tbl, prefix)
@@ -245,7 +277,6 @@ function Debug.FindEntity(ent, duration)
     end
     DebugDrawLine(from, ent:GetOrigin(), 255, 0, 0, true, duration)
     local radius = ent:GetBiggestBounding()/2
-    print(radius)
     if radius == 0 then radius = 16 end
     DebugDrawCircle(ent:GetOrigin(), Vector(255), 128, radius, true, duration)
     DebugDrawSphere(ent:GetCenter(), Vector(255), 128, radius, true, duration)
@@ -262,6 +293,23 @@ function Debug.PrintEntityCriteria(ent)
     Debug.PrintTable(c)
 end
 CBaseEntity.PrintCriteria = Debug.PrintEntityCriteria
+
+---
+---Prints current context criteria for an entity except for values saved using `storage.lua`.
+---
+---@param ent EntityHandle
+function Debug.PrintEntityBaseCriteria(ent)
+    ---@type table<string, any>
+    local c, d = {}, {}
+    ent:GatherCriteria(c)
+    for key, value in pairs(c) do
+        if not key:find("::") then
+            d[key] = value
+        end
+    end
+    Debug.PrintTable(d)
+end
+CBaseEntity.PrintBaseCriteria = Debug.PrintEntityBaseCriteria
 
 local classes = {
     [CBaseEntity] = 'CBaseEntity';
@@ -470,4 +518,11 @@ function Debug.PrintInheritance(ent)
         parent = new_parent
         prefix = prefix .. "  "
     end
+end
+
+---Returns a simplified vector string with decimal places truncated.
+---@param vector Vector
+---@return string
+function Debug.SimpleVector(vector)
+    return "[" .. math.trunc(vector.x, 3) .. " " .. math.trunc(vector.y, 3) .. " " .. math.trunc(vector.z, 3) .. "]"
 end

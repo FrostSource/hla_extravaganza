@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.0.9
+    Version 2.1.0
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -666,6 +666,19 @@ thisEntity = nil
 ---@param tbl table
 function DeepPrintTable(tbl) end
 
+---Returns a string like "foo.nut:53"
+---with the source file and line number of its caller.
+---returns the empty string if it couldn't get the source file and line number of its caller.
+---@return string
+function _sourceline() end
+
+---A function to re-lookup a function by name every time.
+---Outside of developer mode this just returns the function.
+---Unsure of its use outside of dev mode.
+---@param scope table # Scope/context that the named function belongs in.
+---@param name string # Name of the function to wrap.
+function Dynamic_Wrap(scope, name) end
+
 --#region Math
 
 ---Returns the number of degrees difference between two yaw angles
@@ -798,7 +811,7 @@ function Deg2Rad(deg) end
 ---Convert radians to degrees.
 ---@param rad number
 ---@return number
-function Deg2Rad(rad) end
+function Rad2Deg(rad) end
 ---Linear interpolation of float values a and b over t [0,1].
 ---@param t number
 ---@param a number
@@ -1166,8 +1179,8 @@ function SetRenderingEnabled(EHANDLE, enabled) end
 ---Asynchronously spawns a single entity from a table. A callback will be triggered when the spawning is complete, passing the handle of the entity as a parameter.
 ---@param classname string
 ---@param spawnKeys table
----@param callback function
----@param unknown unknown
+---@param callback fun(spawnedEnt: EntityHandle)
+---@param unknown unknown|`nil`
 function SpawnEntityFromTableAsynchronous(classname, spawnKeys, callback, unknown) end
 ---Synchronously spawns a single entity from a table
 ---@param classname string
@@ -1499,7 +1512,7 @@ function vlua.contains(t, key) end
 ---@param key any
 ---@return integer
 function vlua.delete(t, key) end
----Implements Squirrel clone operator.
+---Implements Squirrel clone operator. This is shallow clone and will also assign the metatable.
 ---@param t table
 ---@return table
 function vlua.clone(t) end
@@ -2187,9 +2200,9 @@ function CBaseAnimating:GetAttachmentOrigin(attachmentIndex) end
 ---@return number
 function CBaseAnimating:GetCycle() end
 ---Get the value of the given animGraph parameter.
----@param pszParam string
----@return table
-function CBaseAnimating:GetGraphParameter(pszParam) end
+---@param paramName string
+---@return any
+function CBaseAnimating:GetGraphParameter(paramName) end
 ---Get scale of entity's model.
 ---@return number
 function CBaseAnimating:GetModelScale() end
@@ -3175,8 +3188,8 @@ function CPointTemplate:ForceSpawn() end
 ---GetSpawnedEntities() : Get the list of the most recent spawned entities
 function CPointTemplate:GetSpawnedEntities() end
 ---SetSpawnCallback( hCallbackFunc, hCallbackScope, hCallbackData ) : Set a callback for when the template spawns entities. The spawned entities will be passed in as an array.
----@param hCallbackFunc handle
----@param hCallbackScope handle
+---@param hCallbackFunc fun(context: table|EntityHandle[], entities: EntityHandle[]|nil)
+---@param hCallbackScope handle|nil
 function CPointTemplate:SetSpawnCallback(hCallbackFunc, hCallbackScope) end
 
 --#endregion
@@ -3486,9 +3499,9 @@ function Convars:GetInt(name) end
 ---@param name string
 ---@return string|nil
 function Convars:GetStr(name) end
----RegisterCommand(name, fn, helpString, flags) : register a console command.
----@param name string
----@param callback function
+---Register a console command with a callback function.
+---@param name string # Name of the command as it appears in the console.
+---@param callback fun(_:string, ...:string) # Callback function. Command name is passed to first function and all others are passed after.
 ---@param helpText string
 ---@param flags integer
 function Convars:RegisterCommand(name, callback, helpText, flags) end
@@ -3706,9 +3719,9 @@ function VectorClass:Length() end
 ---@return number
 function VectorClass:Length2D() end
 ---Linear interpolation between the vector and the passed in target over t = [0,1].
----@param target Vector
----@param t number
----@return Vector
+---@param target Vector # The target vector to interpolate towards.
+---@param t number # The interpolation factor, ranging from 0 to 1.
+---@return Vector # The resulting vector after linear interpolation.
 function VectorClass:Lerp(target, t) end
 ---Returns the vector normalized.
 ---@return Vector

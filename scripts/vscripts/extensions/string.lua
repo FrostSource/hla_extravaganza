@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides string class extension methods.
@@ -10,6 +10,8 @@
     require "extensions.string"
     ```
 ]]
+
+local version = "v1.3.0"
 
 ---
 ---Gets if a string starts with a substring.
@@ -31,9 +33,23 @@ function string.endswith(s, substr)
 end
 
 ---
+---Split an input string using a raw pattern string. No changes are made to the pattern.
+---
+---@param s string
+---@param pattern string # Split pattern.
+---@return string[]
+function string.splitraw(s, pattern)
+    local t = {}
+    for str in s:gmatch(pattern) do
+        table.insert(t, str)
+    end
+    return t
+end
+
+---
 ---Split an input string using a separator string.
 ---
----Found at https://stackoverflow.com/a/7615129
+---@link https://stackoverflow.com/a/7615129
 ---
 ---@param s string
 ---@param sep string? # String to split by. Default is whitespace.
@@ -42,11 +58,7 @@ function string.split(s, sep)
     if sep == nil then
         sep = '%s'
     end
-    local t = {}
-    for str in s:gmatch('([^'..sep..']+)') do
-        table.insert(t, str)
-    end
-    return t
+    return string.splitraw(s, '([^'..sep..']+)')
 end
 
 ---
@@ -86,3 +98,23 @@ function string.trimright(s, char)
     local index = s:find(char)
     return index and s:sub(1, index - 1) or s
 end
+
+---
+---Capitalizes letters in the input string.
+---If `onlyFirstLetter` is true, it capitalizes only the first letter.
+---If `onlyFirstLetter` is false or not provided, it capitalizes all letters.
+---
+---@param s string # The input string to be capitalized.
+---@param only_first_letter boolean # (optional) If true, only the first letter is capitalized. Default is false.
+---@return string # The capitalized string.
+function string.capitalize(s, only_first_letter)
+    if only_first_letter then
+        local upper = s:gsub("^%l", string.upper)
+        return upper
+    else
+        local upper = s:gsub("%a", string.upper)
+        return upper
+    end
+end
+
+return version

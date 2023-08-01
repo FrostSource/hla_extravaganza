@@ -1,5 +1,5 @@
 --[[
-    v2.1.0
+    v2.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code and add general miscellaneous functionality.
@@ -12,6 +12,7 @@
 ]]
 
 Util = {}
+Util.version = "v2.2.0"
 
 ---
 ---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
@@ -198,4 +199,31 @@ function Util.CreateConstraint(entity1, entity2, class, properties)
     entity1:SetEntityName(name1)
     if entity2 then entity2:SetEntityName(name2) end
     return constraint
+end
+
+---Choose and return a random argument.
+---@generic T
+---@param ... T
+---@return T
+function Util.Choose(...)
+    local args = {...}
+    local numArgs = #args
+    if numArgs == 0 then
+        return nil
+    elseif numArgs == 1 then
+        return args[1]
+    else
+        return args[RandomInt(1, numArgs)]
+    end
+end
+
+---Turns a string of up to three numbers into a vector.
+---@param str string # Should have a format of "x y z"
+---@return Vector
+function Util.VectorFromString(str)
+    if type(str) ~= "string" then
+        return Vector()
+    end
+    local x, y, z = str:match("(%d+)[^%d]+(%d*)[^%d]+(%d*)")
+    return Vector(tonumber(x), tonumber(y), tonumber(z))
 end

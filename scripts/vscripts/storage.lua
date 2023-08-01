@@ -1,5 +1,5 @@
 --[[
-    v3.0.0
+    v3.0.1
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -171,7 +171,7 @@ end
 local separator = "::"
 
 Storage = {}
-Storage.version = "v2.4.2"
+Storage.version = "v3.0.1"
 ---Collection of type names associated with a class table.
 ---The table should have both __save() and __load() functions.
 ---@type table<string,table>
@@ -418,8 +418,8 @@ function Storage.SaveEntity(handle, name, entity)
     return true
 end
 
-local _vector = Vector()
-local _qangle = QAngle()
+local _vector = getmetatable(Vector())
+local _qangle = getmetatable(QAngle())
 
 ---
 ---Save a value.
@@ -441,14 +441,13 @@ function Storage.Save(handle, name, value)
     elseif t=="table" then
         if type(value.__self) == "userdata" then
             return Storage.SaveEntity(handle, name, value)
-        elseif Storage.class_to_type[value.__index] then
+        elseif Storage.class_to_type[getmetatable(value)] then
             return value.__save(handle, name, value)
         else
             return Storage.SaveTable(handle, name, value)
         end
-    -- better way to get userdata class?
-    elseif value.__index==_vector.__index then return Storage.SaveVector(handle, name, value)
-    elseif value.__index==_qangle.__index then return Storage.SaveQAngle(handle, name, value)
+    elseif getmetatable(value)==_vector then return Storage.SaveVector(handle, name, value)
+    elseif getmetatable(value)==_qangle then return Storage.SaveQAngle(handle, name, value)
     else
         Warn("Value ["..tostring(value)..","..type(value).."] is not supported. Please open at issue on the github.")
         return false
