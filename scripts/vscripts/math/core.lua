@@ -44,4 +44,34 @@ function math.round(number, decimals)
     return math.floor(number * shift + 0.5) / shift
 end
 
+---
+---Check if two numbers are close to each other within a specified tolerance.
+---
+---@param a number # The first number to compare.
+---@param b number # The second number to compare.
+---@param rel_tol? number # The relative tolerance (optional).
+---@param abs_tol? number # The absolute tolerance (optional).
+---@return boolean # True if the numbers are close; false otherwise.
+function math.isclose(a, b, rel_tol, abs_tol)
+    rel_tol = rel_tol or 1e-8
+    abs_tol = abs_tol or 0.0
+
+    if a == b then
+        return true
+    end
+
+    local diff = abs(b - a)
+    return ((diff <= math.abs(rel_tol * b)) or (diff <= abs(rel_tol * a))) or (diff <= abs_tol)
+end
+
+---
+---Checks if a given number has a fractional part (decimal part).
+---
+---@param number number # The number to check for fractional part.
+---@return boolean # True if the number has a fractional part, false otherwise.
+function math.has_frac(number)
+    return type(number) == "number" and number ~= math.floor(number)
+end
+
+
 return version
