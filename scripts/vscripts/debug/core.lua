@@ -131,6 +131,13 @@ local bailout_count = 9000
 local current_recursion_level = 0
 local current_print_count = 0
 
+local function printKeyValue(key, value, prefix)
+    prefix = prefix or ""
+    local vs = (type(value) == "string" and ("\"" .. tostring(value) .. "\"") or tostring(value))
+    local ts = " ("..(IsEntity(value) and "entity" or type(value))..")"
+    print( string.format( "\t%s%-32s %s", prefix, key, "= " .. format_string(vs) .. ts ) )
+end
+
 -- local function table_level(level, count, m)
 --     local tbl = {}
 --     local val
@@ -173,9 +180,7 @@ function Debug.PrintTable(tbl, prefix, ignore, meta)
         end
         if not ignore_fdesc or key ~= "FDesc" then
             current_print_count = current_print_count + 1
-            local vs = (type(value) == "string" and ("\"" .. tostring(value) .. "\"") or tostring(value))
-            local ts = " ("..(IsEntity(value) and "entity" or type(value))..")"
-            print( string.format( "\t%s%-32s %s", prefix, key, "= " .. format_string(vs) .. ts ) )
+            printKeyValue(key, value, prefix)
             if type(value) == "table" and not IsEntity(value) and not vlua.find(ignore, value) then
                 table.insert(ignore, value)
                 current_recursion_level = current_recursion_level + 1
@@ -199,6 +204,19 @@ function Debug.PrintTable(tbl, prefix, ignore, meta)
         current_recursion_level = 0
         current_print_count = 0
     end
+end
+
+---
+---Prints the keys/values of a table but not any tested tables.
+---
+---@param tbl table # Table to print.
+function Debug.PrintTableShallow(tbl)
+    if type(tbl) ~= "table" then return end
+    print("{")
+    for key, value in pairs(tbl) do
+        printKeyValue(key, value)
+    end
+    print("}")
 end
 
 function Debug.PrintList(tbl, prefix)
