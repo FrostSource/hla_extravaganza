@@ -339,17 +339,20 @@ function DeepCopyTable(tbl)
 end
 
 ---
----Returns a random value from an array.
+---Searches for `value` in `tbl` and sets the associated key to `nil`, returning the key if found.
 ---
----@generic T
----@param array T[] # Array to get a value from.
----@param min? integer # Optional minimum bound.
----@param max? integer # Optional maximum bound.
----@return T one # The random value.
----@return integer two # The random index.
-function RandomFromArray(array, min, max)
-    local i = RandomInt(min or 1, max or #array)
-    return array[i], i
+---If working with arrays you should use `ArrayRemove` instead.
+---
+---@param tbl table
+---@param value any
+---@return any
+function TableRemove(tbl, value)
+    local k = vlua.find(tbl, value)
+    if k then
+        tbl[k] = nil
+        return k
+    end
+    return nil
 end
 
 ---
@@ -358,7 +361,7 @@ end
 ---@param tbl table # Table to get a random pair from.
 ---@return any key # Random key selected.
 ---@return any value # Value linked to the random key.
-function RandomFromTable(tbl)
+function TableRandom(tbl)
     local count = 0
     local selectedKey
 
@@ -375,17 +378,80 @@ function RandomFromTable(tbl)
 end
 
 ---
----Shuffles a given array.
+---Returns a random value from an array.
+---
+---@generic T
+---@param array T[] # Array to get a value from.
+---@param min? integer # Optional minimum bound.
+---@param max? integer # Optional maximum bound.
+---@return T one # The random value.
+---@return integer two # The random index.
+function ArrayRandom(array, min, max)
+    local i = RandomInt(min or 1, max or #array)
+    return array[i], i
+end
+
+---
+---Shuffles a given array in-place.
 ---
 ---@source https://stackoverflow.com/a/68486276
 ---
----@param t any[]
-function ShuffleArray(t)
-    for i = #t, 2, -1 do
+---@param array any[]
+function ArrayShuffle(array)
+    for i = #array, 2, -1 do
         local j = RandomInt(1, i)
-        t[i], t[j] = t[j], t[i]
+        array[i], array[j] = array[j], array[i]
     end
 end
+
+---
+---Remove an item from an array at a given position.
+---
+---This is significantly faster than `table.remove`.
+---
+---@generic T
+---@param array T # The array to remove from.
+---@param pos integer # Position to remove at.
+---@return T # The same array passed in.
+function ArrayRemove(array, pos)
+    local j, n = 1, #array
+
+    for i = 1,n do
+        if i == pos then
+            -- Move i's kept value to j's position, if it's not already there.
+            if i ~= j then
+                array[j] = array[i]
+                array[i] = nil
+            end
+            j = j + 1 -- Increment position of where we'll place the next kept value.
+        else
+            array[i] = nil
+        end
+    end
+
+    return array
+end
+
+---
+---Appends `array2` onto `array1` as a new array.
+---
+---Safe extend function alternative to `vlua.extend`, neither input arrays are modified.
+---
+---@generic T1
+---@generic T2
+---@param array1 T1[] # Base array
+---@param array2 T2[] # Array which will be appended onto the base array.
+---@return T1[]|T2[] # The new appended array.
+function ArrayAppend(array1, array2)
+    array1 = vlua.clone(array1)
+    for _, v in ipairs(array2) do
+        table.insert(array1, v)
+    end
+    return array1
+end
+
+
+
 
 ---@class TraceTableLineExt : TraceTableLine
 ---@field ignore (EntityHandle|EntityHandle[])? # Entity or array of entities to ignore.
@@ -410,18 +476,15 @@ function TraceLineExt(parameters)
         parameters.ignore = nil
     end
     if type(parameters.ignoreclass) == "string" then
-        ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignoreclass = {parameters.ignoreclass}
     end
     if type(parameters.ignorename) == "string" then
-        ---@diagnostic disable-next-line: assign-type-mismatch
         parameters.ignorename = {parameters.ignorename}
     end
     parameters.traces = 1
     parameters.timeout = parameters.timeout or math.huge
 
     local result = TraceLine(parameters)
-    -- print(parameters.hit, parameters.enthit)
     while parameters.traces < parameters.timeout and parameters.hit and parameters.enthit ~= parameters.dontignore and
     (
         vlua.find(parameters.ignoreent, parameters.enthit)
@@ -499,6 +562,8 @@ end
 
 ---
 ---Check if a value is truthy or falsy.
+---
+--- **falsy == `nil`|`false`|`0`|`""`|`{}`**
 ---
 ---@param value any # The value to be checked.
 ---@return boolean # Returns true if the value is truthy, false otherwise.
