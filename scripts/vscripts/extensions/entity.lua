@@ -224,12 +224,40 @@ function CBaseEntity:DoNotDrop(enabled)
     end
 end
 
+---
 ---Get all criteria as a table.
+---
 ---@return CriteriaTable
 function CBaseEntity:GetCriteria()
     local c = {}
     self:GatherCriteria(c)
     return c
+end
+
+---
+---Get all entities which are owned by this entity
+---
+---**Note:** This searches all entities in the map and should be used sparingly.
+---@return EntityHandle[]
+function CBaseEntity:GetOwnedEntities()
+    local ents = {}
+    local ent = Entities:First()
+    while ent ~= nil do
+        if ent ~= self and ent:GetOwner() == self then
+            table.insert(ents, ent)
+        end
+        ent = Entities:Next(ent)
+    end
+    return ents
+end
+
+---Set the alpha modulation of this entity plus any children.
+---@param alpha integer
+function CBaseModelEntity:SetRenderAlphaAll(alpha)
+    for _, child in ipairs(self:GetChildren()) do
+        child:SetRenderAlpha(alpha)
+    end
+    self:SetRenderAlpha(alpha)
 end
 
 return version
