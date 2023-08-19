@@ -401,7 +401,7 @@ EntityClass = entity("EntityClass")
 ---This also saves the field.
 ---@param name string
 ---@param value any
----@deprecated
+---@deprecated # Values are automatically saved now.
 function EntityClass:Set(name, value)
     -- self[name] = value
     ---@TODO Unsure if there's a reasonable difference between this and normal assignment

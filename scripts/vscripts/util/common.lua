@@ -61,6 +61,7 @@ end
 ---@param tbl table # The table to search.
 ---@param value any # The value to search for.
 ---@return unknown|nil # The key in `tbl` or nil if no `value` was found.
+---@deprecated # Functionally the same as `vlua.find`.
 function Util.FindKeyFromValue(tbl, value)
     for key, val in pairs(tbl) do
         if val == value then
