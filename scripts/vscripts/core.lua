@@ -27,6 +27,7 @@ require "util.globals"
 
 ifrequire "debug.core"
 ifrequire "util.enums"
+ifrequire "extensions.string"
 ifrequire "extensions.vector"
 ifrequire "extensions.entity"
 ifrequire "extensions.entities"
