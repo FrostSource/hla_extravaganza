@@ -921,7 +921,8 @@ local function listenEventItemPickup(data)
     end
 
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_ITEM_PICKUP
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = ent_held
     data.hand = hand
@@ -968,8 +969,10 @@ local function listenEventItemReleased(data)
     hand.LastItemDropped = hand.ItemHeld
     hand.LastClassDropped = data.item
     hand.ItemHeld = nil
+
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_ITEM_RELEASED
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = Player.LastItemDropped
     data.hand = hand
@@ -1075,7 +1078,10 @@ local function listenEventPlayerDropAmmoInBackpack(data)
         print("Couldn't figure out ammo for "..tostring(ammotype))
     end
     savePlayerData()
+
     -- Registered callback
+    ---@diagnostic disable-next-line: cast-type-mismatch
+    ---@cast data PLAYER_EVENT_PLAYER_DROP_AMMO_IN_BACKPACK
     data.ammotype = ammotype
     data.ammo_amount = ammo_amount
     for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -1089,6 +1095,7 @@ end
 ListenToGameEvent("player_drop_ammo_in_backpack", listenEventPlayerDropAmmoInBackpack, nil)
 
 -- Inherit from base instead of event to remove 'ammoType'
+
 ---@class PLAYER_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP : GAME_EVENT_BASE
 ---@field ammotype "Pistol"|"SMG1"|"Buckshot"|"AlyxGun" # Type of ammo that was retrieved.
 ---@field ammo_amount integer # Amount of ammo retrieved for the given type (1 clip, 2 shells).
@@ -1122,6 +1129,8 @@ local function listenEventPlayerRetrievedBackpackClip(data)
                 Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - ammo_amount
             end
             -- Registered callback
+            ---@diagnostic disable-next-line: cast-type-mismatch
+            ---@cast data PLAYER_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP
             data.ammotype = ammotype
             data.ammo_amount = ammo_amount
             for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -1139,6 +1148,8 @@ local function listenEventPlayerRetrievedBackpackClip(data)
     savePlayerData()
     -- Registered callback
     if do_callback then
+        ---@diagnostic disable-next-line: cast-type-mismatch
+        ---@cast data PLAYER_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP
         data.ammotype = ammotype
         data.ammo_amount = ammo_amount
         for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -1184,8 +1195,10 @@ local function listenEventPlayerStoredItemInItemholder(data)
     --     Player.Items.healthpen = Player.Items.healthpen + 1
     -- end
     savePlayerData()
+
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_PLAYER_STORED_ITEM_IN_ITEMHOLDER
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = item
     data.hand = hand
@@ -1236,8 +1249,10 @@ local function listenEventPlayerRemovedItemFromItemholder(data)
     --     Player.Items.healthpen = Player.Items.healthpen - 1
     -- end
     savePlayerData()
+
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_PLAYER_REMOVED_ITEM_FROM_ITEMHOLDER
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = item
     data.hand = hand
