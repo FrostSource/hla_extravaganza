@@ -498,9 +498,9 @@ end
 function CBasePlayer:GetGrenades()
     local grenades = {}
     local immediate_items = self:GetImmediateItems()
-    for i in ipairs(immediate_items) do
-        if i and (i:GetClassname() == "item_hlvr_grenade_frag" or i:GetClassname() == "item_hlvr_grenade_xen") then
-            grenades[#grenades+1] = i
+    for _, item in ipairs(immediate_items) do
+        if item and (item:GetClassname() == "item_hlvr_grenade_frag" or item:GetClassname() == "item_hlvr_grenade_xen") then
+            grenades[#grenades+1] = item
         end
     end
     return grenades
@@ -515,9 +515,9 @@ end
 function CBasePlayer:GetHealthPens()
     local healthpens = {}
     local immediate_items = self:GetImmediateItems()
-    for i in ipairs(immediate_items) do
-        if i and (i:GetClassname() == "item_healthvial") then
-            healthpens[#healthpens+1] = i
+    for _, item in ipairs(immediate_items) do
+        if item and (item:GetClassname() == "item_healthvial") then
+            healthpens[#healthpens+1] = item
         end
     end
     return healthpens
