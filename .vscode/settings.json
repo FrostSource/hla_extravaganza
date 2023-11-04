@@ -30,6 +30,7 @@
     "files.exclude": {
         "**/__pycache__": true,
         "**/_bakeresourcecache": true,
-        "**/*.bak": true
+        "**/*.bak": true,
+        "/release/": true
     },
 }
