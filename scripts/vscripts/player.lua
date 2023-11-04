@@ -792,7 +792,7 @@ end
 
 ---@class PLAYER_EVENT_PLAYER_ACTIVATE : GAME_EVENT_BASE
 ---@field player CBasePlayer # The entity handle of the player.
----@field game_loaded boolean # If the player was activated from a game save being loaded.
+---@field type "spawn"|"load"|"transition" # Type of player activate.
 ---@class PLAYER_EVENT_VR_PLAYER_READY : PLAYER_EVENT_PLAYER_ACTIVATE
 ---@field hmd_avatar CPropHMDAvatar # The hmd avatar entity handle.
 
@@ -802,8 +802,20 @@ local function listenEventPlayerActivate(data)
     local base_data = vlua.clone(data)
     Player = GetListenServerHost()
     loadPlayerData()
-    local player_previously_activated = Storage.LoadBoolean(Player, "PlayerPreviouslyActivated", false)
-    Storage.SaveBoolean(Player, "PlayerPreviouslyActivated", true)
+    local previous_map = Storage.LoadString(Player, "PlayerPreviousMap", "")
+    Storage.SaveString(Player, "PlayerPreviousMap", GetMapName())
+
+    ---@cast data PLAYER_EVENT_PLAYER_ACTIVATE
+    data.player = Player
+    -- Determine type of player activate
+    if previous_map == "" then
+        data.type = "spawn"
+    elseif previous_map ~= GetMapName() then
+        data.type = "transition"
+    else
+        data.type = "load"
+    end
+
     Player:SetContextThink("global_player_setup_delay", function()
         Player.HMDAvatar = Player:GetHMDAvatar() --[[@as CPropHMDAvatar]]
         if Player.HMDAvatar then
@@ -829,11 +841,8 @@ local function listenEventPlayerActivate(data)
             -- Have to load these seperately
             Player.LeftHand.WristItem = Storage.LoadEntity(Player, "LeftWristItem")
             Player.RightHand.WristItem = Storage.LoadEntity(Player, "RightWristItem")
-            -- Registered callback
-            data.player = Player
-            data.game_loaded = player_previously_activated
-            data.hmd_avatar = Player.HMDAvatar
-            -- Get resin only if it wasn't loaded
+
+            -- Get resin only if it couldn't be loaded from player context
             if Player.Items.resin == nil or Player.Items.resin_found == nil then
                 -- For some reason resin isn't in criteria until 0.6 seconds
                 Player:SetContextThink("__resin_update", function()
@@ -841,6 +850,9 @@ local function listenEventPlayerActivate(data)
                     Player.Items.resin_found = Player.Items.resin
                 end, 0.5)
             end
+
+            -- Registered callback
+            data.hmd_avatar = Player.HMDAvatar
             for id, event_data in pairs(registered_event_callbacks["vr_player_ready"]) do
                 if event_data.context ~= nil then
                     event_data.callback(event_data.context, data)
@@ -859,9 +871,8 @@ local function listenEventPlayerActivate(data)
             end
         end
     end, 0)
+
     -- Registered callback
-    data.player = Player
-    data.game_loaded = player_previously_activated
     for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
         if event_data.context ~= nil then
             event_data.callback(event_data.context, data)
