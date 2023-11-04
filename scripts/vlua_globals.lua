@@ -1162,8 +1162,8 @@ function PrecacheEntityListFromTable(groupSpawnTables, context) end
 ---@param modelName string
 ---@param context CScriptPrecacheContext
 function PrecacheModel(modelName, context) end
----model_folder|sound|soundfile|particle|particle_folder"
----@param resourceType string|"model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
+---@alias PrecacheTypes "model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
+---@param resourceType string|PrecacheTypes
 ---@param resourcePath string
 ---@param context CScriptPrecacheContext
 function PrecacheResource(resourceType, resourcePath, context) end
@@ -1379,7 +1379,7 @@ function IsServer() end
 function IsInToolsMode() end
 ---Register as a listener for a game event from script.
 ---@param eventname GAME_EVENTS_ALL
----@param callback function
+---@param callback fun(params: GAME_EVENT_BASE)
 ---@param context nil|table # Context to pass as the first parameter of `callback`.
 ---@return integer # ID used to cancel with StopListeningToGameEvent().
 function ListenToGameEvent(eventname, callback, context) end
@@ -1961,8 +1961,8 @@ function CEntityInstance:DisconnectRedirectedOutput(output, functionName, entity
 function CEntityInstance:entindex() end
 ---Fire an entity output.
 ---@param outputName string
----@param activator EntityHandle
----@param caller EntityHandle
+---@param activator EntityHandle|nil
+---@param caller EntityHandle|nil
 ---@param parameter string|nil # The parameter override to send with the output.
 ---@param delay number
 function CEntityInstance:FireOutput(outputName, activator, caller, parameter, delay) end
@@ -2494,7 +2494,7 @@ function Entities:First() end
 ---@return CHL2_Player
 function Entities:GetLocalPlayer() end
 ---Continue an iteration over the list of entities, providing reference to a previously found entity
----@param startFrom EntityHandle What happens if starting from nil?
+---@param startFrom EntityHandle|nil # If nil, works the same as `Entities:First()`
 ---@return EntityHandle
 function Entities:Next(startFrom) end
 
