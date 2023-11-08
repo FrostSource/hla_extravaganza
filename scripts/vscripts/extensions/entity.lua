@@ -267,11 +267,15 @@ function CBaseEntity:GetOwnedEntities()
     return ents
 end
 
----Set the alpha modulation of this entity plus any children.
+---
+---Set the alpha modulation of this entity, plus any children that can have their alpha set.
+---
 ---@param alpha integer
 function CBaseModelEntity:SetRenderAlphaAll(alpha)
     for _, child in ipairs(self:GetChildren()) do
-        child:SetRenderAlpha(alpha)
+        if child.SetRenderAlpha then
+            child:SetRenderAlpha(alpha)
+        end
     end
     self:SetRenderAlpha(alpha)
 end
