@@ -592,9 +592,34 @@ function Debug.PrintInheritance(ent)
     end
 end
 
+---
 ---Returns a simplified vector string with decimal places truncated.
+---
 ---@param vector Vector
 ---@return string
 function Debug.SimpleVector(vector)
     return "[" .. math.trunc(vector.x, 3) .. " " .. math.trunc(vector.y, 3) .. " " .. math.trunc(vector.z, 3) .. "]"
+end
+
+---
+---Draw a simple sphere without worrying about all the properties.
+---
+---@param x number
+---@param y number
+---@param z number
+---@param radius? number
+---@overload fun(pos: Vector, radius?: number)
+function Debug.Sphere(x, y, z, radius)
+    if IsVector(x) then
+        ---@diagnostic disable-next-line: cast-type-mismatch
+        ---@cast x Vector
+        radius = y
+        z = x.z
+        y = x.y
+        x = x.x
+    end
+
+    radius = radius or 8
+
+    DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, radius, false, 10)
 end
