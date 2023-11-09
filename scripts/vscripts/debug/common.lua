@@ -19,47 +19,111 @@ Debug = {}
 Debug.version = "v1.6.0"
 
 ---
----Prints useful entity information about a list of entities, such as classname and model.
 ---
----@param list EntityHandle[]
-function Debug.PrintEntityList(list)
+---Prints a formated indexed list of entities with custom property information.
+---Also links children with their parents by displaying the index alongside the parent for easy look-up.
+---
+---    Debug.PrintEntityList(ents, {"getclassname", "getname", "getname"})
+---
+---If no properties are supplied the default properties are used: GetClassname, GetName, GetModelName
+---If an empty property table is supplied only the base values are shown: Index, Handle, Parent
+---Property patterns do not need to be functions.
+---
+---@param list EntityHandle[] # List of entities to print.
+---@param properties string[] # List of property patterns to search for.
+function Debug.PrintEntityList(list, properties)
 
-    local len_index  = 0
-    local len_handle = 0
-    local len_class  = 0
-    local len_name   = 0
-    local len_model  = 0
-    local len_parent = #"[none]"
+    properties = properties or {"GetClassname", "GetName", "GetModelName"}
+
+    local lenIndex  = 0
+    local lenHandle = 0
+    local lenParent = #"[none]"
+
+    ---Values of the properties found in the entities
+    ---@type any[][]
+    local propertyValues = {}
+    ---Metadata about the properties found matching the property patterns
+    ---@type { name: string, func: function?, max: number }[]
+    local propertyMetaData = {}
+
+    ---@type string[]
+    local headerNames = {"","Handle"}
+    local headerSeparators = {"", "------"}
+    headerNames[3 + #properties] = "Parent"
+    headerSeparators[3 + #properties] = "------"
 
     ---@param e EntityHandle
     local function generate_parent_str(e)
-        local par_format = "%-"..len_index.."s %s, %s"
+        local parFormat = "%-"..lenIndex.."s %s, %s"
         local i = vlua.find(list, e)
-        return par_format:format("["..(i or "/").."]", tostring(e), e:GetClassname())
+        return parFormat:format("["..(i or "/").."]", string.gsub(tostring(e), "table: ", ""), e:GetClassname())
     end
 
     for index, ent in ipairs(list) do
-        len_index  = max(len_index, #("["..index.."]") )
-        len_handle = max(len_handle, #tostring(ent) )
-        len_class  = max(len_class, #ent:GetClassname() )
-        len_name   = max(len_name, #ent:GetName() )
-        len_model  = max(len_model, #ent:GetModelName() )
+        lenIndex  = max(lenIndex, #("["..index.."]") )
+        lenHandle = max(lenHandle, #string.gsub(tostring(ent), "table: ", "") )
         if ent:GetMoveParent() then
-            len_parent = max(len_parent, #generate_parent_str(ent:GetMoveParent()))
+            lenParent = max(lenParent, #generate_parent_str(ent:GetMoveParent()))
+        end
+
+        -- Create new property table for this entity
+        propertyValues[index] = {}
+
+        for propertyIndex, propertyName in ipairs(properties) do
+            if propertyMetaData[propertyIndex] == nil then
+                propertyMetaData[propertyIndex] = { name = propertyName, func = nil, max = #propertyName }
+                headerNames[2 + propertyIndex] = propertyName
+                headerSeparators[2 + propertyIndex] = string.rep("-", #propertyName)
+            end
+            local key, value = SearchEntity(ent, propertyName)
+            -- Capture the first function matching the property pattern
+            if key ~= nil and propertyMetaData[propertyIndex].func == nil then
+                propertyMetaData[propertyIndex] = { name = key, func = value, max = #key }
+                -- Add the name and separator for property to be unpacked later
+                headerNames[2 + propertyIndex] = key
+                headerSeparators[2 + propertyIndex] = string.rep("-", #key)
+            end
+
+            -- Find the value of the property
+            ---@type any
+            local foundValueInEntity = "nil"
+            if propertyMetaData[propertyIndex] ~= nil then
+                if type(propertyMetaData[propertyIndex].func) == "function" then
+                    local s, result = pcall(propertyMetaData[propertyIndex].func, ent)
+                    if s then
+                        foundValueInEntity = result
+                    end
+                else
+                    foundValueInEntity = ent[propertyName]
+                end
+            end
+
+            propertyValues[index][propertyIndex] = tostring(foundValueInEntity)
+
+            -- Track the biggest value length
+            propertyMetaData[propertyIndex].max = max(propertyMetaData[propertyIndex].max, #tostring(foundValueInEntity))
         end
     end
-    len_handle = len_handle + 1
-    local format_str   = "%-"..len_index.."s %-"..len_handle.."s %-"..len_class.."s %-"..len_name.."s %-"..len_model.."s %-"..len_parent.."s"
+
+    -- Create the format string with correct padding
+    lenHandle = lenHandle + 1
+    local formatStr   = "%-"..lenIndex.."s %-"..lenHandle.."s"
+    for propertyIndex, propertyTable in ipairs(propertyMetaData) do
+        formatStr = formatStr .. " | %-"..propertyTable.max.."s"
+    end
+    formatStr = formatStr .. " | %-"..lenParent.."s"
 
     print()
-    print(string.format(format_str,"","Handle", "Classname:", "Name:", "Model Name:", "Parent"))
-    print(string.format(format_str,"", "------", "----------", "-----", "-----------", "------"))
+    print(string.format(formatStr,unpack(headerNames)))
+    print(string.format(formatStr,unpack(headerSeparators)))
     for index, ent in ipairs(list) do
         local parent_str = ""
         if ent:GetMoveParent() then
             parent_str = generate_parent_str(ent:GetMoveParent())
         end
-        print(string.format(format_str, "["..index.."]", ent, ent:GetClassname(), ent:GetName(), ent:GetModelName(), parent_str ))
+
+        propertyValues[index][#propertyValues[index]+1] = parent_str
+        print(string.format(formatStr, "["..index.."]", string.gsub(tostring(ent), "table: ", ""), unpack(propertyValues[index]) ))
     end
     print()
 end
@@ -67,14 +131,16 @@ end
 ---
 ---Prints information about all existing entities.
 ---
-function Debug.PrintAllEntities()
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintAllEntities(properties)
+    properties = properties or {"GetClassname", "GetName", "GetModelName"}
     local list = {}
     local e = Entities:First()
     while e ~= nil do
         list[#list+1] = e
         e = Entities:Next(e)
     end
-    Debug.PrintEntityList(list)
+    Debug.PrintEntityList(list, properties)
 end
 
 ---
@@ -85,7 +151,8 @@ end
 ---@param search string # Search string, may include `*`.
 ---@param exact boolean # If the search should match exactly or part of the name.
 ---@param dont_include_parents boolean # Parents won't be included in the results.
-function Debug.PrintEntities(search, exact, dont_include_parents)
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintEntities(search, exact, dont_include_parents, properties)
     if not exact then
         search = "*"..search.."*"
     end
@@ -111,12 +178,17 @@ function Debug.PrintEntities(search, exact, dont_include_parents)
             ents[#ents+1] = ent
         end
     end
-    Debug.PrintEntityList(ents)
+    Debug.PrintEntityList(ents, properties)
 end
 
+---
 ---Prints information about all entities within a sphere.
-function Debug.PrintAllEntitiesInSphere(origin, radius)
-    Debug.PrintEntityList(Entities:FindAllInSphere(origin, radius))
+---
+---@param origin Vector # Position to search for entities at.
+---@param radius number # Max radius to find entities within.
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintAllEntitiesInSphere(origin, radius, properties)
+    Debug.PrintEntityList(Entities:FindAllInSphere(origin, radius), properties)
 end
 
 ---Turns newlines into spaces.

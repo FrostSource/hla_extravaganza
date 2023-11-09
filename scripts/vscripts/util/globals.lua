@@ -470,8 +470,10 @@ end
 ---@return boolean
 function TraceLineExt(parameters)
     if IsEntity(parameters.ignore) then
+        ---@diagnostic disable-next-line: inject-field
         parameters.ignoreent = {parameters.ignore}
     else
+        ---@diagnostic disable-next-line: inject-field
         parameters.ignoreent = parameters.ignore
         parameters.ignore = nil
     end
@@ -570,4 +572,53 @@ end
 ---@diagnostic disable-next-line:lowercase-global
 function truthy(value)
     return not (value == nil or value == false or value == 0 or value == "" or (type(value) == "table" and next(value) == nil))
+end
+
+---
+---Search an entity for a key using a search pattern. E.g. "getclass" will find "GetClassname"
+---
+---Works with `class.lua` EntityClass entities.
+---
+---@param entity EntityHandle|EntityClass
+---@param searchPattern string
+---@return string? key # The full name of the first key matching `searchPattern`.
+---@return any? value # The value of the key found.
+function SearchEntity(entity, searchPattern)
+    searchPattern = searchPattern:lower()
+
+    local function searchTable(tbl, pattern)
+        for key, value in pairs(tbl) do
+            if debug then  print("", key, value) end
+            local lkey = key:lower()
+            if not lkey:startswith("set") then
+                if string.find(lkey, pattern) then
+                    if debug then print(key, value) end
+                    return key, value
+                end
+            end
+        end
+    end
+
+    if rawget(entity, "__inherits") then
+        local inherits = getinherits(entity)
+        for _, tbl in ipairs(inherits) do
+            local key, value = searchTable(tbl, searchPattern)
+            if key or value then
+                return key, value
+            end
+        end
+
+        -- Set up the valve meta to be searched since inherits failed to find pattern
+        entity = getvalvemeta(entity).__index
+    end
+
+    while type(entity) == "table" do
+        local key, value = searchTable(entity, searchPattern)
+        if key or value then
+            return key, value
+        end
+        entity = getmetatable(entity).__index
+    end
+
+    return nil, nil
 end
