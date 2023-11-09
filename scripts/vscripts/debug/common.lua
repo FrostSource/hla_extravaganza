@@ -19,6 +19,85 @@ Debug = {}
 Debug.version = "v1.6.0"
 
 ---
+---Prints all entities in the map, along with any supplied property patterns.
+---
+---E.g. print_all_ents getname mass health
+---
+---If no arguments are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_all_ents", function (_, ...)
+    local properties = nil
+    properties = {...}
+    if #properties == 0 then properties = nil end
+    Debug.PrintAllEntities(properties)
+end, "", 0)
+
+---
+---Prints all entities with a radius around the player, along with any supplied property patterns.
+---
+---E.g. print_nearby_ents 100 getname mass
+---
+---If no radius is supplied then the default radius of 256 is used.
+---If no properties are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_nearby_ents", function (_, radius, ...)
+
+    local properties = nil
+    if radius == nil or tonumber(radius) then
+        properties = {...}
+    else
+        properties = {radius, ...}
+    end
+
+    if #properties == 0 then properties = nil end
+    Debug.PrintAllEntitiesInSphere(Entities:GetLocalPlayer():GetOrigin(), tonumber(radius) or 256, properties)
+end, "", 0)
+
+---
+---Prints all entities with class, name or model matching a `pattern`, along with any supplied property patterns.
+---
+---E.g. print_ents physics getname mass
+---E.g. print_ents box.vmdl getname mass
+---
+---If no properties are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_ents", function (_, pattern, ...)
+
+    local properties = nil
+    properties = {...}
+    if #properties == 0 then properties = nil end
+
+    Debug.PrintEntities(pattern, false, false, properties)
+end, "", 0)
+
+---
+---Show the position of an entity relative to the player using debug drawing.
+---
+Convars:RegisterCommand("ent_show", function (_, name)
+    Debug.ShowEntity(name)
+end, "", 0)
+
+---
+---Print the mass of an entity.
+---
+Convars:RegisterCommand("ent_mass", function (_, name)
+    local ent = Entities:FindByName(nil, name)
+    print(ent:GetMass())
+end, "", 0)
+
+---
+---Quickly draw a sphere at a position with a radius.
+---
+Convars:RegisterCommand("sphere", function (_, x, y, z, r)
+    x = tonumber(x) or 0
+    y = tonumber(y) or 0
+    z = tonumber(z) or 0
+    r = tonumber(r) or 16
+
+    DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, r, false, 10)
+
+end, "", 0)
+
 ---
 ---Prints a formated indexed list of entities with custom property information.
 ---Also links children with their parents by displaying the index alongside the parent for easy look-up.
