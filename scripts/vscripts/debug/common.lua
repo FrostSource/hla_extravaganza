@@ -375,23 +375,6 @@ function Debug.PrintTableShallow(tbl)
 end
 
 function Debug.PrintList(tbl, prefix)
-    -- local ordered = {}
-    -- local unordered = {}
-    -- for _, value in ipairs(tbl) do
-    --     ordered[#ordered+1] = value
-    -- end
-    -- for _, value in pairs(tbl) do
-    --     if not vlua.find(ordered, value) then
-    --         unordered[#unordered+1] = value
-    --     end
-    -- end
-    -- local frmt = "%-"..(#tostring(#ordered)+1).."s %s"
-    -- for index, value in ipairs(ordered) do
-    --     print(frmt:format(index..".", value))
-    -- end
-    -- for _, value in ipairs(unordered) do
-    --     print(frmt:format("*", value))
-    -- end
     local m = 0
     prefix = prefix or ""
     for key, value in pairs(tbl) do
@@ -539,6 +522,7 @@ function Debug.PrintGraph(height, min_val, max_val, name_value_pairs)
     ---@type string[]
     local text_rows = {}
     ---Returns a new string from a non existing key
+    ---@diagnostic disable-next-line: inject-field
     text_rows.__index = function (table, key)
         return ""
     end
