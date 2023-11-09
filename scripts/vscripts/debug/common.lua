@@ -334,12 +334,12 @@ end
 ---
 ---@param ent EntityHandle|string # Handle or targetname of the entity(s) to find.
 ---@param duration number? # Number of seconds the debug should display for.
-function Debug.FindEntity(ent, duration)
+function Debug.ShowEntity(ent, duration)
     duration = duration or 20
     if type(ent) == "string" then
         local ents = Entities:FindAllByName(ent)
         for _,e in ipairs(ents) do
-            Debug.FindEntity(e)
+            Debug.ShowEntity(e)
         end
         return
     end
@@ -353,7 +353,7 @@ function Debug.FindEntity(ent, duration)
     DebugDrawCircle(ent:GetOrigin(), Vector(255), 128, radius, true, duration)
     DebugDrawSphere(ent:GetCenter(), Vector(255), 128, radius, true, duration)
 end
-CBaseEntity.DebugFind = Debug.FindEntity
+CBaseEntity.DebugFind = Debug.ShowEntity
 
 ---
 ---Prints all current context criteria for an entity.
