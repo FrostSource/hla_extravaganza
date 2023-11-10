@@ -98,6 +98,21 @@ Convars:RegisterCommand("sphere", function (_, x, y, z, r)
 
 end, "", 0)
 
+if IsInToolsMode() then
+    ---
+    ---Executes Lua code.
+    ---
+    ---E.g. code print('Hello world!')
+    ---
+    ---Double quotes are not recognized.
+    ---
+    Convars:RegisterCommand("code", function (_, ...)
+        local code = table.concat({...})
+        print("Doing code:", code)
+        load(code)()
+    end, "", 0)
+end
+
 ---
 ---Prints a formated indexed list of entities with custom property information.
 ---Also links children with their parents by displaying the index alongside the parent for easy look-up.
