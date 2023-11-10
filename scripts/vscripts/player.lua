@@ -649,6 +649,90 @@ function CBasePlayer:GetWorldForward()
     return f
 end
 
+local specialAttachmentsOrder = {
+    "hlvr_prop_renderable_glove",
+    "hand_use_controller",
+    "worldui_interact_controller",
+    "hlvr_weaponswitch_controller",
+}
+
+---
+---Update player weapon inventory, both removing and setting.
+---
+---@param removes? (string|EntityHandle)[] # List of classnames or handles to remove.
+---@param set? string|EntityHandle # Classname or handle to set as active weapon.
+---@return EntityHandle? # The handle of the newly set weapon if given and found.
+function CBasePlayer:UpdateWeapons(removes, set)
+    local hand = Player.PrimaryHand
+
+    local setFound = nil
+    local specialAttachmentsFound = {}
+    local attachments = {}
+    local attachment = hand:GetHandAttachment()
+    while attachment ~= nil do
+        if not removes or not (vlua.find(removes, attachment) or vlua.find(removes, attachment:GetClassname())) then
+            if attachment == set or attachment:GetClassname() == set then
+                setFound = attachment
+            elseif vlua.find(specialAttachmentsOrder, attachment:GetClassname()) then
+                specialAttachmentsFound[attachment:GetClassname()] = attachment
+            else
+                table.insert(attachments, 1, attachment)
+            end
+        end
+        hand:RemoveHandAttachmentByHandle(attachment)
+        -- Get next current attachment
+        attachment = hand:GetHandAttachment()
+    end
+
+    -- Add special attachments back first to avoid crash
+    for _, specialName in ipairs(specialAttachmentsOrder) do
+        if specialAttachmentsFound[specialName] then
+            hand:AddHandAttachment(specialAttachmentsFound[specialName])
+        end
+    end
+
+    -- Add back attachments that weren't removed
+    for _, removedAttachment in ipairs(attachments) do
+        print("Adding attachment", removedAttachment:GetClassname())
+        hand:AddHandAttachment(removedAttachment)
+    end
+
+    -- Add back the attachment to be set last
+    if setFound ~= nil then
+        hand:AddHandAttachment(setFound)
+        -- Multitool needs to be added twice
+        if setFound:GetClassname() == "hlvr_multitool" then
+            hand:AddHandAttachment(setFound)
+        end
+    end
+
+    return setFound
+end
+
+---
+---Remove weapons from the player inventory.
+---
+---@param weapons (string|EntityHandle)[] # List of classnames or handles to remove.
+---@overload fun(self: CBasePlayer, weapon: string|EntityHandle)
+function CBasePlayer:RemoveWeapons(weapons)
+    if weapons == nil or (type(weapons) == "table" and #weapons == 0) then
+        weapons = self:GetWeapon()
+    end
+    if type(weapons) == "string" or IsEntity(weapons) then
+        weapons = {weapons}
+    end
+    self:UpdateWeapons(weapons, nil)
+end
+
+---
+---Set the weapon that the player is holding.
+---
+---@param weapon string|EntityHandle # Classname or handle to set as active weapon.
+---@return EntityHandle? # The handle of the newly set weapon if found.
+function CBasePlayer:SetWeapon(weapon)
+    return self:UpdateWeapons(nil, weapon)
+end
+
 ---@class __PlayerRegisteredEventData
 ---@field callback function
 ---@field context any
