@@ -1,5 +1,5 @@
 --[[
-    v1.6.0
+    v1.7.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -16,7 +16,7 @@ require "extensions.entity"
 require "math.common"
 
 Debug = {}
-Debug.version = "v1.6.0"
+Debug.version = "v1.7.0"
 
 ---
 ---Prints all entities in the map, along with any supplied property patterns.

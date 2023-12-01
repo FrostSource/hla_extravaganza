@@ -1,5 +1,5 @@
 --[[
-    v2.2.0
+    v2.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v2.2.0"
+local version = "v2.3.0"
 
 ---
 ---Get the top level entities parented to this entity. Not children of children.
