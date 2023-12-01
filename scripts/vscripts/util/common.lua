@@ -1,5 +1,5 @@
 --[[
-    v2.2.0
+    v3.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     This file contains utility functions to help reduce repetitive code and add general miscellaneous functionality.
@@ -12,7 +12,7 @@
 ]]
 
 Util = {}
-Util.version = "v2.2.0"
+Util.version = "v3.0.0"
 
 ---
 ---Convert vr_tip_attachment from a game event [1,2] into a hand id [0,1] taking into account left handedness.
@@ -61,6 +61,7 @@ end
 ---@param tbl table # The table to search.
 ---@param value any # The value to search for.
 ---@return unknown|nil # The key in `tbl` or nil if no `value` was found.
+---@deprecated # Functionally the same as `vlua.find`.
 function Util.FindKeyFromValue(tbl, value)
     for key, val in pairs(tbl) do
         if val == value then
@@ -110,50 +111,6 @@ function Util.TableSize(tbl)
         count = count + 1
     end
     return count
-end
-
----
----Remove a value from a table, returning it if it exists.
----
----@param tbl table
----@param value any
----@return any
-function Util.RemoveFromTable(tbl, value)
-    local i = vlua.find(tbl, value)
-    if i then
-        return table.remove(tbl, i)
-    end
-    return nil
-end
-
----
----Appends `array2` onto `array1` as a new array.
----Safe extend function alternative to `vlua.extend`.
----
----@param array1 any[]
----@param array2 any[]
-function Util.AppendArray(array1, array2)
-    array1 = vlua.clone(array1)
-    for i = 1, #array2 do
-        table.insert(array1, array2[i])
-    end
-    return array1
-end
-
----Append any number of arrays onto `array` and return as a new array.
----Safe extend function alternative to `vlua.extend`.
----@param array any[]
----@param ... any[]
-function Util.AppendArrays(array, ...)
-    local arg = {...}
-    local n = #arg
-    array = vlua.clone(array)
-    for _, arr in ipairs(arg) do
-        for i = 1, #arr do
-            table.insert(array, arr[i])
-        end
-    end
-    return array
 end
 
 ---

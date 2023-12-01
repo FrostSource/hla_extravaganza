@@ -1,5 +1,5 @@
 --[[
-    v2.2.0
+    v2.3.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides base entity extension methods.
@@ -11,7 +11,7 @@
     ```
 ]]
 
-local version = "v2.2.0"
+local version = "v2.3.0"
 
 ---
 ---Get the top level entities parented to this entity. Not children of children.
@@ -76,6 +76,14 @@ function CBaseEntity:SetQAngle(qangle)
 end
 
 ---
+---Set entity local pitch, yaw, roll from a `QAngle`.
+---
+---@param qangle QAngle
+function CBaseEntity:SetLocalQAngle(qangle)
+    self:SetLocalAngles(qangle.x, qangle.y, qangle.z)
+end
+
+---
 ---Set entity pitch, yaw or roll. Supply `nil` for any parameter to leave it unchanged.
 ---
 ---@param pitch number|nil
@@ -84,6 +92,14 @@ end
 function CBaseEntity:SetAngle(pitch, yaw, roll)
     local angles = self:GetAngles()
     self:SetAngles(pitch or angles.x, yaw or angles.y, roll or angles.z)
+end
+
+---
+---Resets local origin and angle to [0,0,0]
+---
+function CBaseEntity:ResetLocal()
+    self:SetLocalOrigin(Vector())
+    self:SetLocalAngles(0, 0, 0)
 end
 
 ---
@@ -224,12 +240,92 @@ function CBaseEntity:DoNotDrop(enabled)
     end
 end
 
+---
 ---Get all criteria as a table.
+---
 ---@return CriteriaTable
 function CBaseEntity:GetCriteria()
     local c = {}
     self:GatherCriteria(c)
     return c
+end
+
+---
+---Get all entities which are owned by this entity
+---
+---**Note:** This searches all entities in the map and should be used sparingly.
+---@return EntityHandle[]
+function CBaseEntity:GetOwnedEntities()
+    local ents = {}
+    local ent = Entities:First()
+    while ent ~= nil do
+        if ent ~= self and ent:GetOwner() == self then
+            table.insert(ents, ent)
+        end
+        ent = Entities:Next(ent)
+    end
+    return ents
+end
+
+---
+---Set the alpha modulation of this entity, plus any children that can have their alpha set.
+---
+---@param alpha integer
+function CBaseModelEntity:SetRenderAlphaAll(alpha)
+    for _, child in ipairs(self:GetChildren()) do
+        if child.SetRenderAlpha then
+            child:SetRenderAlpha(alpha)
+        end
+    end
+    self:SetRenderAlpha(alpha)
+end
+
+---
+---Center the entity at a new position.
+---
+---@param position Vector
+function CBaseEntity:SetCenter(position)
+    local center = self:GetCenter()
+    local origin = self:GetOrigin()
+
+    local translation = position - center
+
+    self:SetOrigin(origin + translation)
+end
+
+---
+---Track a property function using a callback when a change is detected.
+---
+---    -- Make entity fully opaque if alpha is ever detected below 255
+---    thisEntity:TrackProperty(thisEntity.GetRenderAlpha, function(prevValue, newValue)
+---        if newValue < 255 then
+---            thisEntity:SetRenderAlpha(255)
+---        end
+---    end)
+---
+---@param propertyFunction fun(handle: EntityHandle): any # Property function to track, e.g. GetRenderAlpha.
+---@param onChangeFunction fun(prevValue: any, newValue: any) # Function to call when a change is detected.
+---@param interval? number # Think interval, or smallest possible if nil.
+---@param context? EntityHandle # Entity to run the thinker on, or this entity if nil.
+function CBaseEntity:TrackProperty(propertyFunction, onChangeFunction, interval, context)
+    interval = interval or 0
+    context = context or self
+    local value = propertyFunction(self)
+    context:SetContextThink(tostring(propertyFunction), function()
+        local newValue = propertyFunction(self)
+        if newValue ~= value then
+            onChangeFunction(value, newValue)
+        end
+        return interval
+    end, interval)
+end
+
+---
+--- Untrack a property function which was set to be tracked using `CBaseEntity:TrackProperty`.
+---
+---@param propertyFunction fun(handle: EntityHandle): any # Property function to untrack, e.g. GetRenderAlpha.
+function CBaseEntity:UntrackProperty(propertyFunction)
+    self:SetContextThink(tostring(propertyFunction), nil, 0)
 end
 
 return version

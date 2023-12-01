@@ -1,5 +1,5 @@
 --[[
-    v1.6.0
+    v1.7.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -16,50 +16,208 @@ require "extensions.entity"
 require "math.common"
 
 Debug = {}
-Debug.version = "v1.6.0"
+Debug.version = "v1.7.0"
 
 ---
----Prints useful entity information about a list of entities, such as classname and model.
+---Prints all entities in the map, along with any supplied property patterns.
 ---
----@param list EntityHandle[]
-function Debug.PrintEntityList(list)
+---E.g. print_all_ents getname mass health
+---
+---If no arguments are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_all_ents", function (_, ...)
+    local properties = nil
+    properties = {...}
+    if #properties == 0 then properties = nil end
+    Debug.PrintAllEntities(properties)
+end, "", 0)
 
-    local len_index  = 0
-    local len_handle = 0
-    local len_class  = 0
-    local len_name   = 0
-    local len_model  = 0
-    local len_parent = #"[none]"
+---
+---Prints all entities with a radius around the player, along with any supplied property patterns.
+---
+---E.g. print_nearby_ents 100 getname mass
+---
+---If no radius is supplied then the default radius of 256 is used.
+---If no properties are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_nearby_ents", function (_, radius, ...)
+
+    local properties = nil
+    if radius == nil or tonumber(radius) then
+        properties = {...}
+    else
+        properties = {radius, ...}
+    end
+
+    if #properties == 0 then properties = nil end
+    Debug.PrintAllEntitiesInSphere(Entities:GetLocalPlayer():GetOrigin(), tonumber(radius) or 256, properties)
+end, "", 0)
+
+---
+---Prints all entities with class, name or model matching a `pattern`, along with any supplied property patterns.
+---
+---E.g. print_ents physics getname mass
+---E.g. print_ents box.vmdl getname mass
+---
+---If no properties are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_ents", function (_, pattern, ...)
+
+    local properties = nil
+    properties = {...}
+    if #properties == 0 then properties = nil end
+
+    Debug.PrintEntities(pattern, false, false, properties)
+end, "", 0)
+
+---
+---Show the position of an entity relative to the player using debug drawing.
+---
+Convars:RegisterCommand("ent_show", function (_, name)
+    Debug.ShowEntity(name)
+end, "", 0)
+
+---
+---Print the mass of an entity.
+---
+Convars:RegisterCommand("ent_mass", function (_, name)
+    local ent = Entities:FindByName(nil, name)
+    print(ent:GetMass())
+end, "", 0)
+
+---
+---Quickly draw a sphere at a position with a radius.
+---
+Convars:RegisterCommand("sphere", function (_, x, y, z, r)
+    x = tonumber(x) or 0
+    y = tonumber(y) or 0
+    z = tonumber(z) or 0
+    r = tonumber(r) or 16
+
+    DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, r, false, 10)
+
+end, "", 0)
+
+if IsInToolsMode() then
+    ---
+    ---Executes Lua code.
+    ---
+    ---E.g. code print('Hello world!')
+    ---
+    ---Double quotes are not recognized.
+    ---
+    Convars:RegisterCommand("code", function (_, ...)
+        local code = table.concat({...})
+        print("Doing code:", code)
+        load(code)()
+    end, "", 0)
+end
+
+---
+---Prints a formated indexed list of entities with custom property information.
+---Also links children with their parents by displaying the index alongside the parent for easy look-up.
+---
+---    Debug.PrintEntityList(ents, {"getclassname", "getname", "getname"})
+---
+---If no properties are supplied the default properties are used: GetClassname, GetName, GetModelName
+---If an empty property table is supplied only the base values are shown: Index, Handle, Parent
+---Property patterns do not need to be functions.
+---
+---@param list EntityHandle[] # List of entities to print.
+---@param properties string[] # List of property patterns to search for.
+function Debug.PrintEntityList(list, properties)
+
+    properties = properties or {"GetClassname", "GetName", "GetModelName"}
+
+    local lenIndex  = 0
+    local lenHandle = 0
+    local lenParent = #"[none]"
+
+    ---Values of the properties found in the entities
+    ---@type any[][]
+    local propertyValues = {}
+    ---Metadata about the properties found matching the property patterns
+    ---@type { name: string, func: function?, max: number }[]
+    local propertyMetaData = {}
+
+    ---@type string[]
+    local headerNames = {"","Handle"}
+    local headerSeparators = {"", "------"}
+    headerNames[3 + #properties] = "Parent"
+    headerSeparators[3 + #properties] = "------"
 
     ---@param e EntityHandle
     local function generate_parent_str(e)
-        local par_format = "%-"..len_index.."s %s, %s"
+        local parFormat = "%-"..lenIndex.."s %s, %s"
         local i = vlua.find(list, e)
-        return par_format:format("["..(i or "/").."]", tostring(e), e:GetClassname())
+        return parFormat:format("["..(i or "/").."]", string.gsub(tostring(e), "table: ", ""), e:GetClassname())
     end
 
     for index, ent in ipairs(list) do
-        len_index  = max(len_index, #("["..index.."]") )
-        len_handle = max(len_handle, #tostring(ent) )
-        len_class  = max(len_class, #ent:GetClassname() )
-        len_name   = max(len_name, #ent:GetName() )
-        len_model  = max(len_model, #ent:GetModelName() )
+        lenIndex  = max(lenIndex, #("["..index.."]") )
+        lenHandle = max(lenHandle, #string.gsub(tostring(ent), "table: ", "") )
         if ent:GetMoveParent() then
-            len_parent = max(len_parent, #generate_parent_str(ent:GetMoveParent()))
+            lenParent = max(lenParent, #generate_parent_str(ent:GetMoveParent()))
+        end
+
+        -- Create new property table for this entity
+        propertyValues[index] = {}
+
+        for propertyIndex, propertyName in ipairs(properties) do
+            if propertyMetaData[propertyIndex] == nil then
+                propertyMetaData[propertyIndex] = { name = propertyName, func = nil, max = #propertyName }
+                headerNames[2 + propertyIndex] = propertyName
+                headerSeparators[2 + propertyIndex] = string.rep("-", #propertyName)
+            end
+            local key, value = SearchEntity(ent, propertyName)
+            -- Capture the first function matching the property pattern
+            if key ~= nil and propertyMetaData[propertyIndex].func == nil then
+                propertyMetaData[propertyIndex] = { name = key, func = value, max = #key }
+                -- Add the name and separator for property to be unpacked later
+                headerNames[2 + propertyIndex] = key
+                headerSeparators[2 + propertyIndex] = string.rep("-", #key)
+            end
+
+            -- Find the value of the property
+            ---@type any
+            local foundValueInEntity = "nil"
+            if propertyMetaData[propertyIndex] ~= nil then
+                if type(propertyMetaData[propertyIndex].func) == "function" then
+                    local s, result = pcall(propertyMetaData[propertyIndex].func, ent)
+                    if s then
+                        foundValueInEntity = result
+                    end
+                else
+                    foundValueInEntity = ent[propertyName]
+                end
+            end
+
+            propertyValues[index][propertyIndex] = tostring(foundValueInEntity)
+
+            -- Track the biggest value length
+            propertyMetaData[propertyIndex].max = max(propertyMetaData[propertyIndex].max, #tostring(foundValueInEntity))
         end
     end
-    len_handle = len_handle + 1
-    local format_str   = "%-"..len_index.."s %-"..len_handle.."s %-"..len_class.."s %-"..len_name.."s %-"..len_model.."s %-"..len_parent.."s"
+
+    -- Create the format string with correct padding
+    lenHandle = lenHandle + 1
+    local formatStr   = "%-"..lenIndex.."s %-"..lenHandle.."s"
+    for propertyIndex, propertyTable in ipairs(propertyMetaData) do
+        formatStr = formatStr .. " | %-"..propertyTable.max.."s"
+    end
+    formatStr = formatStr .. " | %-"..lenParent.."s"
 
     print()
-    print(string.format(format_str,"","Handle", "Classname:", "Name:", "Model Name:", "Parent"))
-    print(string.format(format_str,"", "------", "----------", "-----", "-----------", "------"))
+    print(string.format(formatStr,unpack(headerNames)))
+    print(string.format(formatStr,unpack(headerSeparators)))
     for index, ent in ipairs(list) do
         local parent_str = ""
         if ent:GetMoveParent() then
             parent_str = generate_parent_str(ent:GetMoveParent())
         end
-        print(string.format(format_str, "["..index.."]", ent, ent:GetClassname(), ent:GetName(), ent:GetModelName(), parent_str ))
+
+        propertyValues[index][#propertyValues[index]+1] = parent_str
+        print(string.format(formatStr, "["..index.."]", string.gsub(tostring(ent), "table: ", ""), unpack(propertyValues[index]) ))
     end
     print()
 end
@@ -67,14 +225,16 @@ end
 ---
 ---Prints information about all existing entities.
 ---
-function Debug.PrintAllEntities()
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintAllEntities(properties)
+    properties = properties or {"GetClassname", "GetName", "GetModelName"}
     local list = {}
     local e = Entities:First()
     while e ~= nil do
         list[#list+1] = e
         e = Entities:Next(e)
     end
-    Debug.PrintEntityList(list)
+    Debug.PrintEntityList(list, properties)
 end
 
 ---
@@ -85,7 +245,8 @@ end
 ---@param search string # Search string, may include `*`.
 ---@param exact boolean # If the search should match exactly or part of the name.
 ---@param dont_include_parents boolean # Parents won't be included in the results.
-function Debug.PrintEntities(search, exact, dont_include_parents)
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintEntities(search, exact, dont_include_parents, properties)
     if not exact then
         search = "*"..search.."*"
     end
@@ -111,12 +272,17 @@ function Debug.PrintEntities(search, exact, dont_include_parents)
             ents[#ents+1] = ent
         end
     end
-    Debug.PrintEntityList(ents)
+    Debug.PrintEntityList(ents, properties)
 end
 
+---
 ---Prints information about all entities within a sphere.
-function Debug.PrintAllEntitiesInSphere(origin, radius)
-    Debug.PrintEntityList(Entities:FindAllInSphere(origin, radius))
+---
+---@param origin Vector # Position to search for entities at.
+---@param radius number # Max radius to find entities within.
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintAllEntitiesInSphere(origin, radius, properties)
+    Debug.PrintEntityList(Entities:FindAllInSphere(origin, radius), properties)
 end
 
 ---Turns newlines into spaces.
@@ -224,23 +390,6 @@ function Debug.PrintTableShallow(tbl)
 end
 
 function Debug.PrintList(tbl, prefix)
-    -- local ordered = {}
-    -- local unordered = {}
-    -- for _, value in ipairs(tbl) do
-    --     ordered[#ordered+1] = value
-    -- end
-    -- for _, value in pairs(tbl) do
-    --     if not vlua.find(ordered, value) then
-    --         unordered[#unordered+1] = value
-    --     end
-    -- end
-    -- local frmt = "%-"..(#tostring(#ordered)+1).."s %s"
-    -- for index, value in ipairs(ordered) do
-    --     print(frmt:format(index..".", value))
-    -- end
-    -- for _, value in ipairs(unordered) do
-    --     print(frmt:format("*", value))
-    -- end
     local m = 0
     prefix = prefix or ""
     for key, value in pairs(tbl) do
@@ -262,12 +411,12 @@ end
 ---
 ---@param ent EntityHandle|string # Handle or targetname of the entity(s) to find.
 ---@param duration number? # Number of seconds the debug should display for.
-function Debug.FindEntity(ent, duration)
+function Debug.ShowEntity(ent, duration)
     duration = duration or 20
     if type(ent) == "string" then
         local ents = Entities:FindAllByName(ent)
         for _,e in ipairs(ents) do
-            Debug.FindEntity(e)
+            Debug.ShowEntity(e)
         end
         return
     end
@@ -281,7 +430,7 @@ function Debug.FindEntity(ent, duration)
     DebugDrawCircle(ent:GetOrigin(), Vector(255), 128, radius, true, duration)
     DebugDrawSphere(ent:GetCenter(), Vector(255), 128, radius, true, duration)
 end
-CBaseEntity.DebugFind = Debug.FindEntity
+CBaseEntity.DebugFind = Debug.ShowEntity
 
 ---
 ---Prints all current context criteria for an entity.
@@ -388,6 +537,7 @@ function Debug.PrintGraph(height, min_val, max_val, name_value_pairs)
     ---@type string[]
     local text_rows = {}
     ---Returns a new string from a non existing key
+    ---@diagnostic disable-next-line: inject-field
     text_rows.__index = function (table, key)
         return ""
     end
@@ -520,9 +670,34 @@ function Debug.PrintInheritance(ent)
     end
 end
 
+---
 ---Returns a simplified vector string with decimal places truncated.
+---
 ---@param vector Vector
 ---@return string
 function Debug.SimpleVector(vector)
     return "[" .. math.trunc(vector.x, 3) .. " " .. math.trunc(vector.y, 3) .. " " .. math.trunc(vector.z, 3) .. "]"
+end
+
+---
+---Draw a simple sphere without worrying about all the properties.
+---
+---@param x number
+---@param y number
+---@param z number
+---@param radius? number
+---@overload fun(pos: Vector, radius?: number)
+function Debug.Sphere(x, y, z, radius)
+    if IsVector(x) then
+        ---@diagnostic disable-next-line: cast-type-mismatch
+        ---@cast x Vector
+        radius = y
+        z = x.z
+        y = x.y
+        x = x.x
+    end
+
+    radius = radius or 8
+
+    DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, radius, false, 10)
 end

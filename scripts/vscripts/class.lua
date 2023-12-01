@@ -1,5 +1,5 @@
 --[[
-    v1.0.0
+    v1.0.1
     https://github.com/FrostSource/hla_extravaganza
 
     If not using `vscripts/core.lua`, load this file at game start using the following line:
@@ -74,7 +74,7 @@
     end
     ```
 ]]
-local version = "v1.0.0"
+local version = "v1.0.1"
 
 require "storage"
 require "util.globals"
@@ -387,6 +387,7 @@ end
 ---@field __inherits table # Table of inherited classes.
 ---@field __name string # Name of the class.
 ---@field __outputs table<string, function> # Map of output names to functions that will be connected on spawn.
+---@field __rawget fun(self: EntityClass, key: string): any # Custom rawget function to get a value from meta.__values without checking inherits.
 ---@field Initiated boolean # If the class entity has been activated.
 ---@field IsThinking boolean # If the entity is currently thinking with `Think` function.
 ---@field OnReady fun(self: EntityClass, loaded: boolean) # Called automatically on `Activate` if defined.
@@ -401,7 +402,7 @@ EntityClass = entity("EntityClass")
 ---This also saves the field.
 ---@param name string
 ---@param value any
----@deprecated
+---@deprecated # Values are automatically saved now.
 function EntityClass:Set(name, value)
     -- self[name] = value
     ---@TODO Unsure if there's a reasonable difference between this and normal assignment
@@ -499,6 +500,7 @@ function getvalvemeta(ent)
 end
 
 ---Get a list of all classes that `class` inherits.
+---Does not include the Valve class; use getvalvemeta() for that.
 ---@param class EntityClass # The entity or class to search.
 ---@return EntityClass[] # List of class tables.
 ---@diagnostic disable-next-line:lowercase-global

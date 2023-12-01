@@ -1,5 +1,5 @@
 --[[
-    v3.0.0
+    v3.0.1
     https://github.com/FrostSource/hla_extravaganza
 
     The main core script provides useful global functions as well as loading any standard libraries that it can find.
@@ -17,7 +17,7 @@
 
 ]]
 
-local version = "v3.0.0"
+local version = "v3.0.1"
 
 print("Initializing Extravaganza core system ".. version .." ...")
 
@@ -26,7 +26,11 @@ require "util.globals"
 -- Base libraries
 
 ifrequire "debug.core"
+if not IsVREnabled() then
+    ifrequire "debug.novr"
+end
 ifrequire "util.enums"
+ifrequire "extensions.string"
 ifrequire "extensions.vector"
 ifrequire "extensions.entity"
 ifrequire "extensions.entities"
@@ -43,6 +47,8 @@ ifrequire "input"
 ifrequire "gesture"
 ifrequire "player"
 ifrequire "class"
+
+ifrequire "gameplay.smooth_speed"
 
 -- Common third-party libraries
 

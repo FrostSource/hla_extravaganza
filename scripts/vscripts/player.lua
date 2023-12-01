@@ -1,5 +1,5 @@
 --[[
-    v3.1.0
+    v4.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     Player script allows for more advanced player manipulation and easier
@@ -100,7 +100,7 @@ require "util.globals"
 require "extensions.entity"
 require "storage"
 
-local version = "v3.1.0"
+local version = "v4.0.0"
 
 -----------------------------
 -- Class extension members --
@@ -498,9 +498,9 @@ end
 function CBasePlayer:GetGrenades()
     local grenades = {}
     local immediate_items = self:GetImmediateItems()
-    for i in ipairs(immediate_items) do
-        if i and (i:GetClassname() == "item_hlvr_grenade_frag" or i:GetClassname() == "item_hlvr_grenade_xen") then
-            grenades[#grenades+1] = i
+    for _, item in ipairs(immediate_items) do
+        if item and (item:GetClassname() == "item_hlvr_grenade_frag" or item:GetClassname() == "item_hlvr_grenade_xen") then
+            grenades[#grenades+1] = item
         end
     end
     return grenades
@@ -515,9 +515,9 @@ end
 function CBasePlayer:GetHealthPens()
     local healthpens = {}
     local immediate_items = self:GetImmediateItems()
-    for i in ipairs(immediate_items) do
-        if i and (i:GetClassname() == "item_healthvial") then
-            healthpens[#healthpens+1] = i
+    for _, item in ipairs(immediate_items) do
+        if item and (item:GetClassname() == "item_healthvial") then
+            healthpens[#healthpens+1] = item
         end
     end
     return healthpens
@@ -647,6 +647,90 @@ function CBasePlayer:GetWorldForward()
     local f = self:GetForwardVector()
     f.z = 0
     return f
+end
+
+local specialAttachmentsOrder = {
+    "hlvr_prop_renderable_glove",
+    "hand_use_controller",
+    "worldui_interact_controller",
+    "hlvr_weaponswitch_controller",
+}
+
+---
+---Update player weapon inventory, both removing and setting.
+---
+---@param removes? (string|EntityHandle)[] # List of classnames or handles to remove.
+---@param set? string|EntityHandle # Classname or handle to set as active weapon.
+---@return EntityHandle? # The handle of the newly set weapon if given and found.
+function CBasePlayer:UpdateWeapons(removes, set)
+    local hand = Player.PrimaryHand
+
+    local setFound = nil
+    local specialAttachmentsFound = {}
+    local attachments = {}
+    local attachment = hand:GetHandAttachment()
+    while attachment ~= nil do
+        if not removes or not (vlua.find(removes, attachment) or vlua.find(removes, attachment:GetClassname())) then
+            if attachment == set or attachment:GetClassname() == set then
+                setFound = attachment
+            elseif vlua.find(specialAttachmentsOrder, attachment:GetClassname()) then
+                specialAttachmentsFound[attachment:GetClassname()] = attachment
+            else
+                table.insert(attachments, 1, attachment)
+            end
+        end
+        hand:RemoveHandAttachmentByHandle(attachment)
+        -- Get next current attachment
+        attachment = hand:GetHandAttachment()
+    end
+
+    -- Add special attachments back first to avoid crash
+    for _, specialName in ipairs(specialAttachmentsOrder) do
+        if specialAttachmentsFound[specialName] then
+            hand:AddHandAttachment(specialAttachmentsFound[specialName])
+        end
+    end
+
+    -- Add back attachments that weren't removed
+    for _, removedAttachment in ipairs(attachments) do
+        print("Adding attachment", removedAttachment:GetClassname())
+        hand:AddHandAttachment(removedAttachment)
+    end
+
+    -- Add back the attachment to be set last
+    if setFound ~= nil then
+        hand:AddHandAttachment(setFound)
+        -- Multitool needs to be added twice
+        if setFound:GetClassname() == "hlvr_multitool" then
+            hand:AddHandAttachment(setFound)
+        end
+    end
+
+    return setFound
+end
+
+---
+---Remove weapons from the player inventory.
+---
+---@param weapons (string|EntityHandle)[] # List of classnames or handles to remove.
+---@overload fun(self: CBasePlayer, weapon: string|EntityHandle)
+function CBasePlayer:RemoveWeapons(weapons)
+    if weapons == nil or (type(weapons) == "table" and #weapons == 0) then
+        weapons = self:GetWeapon()
+    end
+    if type(weapons) == "string" or IsEntity(weapons) then
+        weapons = {weapons}
+    end
+    self:UpdateWeapons(weapons, nil)
+end
+
+---
+---Set the weapon that the player is holding.
+---
+---@param weapon string|EntityHandle # Classname or handle to set as active weapon.
+---@return EntityHandle? # The handle of the newly set weapon if found.
+function CBasePlayer:SetWeapon(weapon)
+    return self:UpdateWeapons(nil, weapon)
 end
 
 ---@class __PlayerRegisteredEventData
@@ -792,7 +876,7 @@ end
 
 ---@class PLAYER_EVENT_PLAYER_ACTIVATE : GAME_EVENT_BASE
 ---@field player CBasePlayer # The entity handle of the player.
----@field game_loaded boolean # If the player was activated from a game save being loaded.
+---@field type "spawn"|"load"|"transition" # Type of player activate.
 ---@class PLAYER_EVENT_VR_PLAYER_READY : PLAYER_EVENT_PLAYER_ACTIVATE
 ---@field hmd_avatar CPropHMDAvatar # The hmd avatar entity handle.
 
@@ -802,8 +886,20 @@ local function listenEventPlayerActivate(data)
     local base_data = vlua.clone(data)
     Player = GetListenServerHost()
     loadPlayerData()
-    local player_previously_activated = Storage.LoadBoolean(Player, "PlayerPreviouslyActivated", false)
-    Storage.SaveBoolean(Player, "PlayerPreviouslyActivated", true)
+    local previous_map = Storage.LoadString(Player, "PlayerPreviousMap", "")
+    Storage.SaveString(Player, "PlayerPreviousMap", GetMapName())
+
+    ---@cast data PLAYER_EVENT_PLAYER_ACTIVATE
+    data.player = Player
+    -- Determine type of player activate
+    if previous_map == "" then
+        data.type = "spawn"
+    elseif previous_map ~= GetMapName() then
+        data.type = "transition"
+    else
+        data.type = "load"
+    end
+
     Player:SetContextThink("global_player_setup_delay", function()
         Player.HMDAvatar = Player:GetHMDAvatar() --[[@as CPropHMDAvatar]]
         if Player.HMDAvatar then
@@ -829,11 +925,8 @@ local function listenEventPlayerActivate(data)
             -- Have to load these seperately
             Player.LeftHand.WristItem = Storage.LoadEntity(Player, "LeftWristItem")
             Player.RightHand.WristItem = Storage.LoadEntity(Player, "RightWristItem")
-            -- Registered callback
-            data.player = Player
-            data.game_loaded = player_previously_activated
-            data.hmd_avatar = Player.HMDAvatar
-            -- Get resin only if it wasn't loaded
+
+            -- Get resin only if it couldn't be loaded from player context
             if Player.Items.resin == nil or Player.Items.resin_found == nil then
                 -- For some reason resin isn't in criteria until 0.6 seconds
                 Player:SetContextThink("__resin_update", function()
@@ -841,6 +934,9 @@ local function listenEventPlayerActivate(data)
                     Player.Items.resin_found = Player.Items.resin
                 end, 0.5)
             end
+
+            -- Registered callback
+            data.hmd_avatar = Player.HMDAvatar
             for id, event_data in pairs(registered_event_callbacks["vr_player_ready"]) do
                 if event_data.context ~= nil then
                     event_data.callback(event_data.context, data)
@@ -859,9 +955,8 @@ local function listenEventPlayerActivate(data)
             end
         end
     end, 0)
+
     -- Registered callback
-    data.player = Player
-    data.game_loaded = player_previously_activated
     for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
         if event_data.context ~= nil then
             event_data.callback(event_data.context, data)
@@ -910,7 +1005,8 @@ local function listenEventItemPickup(data)
     end
 
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_ITEM_PICKUP
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = ent_held
     data.hand = hand
@@ -957,8 +1053,10 @@ local function listenEventItemReleased(data)
     hand.LastItemDropped = hand.ItemHeld
     hand.LastClassDropped = data.item
     hand.ItemHeld = nil
+
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_ITEM_RELEASED
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = Player.LastItemDropped
     data.hand = hand
@@ -1064,7 +1162,10 @@ local function listenEventPlayerDropAmmoInBackpack(data)
         print("Couldn't figure out ammo for "..tostring(ammotype))
     end
     savePlayerData()
+
     -- Registered callback
+    ---@diagnostic disable-next-line: cast-type-mismatch
+    ---@cast data PLAYER_EVENT_PLAYER_DROP_AMMO_IN_BACKPACK
     data.ammotype = ammotype
     data.ammo_amount = ammo_amount
     for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -1078,6 +1179,7 @@ end
 ListenToGameEvent("player_drop_ammo_in_backpack", listenEventPlayerDropAmmoInBackpack, nil)
 
 -- Inherit from base instead of event to remove 'ammoType'
+
 ---@class PLAYER_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP : GAME_EVENT_BASE
 ---@field ammotype "Pistol"|"SMG1"|"Buckshot"|"AlyxGun" # Type of ammo that was retrieved.
 ---@field ammo_amount integer # Amount of ammo retrieved for the given type (1 clip, 2 shells).
@@ -1111,6 +1213,8 @@ local function listenEventPlayerRetrievedBackpackClip(data)
                 Player.Items.ammo.shotgun = Player.Items.ammo.shotgun - ammo_amount
             end
             -- Registered callback
+            ---@diagnostic disable-next-line: cast-type-mismatch
+            ---@cast data PLAYER_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP
             data.ammotype = ammotype
             data.ammo_amount = ammo_amount
             for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -1128,6 +1232,8 @@ local function listenEventPlayerRetrievedBackpackClip(data)
     savePlayerData()
     -- Registered callback
     if do_callback then
+        ---@diagnostic disable-next-line: cast-type-mismatch
+        ---@cast data PLAYER_EVENT_PLAYER_RETRIEVED_BACKPACK_CLIP
         data.ammotype = ammotype
         data.ammo_amount = ammo_amount
         for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
@@ -1173,8 +1279,10 @@ local function listenEventPlayerStoredItemInItemholder(data)
     --     Player.Items.healthpen = Player.Items.healthpen + 1
     -- end
     savePlayerData()
+
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_PLAYER_STORED_ITEM_IN_ITEMHOLDER
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = item
     data.hand = hand
@@ -1225,8 +1333,10 @@ local function listenEventPlayerRemovedItemFromItemholder(data)
     --     Player.Items.healthpen = Player.Items.healthpen - 1
     -- end
     savePlayerData()
+
     -- Registered callback
-    data.item_class = data.item
+    ---@cast data PLAYER_EVENT_PLAYER_REMOVED_ITEM_FROM_ITEMHOLDER
+    data.item_class = data.item--[[@as string]]
     ---@diagnostic disable-next-line: assign-type-mismatch
     data.item = item
     data.hand = hand

@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides Vector class extension methods.
@@ -12,7 +12,7 @@
 ]]
 require "math.common"
 
-local version = "v1.1.0"
+local version = "v1.2.0"
 
 ---@class Vector
 local meta = getmetatable(Vector())
@@ -129,6 +129,24 @@ function meta:SignedAngleDiff(vector, axis)
     local sign = math.sign(axis:Dot(cross))
 
     return unsignedAngle * sign
+end
+
+---
+---Unpacks the x, y, z components as 3 return values.
+---
+---@return number # x component
+---@return number # y component
+---@return number # z component
+function meta:Unpack()
+    return self.x, self.y, self.z
+end
+
+---
+---Returns the squared length of the vector, without using sqrt.
+---
+---@return number
+function meta:LengthSquared()
+    return self.x * self.x + self.y * self.y + self.z * self.z
 end
 
 return version

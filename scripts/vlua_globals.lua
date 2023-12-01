@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.1.0
+    Version 2.1.1
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -695,7 +695,7 @@ function AnglesToVector(angle) end
 ---@param axis Vector
 ---@param angle number
 ---@return Quaternion
----@deprecated
+---@deprecated # Quaternions do not exist.
 function AxisAngleToQuaternion(axis, angle) end
 ---Compute the closest point relative to a vector on the OBB of an entity.
 ---@param entity EntityHandle
@@ -757,7 +757,7 @@ function RotatePosition(rotationOrigin, rotationAngle, vectorToRotate) end
 ---@param axis Vector
 ---@param angle number
 ---@return Quaternion
----@deprecated
+---@deprecated # Quaternions do not exist.
 function RotateQuaternionByAxisAngle(quat, axis, angle) end
 ---Find the delta between two QAngles.
 ---@param src QAngle
@@ -775,7 +775,7 @@ function RotationDeltaAsAngularVelocity(angle1, angle2) end
 ---@param q1 Quaternion
 ---@param t number
 ---@return Quaternion
----@deprecated
+---@deprecated # Quaternions do not exist.
 function SplineQuaternions(q0, q1, t) end
 ---Very basic interpolation of two vectors over time t on [0,1].
 ---@param vector1 Vector
@@ -1162,8 +1162,8 @@ function PrecacheEntityListFromTable(groupSpawnTables, context) end
 ---@param modelName string
 ---@param context CScriptPrecacheContext
 function PrecacheModel(modelName, context) end
----model_folder|sound|soundfile|particle|particle_folder"
----@param resourceType string|"model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
+---@alias PrecacheTypes "model_folder"|"sound"|"soundfile"|"particle"|"particle_folder"
+---@param resourceType string|PrecacheTypes
 ---@param resourcePath string
 ---@param context CScriptPrecacheContext
 function PrecacheResource(resourceType, resourcePath, context) end
@@ -1239,9 +1239,8 @@ function TraceLine(parameters) end
 --#region Sound
 
 ---Play named sound for all players.
----Function does not appear to exist.
 ---@param sound string
----@deprecated
+---@deprecated # Function does not appear to exist.
 function EmitGlobalSound(sound) end
 ---Play named sound on Entity.
 ---@param sound string
@@ -1351,11 +1350,10 @@ function GetListenServerHost() end
 ---@return string
 function GetMapName() end
 ---Execute a script file. Included in the current scope by default.
----Doesn't appear to exist, use DoIncludeScript instead.
 ---@param scriptFileName string
 ---@param scope ScriptScope|nil
 ---@return boolean
----@deprecated
+---@deprecated # Doesn't appear to exist, use `DoIncludeScript` instead.
 function IncludeScript(scriptFileName, scope) end
 ---If the given file doesn't exist, creates it with the given contents; does nothing if it exists
 ---Warning: Deprecated
@@ -1381,7 +1379,7 @@ function IsServer() end
 function IsInToolsMode() end
 ---Register as a listener for a game event from script.
 ---@param eventname GAME_EVENTS_ALL
----@param callback function
+---@param callback fun(params: GAME_EVENT_BASE)
 ---@param context nil|table # Context to pass as the first parameter of `callback`.
 ---@return integer # ID used to cancel with StopListeningToGameEvent().
 function ListenToGameEvent(eventname, callback, context) end
@@ -1527,9 +1525,9 @@ function vlua.rawdelete(t, key) end
 ---@return integer
 function vlua.rawin(t, key) end
 ---Implements Squirrel find method for tables and strings. (o, substr, [startidx]) for strings, (o, value) for tables
----@param tbl table
----@param value any|string
----@return any
+---@param tbl table # Table to search.
+---@param value any|string # Value to search for.
+---@return any # Key associated with `value`.
 ---@overload fun(str: string, substr: string, startIndex: integer?): string|nil
 function vlua.find(tbl, value) end
 ---Implements Squirrel slice method for tables and strings.
@@ -1676,10 +1674,10 @@ function CBaseEntity:GetAngularVelocity() end
 ---Get Base velocity. Only functional on prop_dynamic entities with the Scripted Movement property set.
 ---@return Vector
 function CBaseEntity:GetBaseVelocity() end
----Get a vector containing max bounds, centered on object
+---Get a vector containing max bounds, in local space.
 ---@return Vector
 function CBaseEntity:GetBoundingMaxs() end
----Get a vector containing min bounds, centered on object
+---Get a vector containing min bounds, in local space.
 ---@return Vector
 function CBaseEntity:GetBoundingMins() end
 
@@ -1751,11 +1749,12 @@ function CBaseEntity:GetRightVector() end
 ---@return EntityHandle
 function CBaseEntity:GetRootMoveParent() end
 ---Returns float duration of the sound.
----Returns 2 for all sounds.
+---
+---**Note:** Returns 2 for all sounds unless `vsnd_duration` property is set on sound event (not all events support this).
+---
 ---@param soundName string
 ---@param actormodelname string|""
 ---@return number
----@deprecated
 function CBaseEntity:GetSoundDuration(soundName, actormodelname) end
 ---Returns the spawn group handle of this entity.
 ---@return integer
@@ -1875,10 +1874,10 @@ function CBaseEntity:SetMass(mass) end
 ---Set entity max health
 ---@param maxHP integer
 function CBaseEntity:SetMaxHealth(maxHP) end
----	Set entity absolute origin
+---Set entity absolute origin
 ---@param origin Vector
 function CBaseEntity:SetOrigin(origin) end
----	Sets this entity's owner.
+---Sets this entity's owner.
 ---@param owningEntity EntityHandle|nil
 function CBaseEntity:SetOwner(owningEntity) end
 ---Set the parent for this entity. The attachment is optional, pass an empty string to not use it.
@@ -1962,8 +1961,8 @@ function CEntityInstance:DisconnectRedirectedOutput(output, functionName, entity
 function CEntityInstance:entindex() end
 ---Fire an entity output.
 ---@param outputName string
----@param activator EntityHandle
----@param caller EntityHandle
+---@param activator EntityHandle|nil
+---@param caller EntityHandle|nil
 ---@param parameter string|nil # The parameter override to send with the output.
 ---@param delay number
 function CEntityInstance:FireOutput(outputName, activator, caller, parameter, delay) end
@@ -2495,7 +2494,7 @@ function Entities:First() end
 ---@return CHL2_Player
 function Entities:GetLocalPlayer() end
 ---Continue an iteration over the list of entities, providing reference to a previously found entity
----@param startFrom EntityHandle What happens if starting from nil?
+---@param startFrom EntityHandle|nil # If nil, works the same as `Entities:First()`
 ---@return EntityHandle
 function Entities:Next(startFrom) end
 
@@ -2763,7 +2762,7 @@ debugoverlay = {}
 ---@param float_3 number
 ---@param bool_4 boolean
 ---@param float_5 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:Axis(Vector_1, Quaternion_2, float_3, bool_4, float_5) end
 ---Draws a world-space axis-aligned wireframe box. Specify bounds in world space.
 ---@param min Vector
@@ -2786,7 +2785,7 @@ function debugoverlay:Box(min, max, red, green, blue, alpha, noDepthTest, second
 ---@param int_8 integer
 ---@param bool_9 boolean
 ---@param float_10 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:BoxAngles(Vector_1, Vector_2, Vector_3, Quaternion_4, int_5, int_6, int_7, int_8, bool_9, float_10) end
 ---Draws a capsule. Specify base in world space.
 ---@param Vector_1 Vector
@@ -2799,7 +2798,7 @@ function debugoverlay:BoxAngles(Vector_1, Vector_2, Vector_3, Quaternion_4, int_
 ---@param int_8 integer
 ---@param bool_9 integer
 ---@param float_10 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:Capsule(Vector_1, Quaternion_2, float_3, float_4, int_5, int_6, int_7, int_8, bool_9, float_10) end
 ---Draws a circle. Specify center in world space.
 ---@param Vector_1 Vector
@@ -2811,7 +2810,7 @@ function debugoverlay:Capsule(Vector_1, Quaternion_2, float_3, float_4, int_5, i
 ---@param int_7 integer
 ---@param bool_8 boolean
 ---@param float_9 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:Circle(Vector_1, Quaternion_2, float_3, int_4, int_5, int_6, int_7, bool_8, float_9) end
 ---Draws a circle oriented to the screen. Specify center in world space.
 ---@param origin Vector
@@ -2865,7 +2864,7 @@ function debugoverlay:Cross3D(origin, radius, red, green, blue, alpha, noDepthTe
 ---@param int_7 integer
 ---@param bool_8 boolean
 ---@param float_9 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:Cross3DOriented(Vector_1, Quaternion_2, float_3, int_4, int_5, int_6, int_7, bool_8, float_9) end
 ---Draws a dashed line. Specify endpoint's in world space.
 ---@param startPos Vector
@@ -2923,7 +2922,7 @@ function debugoverlay:EntityText(ehandle, heightOffset, text, red, green, blue, 
 ---@param int_5 integer
 ---@param int_6 integer
 ---@param float_7 number
----@deprecated
+---@deprecated # Vector2D does not exist.
 function debugoverlay:FilledRect2D(Vector2D_1, Vector2D_2, int_3, int_4, int_5, int_6, float_7) end
 ---Draws a horizontal arrow. Specify endpoint's in world space.
 ---@param startPos Vector
@@ -2955,7 +2954,7 @@ function debugoverlay:Line(startPos, endPos, red, green, blue, alpha, noDepthTes
 ---@param int_5 integer
 ---@param int_6 integer
 ---@param float_7 number
----@deprecated
+---@deprecated # Vector2D does not exist.
 function debugoverlay:Line2D(Vector2D_1, Vector2D_2, int_3, int_4, int_5, int_6, float_7) end
 ---Pops the identifier used to group overlays. Overlays marked with this identifier can be deleted in a big batch.
 function debugoverlay:PopDebugOverlayScope() end
@@ -3001,7 +3000,7 @@ function debugoverlay:Sphere(position, radius, red, green, blue, alpha, noDepthT
 ---@param int_8 integer
 ---@param int_9 integer
 ---@param float_10 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:SweptBox(Vector_1, Vector_2, Vector_3, Vector_4, Quaternion_5, int_6, int_7, int_8, int_9, float_10) end
 ---Draws 2D text. Specify origin in world space.
 ---@param position Vector
@@ -3026,7 +3025,7 @@ function debugoverlay:Text(position, heightOffset, text, unknown, red, green, bl
 ---@param Vector2D_8 Vector2D
 ---@param Vector2D_9 Vector2D
 ---@param float_10 number
----@deprecated
+---@deprecated # Vector2D does not exist.
 function debugoverlay:Texture(string_1, Vector2D_2, Vector2D_3, int_4, int_5, int_6, int_7, Vector2D_8, Vector2D_9, float_10) end
 ---Draws a filled triangle in world space for the specific amount of seconds (-1 means forever).
 ---@param point1 Vector
@@ -3051,7 +3050,7 @@ function debugoverlay:UnitTestCycleOverlayRenderType() end
 ---@param int_7 integer
 ---@param bool_8 boolean
 ---@param float_9 number
----@deprecated
+---@deprecated # Quaternions do not exist.
 function debugoverlay:VectorText3D(Vector_1, Quaternion_2, string_3, int_4, int_5, int_6, int_7, bool_8, float_9) end
 ---Draws a vertical arrow. Specify endpoint's in world space.
 ---@param startPos Vector
@@ -3489,7 +3488,7 @@ function Convars:GetBool(name) end
 function Convars:GetCommandClient() end
 ---GetFloat(name) : returns the convar as a float. May return nil if no such convar.
 ---@param name string
----@return float|nil
+---@return number|nil
 function Convars:GetFloat(name) end
 ---GetInt(name) : returns the convar as an int. May return nil if no such convar.
 ---@param name string
