@@ -1,4 +1,4 @@
-> Last Updated 2023-08-01
+> Last Updated 2023-12-01
 
 ## Index
 1. [class.lua](#classlua)
@@ -12,7 +12,7 @@
 
 # class.lua
 
-> v1.0.0
+> v1.0.1
 
 If not using `vscripts/core.lua`, load this file at game start using the following line: 
 
@@ -107,7 +107,7 @@ end
 
 `getvalvemeta(ent)`</td><td>Get the original metatable that Valve assigns to the entity.</td></tr><tr><td>
 
-`getinherits(class)`</td><td>Get a list of all classes that `class` inherits.</td></tr><tr><td>
+`getinherits(class)`</td><td>Get a list of all classes that `class` inherits. Does not include the Valve class; use getvalvemeta() for that.</td></tr><tr><td>
 
 `isinstance(ent, class)`</td><td>Get if an `EntityClass` instance inherits a given `class`.</td></tr></table>
 
@@ -117,7 +117,7 @@ end
 
 # core.lua
 
-> v3.0.0
+> v3.0.1
 
 The main core script provides useful global functions as well as loading any standard libraries that it can find. 
 
@@ -364,7 +364,7 @@ if Player.PrimaryHand:ButtonTime(3) >= 5 then end
 
 # player.lua
 
-> v3.1.0
+> v4.0.0
 
 Player script allows for more advanced player manipulation and easier entity access for player related entities by extending the player class. 
 
@@ -549,6 +549,12 @@ The `Player.Items` table keeps track of the ammo and resin the player has in the
 `CBasePlayer:GetWeapon()`</td><td>Get the entity handle of the currently equipped weapon/item. If nothing is equipped this will return the primary hand entity.</td></tr><tr><td>
 
 `CBasePlayer:GetWorldForward()`</td><td>Get the forward vector of the player in world space coordinates (z is zeroed).</td></tr><tr><td>
+
+`CBasePlayer:UpdateWeapons(removes, set)`</td><td> Update player weapon inventory, both removing and setting. </td></tr><tr><td>
+
+`CBasePlayer:RemoveWeapons(weapons)`</td><td> Remove weapons from the player inventory. </td></tr><tr><td>
+
+`CBasePlayer:SetWeapon(weapon)`</td><td> Set the weapon that the player is holding. </td></tr><tr><td>
 
 `RegisterPlayerEventCallback(event, callback, context)`</td><td>Register a callback function with for a player event.</td></tr><tr><td>
 

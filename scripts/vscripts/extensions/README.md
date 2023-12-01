@@ -1,4 +1,4 @@
-> Last Updated 2023-08-01
+> Last Updated 2023-12-01
 
 ## Index
 1. [entities.lua](#entitieslua)
@@ -52,7 +52,7 @@ require "extensions.entities"
 
 # entity.lua
 
-> v2.2.0
+> v2.3.0
 
 Provides base entity extension methods. 
 
@@ -79,7 +79,11 @@ require "extensions.entity"
 
 `CBaseEntity:SetQAngle(qangle)`</td><td> Set entity pitch, yaw, roll from a `QAngle`. </td></tr><tr><td>
 
+`CBaseEntity:SetLocalQAngle(qangle)`</td><td> Set entity local pitch, yaw, roll from a `QAngle`. </td></tr><tr><td>
+
 `CBaseEntity:SetAngle(pitch, yaw, roll)`</td><td> Set entity pitch, yaw or roll. Supply `nil` for any parameter to leave it unchanged. </td></tr><tr><td>
+
+`CBaseEntity:ResetLocal()`</td><td> Resets local origin and angle to [0,0,0] </td></tr><tr><td>
 
 `CBaseEntity:GetSize()`</td><td> Get the bounding size of the entity. </td></tr><tr><td>
 
@@ -103,7 +107,17 @@ require "extensions.entity"
 
 `CBaseEntity:DoNotDrop(enabled)`</td><td> Set if the prop is allowed to be dropped. Only works for physics based props. </td></tr><tr><td>
 
-`CBaseEntity:GetCriteria()`</td><td>Get all criteria as a table.</td></tr></table>
+`CBaseEntity:GetCriteria()`</td><td> Get all criteria as a table. </td></tr><tr><td>
+
+`CBaseEntity:GetOwnedEntities()`</td><td> Get all entities which are owned by this entity  **Note:** This searches all entities in the map and should be used sparingly.</td></tr><tr><td>
+
+`CBaseModelEntity:SetRenderAlphaAll(alpha)`</td><td> Set the alpha modulation of this entity, plus any children that can have their alpha set. </td></tr><tr><td>
+
+`CBaseEntity:SetCenter(position)`</td><td> Center the entity at a new position. </td></tr><tr><td>
+
+`CBaseEntity:TrackProperty(propertyFunction, onChangeFunction, interval, context)`</td><td> Track a property function using a callback when a change is detected.      -- Make entity fully opaque if alpha is ever detected below 255     thisEntity:TrackProperty(thisEntity.GetRenderAlpha, function(prevValue, newValue)         if newValue < 255 then             thisEntity:SetRenderAlpha(255)         end     end) </td></tr><tr><td>
+
+`CBaseEntity:UntrackProperty(propertyFunction)`</td><td>  Untrack a property function which was set to be tracked using `CBaseEntity:TrackProperty`. </td></tr></table>
 
 
 
@@ -185,7 +199,7 @@ require "extensions.string"
 
 # vector.lua
 
-> v1.1.0
+> v1.2.0
 
 Provides Vector class extension methods. 
 
@@ -214,7 +228,11 @@ require "extensions.vector"
 
 `meta:AngleDiff(vector)`</td><td> Calculates the angle difference between the calling vector and the given vector. This is always the smallest angle. </td></tr><tr><td>
 
-`meta:SignedAngleDiff()`</td><td> Calculates the signed angle difference between the calling vector and the given vector around the specified axis.   @param vector Vector # The vector to calculate the angle difference with.  @param axis? Vector # The axis of rotation around which the angle difference is calculated.  @return number # The signed angle difference in degrees.</td></tr></table>
+`meta:SignedAngleDiff()`</td><td> Calculates the signed angle difference between the calling vector and the given vector around the specified axis.   @param vector Vector # The vector to calculate the angle difference with.  @param axis? Vector # The axis of rotation around which the angle difference is calculated.  @return number # The signed angle difference in degrees.</td></tr><tr><td>
+
+`meta:Unpack()`</td><td> Unpacks the x, y, z components as 3 return values. </td></tr><tr><td>
+
+`meta:LengthSquared()`</td><td> Returns the squared length of the vector, without using sqrt. </td></tr></table>
 
 
 

@@ -1,4 +1,4 @@
-> Last Updated 2023-08-01
+> Last Updated 2023-12-01
 
 ## Index
 1. [common.lua](#commonlua)
@@ -7,7 +7,7 @@
 
 # common.lua
 
-> v1.6.0
+> v1.7.0
 
 Debug utility functions. 
 
@@ -24,13 +24,13 @@ require "debug.core"
 
 <table><tr><td><b>Function</b></td><td><b>Description</b></td></tr><tr><td>
 
-`Debug.PrintEntityList(list)`</td><td> Prints useful entity information about a list of entities, such as classname and model. </td></tr><tr><td>
+`Debug.PrintEntityList(list, properties)`</td><td> Prints a formated indexed list of entities with custom property information. Also links children with their parents by displaying the index alongside the parent for easy look-up.      Debug.PrintEntityList(ents, {"getclassname", "getname", "getname"})  If no properties are supplied the default properties are used: GetClassname, GetName, GetModelName If an empty property table is supplied only the base values are shown: Index, Handle, Parent Property patterns do not need to be functions. </td></tr><tr><td>
 
-`Debug.PrintAllEntities()`</td><td> Prints information about all existing entities. </td></tr><tr><td>
+`Debug.PrintAllEntities(properties)`</td><td> Prints information about all existing entities. </td></tr><tr><td>
 
-`Debug.PrintEntities(search, exact, dont_include_parents)`</td><td> Print entities matching a search string.  Searches name, classname and model name. </td></tr><tr><td>
+`Debug.PrintEntities(search, exact, dont_include_parents, properties)`</td><td> Print entities matching a search string.  Searches name, classname and model name. </td></tr><tr><td>
 
-`Debug.PrintAllEntitiesInSphere()`</td><td>Prints information about all entities within a sphere.</td></tr><tr><td>
+`Debug.PrintAllEntitiesInSphere(origin, radius, properties)`</td><td> Prints information about all entities within a sphere. </td></tr><tr><td>
 
 `Debug.PrintTable(tbl, prefix, ignore, meta)`</td><td> Prints the keys/values of a table and any tested tables.  This is different from `DeepPrintTable` in that it will not print members of entity handles. </td></tr><tr><td>
 
@@ -38,7 +38,7 @@ require "debug.core"
 
 `Debug.PrintList()`</td><td></td></tr><tr><td>
 
-`Debug.FindEntity(ent, duration)`</td><td> Draws a debug line to an entity in game. </td></tr><tr><td>
+`Debug.ShowEntity(ent, duration)`</td><td> Draws a debug line to an entity in game. </td></tr><tr><td>
 
 `Debug.PrintEntityCriteria(ent)`</td><td> Prints all current context criteria for an entity. </td></tr><tr><td>
 
@@ -50,7 +50,9 @@ require "debug.core"
 
 `Debug.PrintInheritance(ent)`</td><td> Prints a nested list of entity inheritance. </td></tr><tr><td>
 
-`Debug.SimpleVector(vector)`</td><td>Returns a simplified vector string with decimal places truncated.</td></tr></table>
+`Debug.SimpleVector(vector)`</td><td> Returns a simplified vector string with decimal places truncated. </td></tr><tr><td>
+
+`Debug.Sphere(x, y, z, radius)`</td><td> Draw a simple sphere without worrying about all the properties. </td></tr></table>
 
 
 

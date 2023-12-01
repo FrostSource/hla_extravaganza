@@ -1,4 +1,4 @@
-> Last Updated 2023-08-01
+> Last Updated 2023-12-01
 
 ## Index
 1. [common.lua](#commonlua)
@@ -9,7 +9,7 @@
 
 # common.lua
 
-> v2.2.0
+> v3.0.0
 
 This file contains utility functions to help reduce repetitive code and add general miscellaneous functionality. 
 
@@ -35,12 +35,6 @@ require "util.util"
 `Util.FindKeyFromValueDeep(tbl, value)`</td><td> Attempt to find a key in `tbl` pointing to `value` by recursively searching nested tables. </td></tr><tr><td>
 
 `Util.TableSize(tbl)`</td><td>Returns the size of any table.</td></tr><tr><td>
-
-`Util.RemoveFromTable(tbl, value)`</td><td> Remove a value from a table, returning it if it exists. </td></tr><tr><td>
-
-`Util.AppendArray(array1, array2)`</td><td> Appends `array2` onto `array1` as a new array. Safe extend function alternative to `vlua.extend`. </td></tr><tr><td>
-
-`Util.AppendArrays(array, ...)`</td><td>Append any number of arrays onto `array` and return as a new array. Safe extend function alternative to `vlua.extend`.</td></tr><tr><td>
 
 `Util.Delay(func, delay)`</td><td> Delay some code. </td></tr><tr><td>
 
@@ -72,7 +66,7 @@ require "util.util"
 
 # globals.lua
 
-> v1.0.0
+> v2.0.0
 
 Provides common global functions used throughout extravaganza libraries. 
 
@@ -127,11 +121,17 @@ require "util.globals"
 
 `DeepCopyTable(tbl)`</td><td> Copy all keys from `tbl` and any nested tables into a brand new table and return it. This is a good way to get a unique reference with matching data.  Any functions and userdata will be copied by reference, except for: `Vector`, `QAngle` </td></tr><tr><td>
 
-`RandomFromArray(array, min, max)`</td><td> Returns a random value from an array. </td></tr><tr><td>
+`TableRemove(tbl, value)`</td><td> Searches for `value` in `tbl` and sets the associated key to `nil`, returning the key if found.  If working with arrays you should use `ArrayRemove` instead. </td></tr><tr><td>
 
-`RandomFromTable(tbl)`</td><td> Returns a random key/value pair from a unordered table. </td></tr><tr><td>
+`TableRandom(tbl)`</td><td> Returns a random key/value pair from a unordered table. </td></tr><tr><td>
 
-`ShuffleArray(t)`</td><td> Shuffles a given array.  </td></tr><tr><td>
+`ArrayRandom(array, min, max)`</td><td> Returns a random value from an array. </td></tr><tr><td>
+
+`ArrayShuffle(array)`</td><td> Shuffles a given array in-place.  </td></tr><tr><td>
+
+`ArrayRemove(array, pos)`</td><td> Remove an item from an array at a given position.  This is significantly faster than `table.remove`. </td></tr><tr><td>
+
+`ArrayAppend(array1, array2)`</td><td> Appends `array2` onto `array1` as a new array.  Safe extend function alternative to `vlua.extend`, neither input arrays are modified. </td></tr><tr><td>
 
 `TraceLineExt(parameters)`</td><td> Does a raytrace along a line with extended parameters. You ignore multiple entities as well as classes and names. Because the trace has to be redone multiple times, a `timeout` parameter can be defined to cap the number of traces. </td></tr><tr><td>
 
@@ -141,7 +141,9 @@ require "util.globals"
 
 `GetWorld()`</td><td> Get the world entity. </td></tr><tr><td>
 
-`truthy(value)`</td><td> Check if a value is truthy or falsy. </td></tr></table>
+`truthy(value)`</td><td> Check if a value is truthy or falsy.   **falsy == `nil`|`false`|`0`|`""`|`{}`** </td></tr><tr><td>
+
+`SearchEntity(entity, searchPattern)`</td><td> Search an entity for a key using a search pattern. E.g. "getclass" will find "GetClassname"  Works with `class.lua` EntityClass entities. </td></tr></table>
 
 
 
