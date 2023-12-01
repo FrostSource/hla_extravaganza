@@ -3488,7 +3488,7 @@ function Convars:GetBool(name) end
 function Convars:GetCommandClient() end
 ---GetFloat(name) : returns the convar as a float. May return nil if no such convar.
 ---@param name string
----@return float|nil
+---@return number|nil
 function Convars:GetFloat(name) end
 ---GetInt(name) : returns the convar as an int. May return nil if no such convar.
 ---@param name string
