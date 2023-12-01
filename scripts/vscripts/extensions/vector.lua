@@ -118,9 +118,9 @@ end
 ---
 ---Calculates the signed angle difference between the calling vector and the given vector around the specified axis.
 ---
---- @param vector Vector # The vector to calculate the angle difference with.
---- @param axis? Vector # The axis of rotation around which the angle difference is calculated.
---- @return number # The signed angle difference in degrees.
+---@param vector Vector # The vector to calculate the angle difference with.
+---@param axis? Vector # The axis of rotation around which the angle difference is calculated.
+---@return number # The signed angle difference in degrees.
 function meta:SignedAngleDiff(vector, axis)
     axis = axis or Vector(0, 0, 1)
     local unsignedAngle = self:AngleDiff(vector)
