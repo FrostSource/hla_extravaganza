@@ -590,11 +590,9 @@ function SearchEntity(entity, searchPattern)
 
     local function searchTable(tbl, pattern)
         for key, value in pairs(tbl) do
-            if debug then  print("", key, value) end
             local lkey = key:lower()
             if not lkey:startswith("set") then
                 if string.find(lkey, pattern) then
-                    if debug then print(key, value) end
                     return key, value
                 end
             end
