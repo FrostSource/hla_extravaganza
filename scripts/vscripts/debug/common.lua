@@ -33,6 +33,20 @@ Convars:RegisterCommand("print_all_ents", function (_, ...)
 end, "", 0)
 
 ---
+---Prints all new entities in the map since `print_all_ents` was called, along with any supplied property patterns.
+---
+---E.g. print_diff_ents getname mass health
+---
+---If no arguments are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_diff_ents", function (_, ...)
+    local properties = nil
+    properties = {...}
+    if #properties == 0 then properties = nil end
+    Debug.PrintDiffEntities(properties)
+end, "", 0)
+
+---
 ---Prints all entities with a radius around the player, along with any supplied property patterns.
 ---
 ---E.g. print_nearby_ents 100 getname mass
@@ -222,6 +236,7 @@ function Debug.PrintEntityList(list, properties)
     print()
 end
 
+local cachedEntities = {}
 ---
 ---Prints information about all existing entities.
 ---
@@ -232,6 +247,24 @@ function Debug.PrintAllEntities(properties)
     local e = Entities:First()
     while e ~= nil do
         list[#list+1] = e
+        e = Entities:Next(e)
+    end
+    cachedEntities = list
+    Debug.PrintEntityList(list, properties)
+end
+
+---
+---Prints information about any new entities since the last time `Debug.PrintAllEntities` was called.
+---
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintDiffEntities(properties)
+    properties = properties or {"GetClassname", "GetName", "GetModelName"}
+    local list = {}
+    local e = Entities:First()
+    while e ~= nil do
+        if not vlua.find(cachedEntities, e) then
+            list[#list+1] = e
+        end
         e = Entities:Next(e)
     end
     Debug.PrintEntityList(list, properties)
