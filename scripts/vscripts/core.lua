@@ -25,11 +25,12 @@ require "util.globals"
 
 -- Base libraries
 
-ifrequire "debug.core"
+ifrequire "debug.common"
 if not IsVREnabled() then
     ifrequire "debug.novr"
 end
 ifrequire "util.enums"
+ifrequire "util.common"
 ifrequire "extensions.string"
 ifrequire "extensions.vector"
 ifrequire "extensions.entity"
