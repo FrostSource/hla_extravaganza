@@ -115,7 +115,12 @@ end
 function ifrequire(modname, callback)
     ---@TODO: Consider using module_exists
     local success, result = pcall(require, modname)
-    if success and callback then
+    if not success then
+        Warning("ifrequire("..modname..") "..tostring(result).."\n")
+        return nil
+    end
+
+    if callback then
         callback(result)
         return result
     end
