@@ -638,6 +638,10 @@ readme_paths = [
     'scripts/vscripts/data',
     'scripts/vscripts/debug',
     'scripts/vscripts/extensions',
+    'scripts/vscripts/framework',
+    'scripts/vscripts/gameplay',
+    'scripts/vscripts/helpers',
+    'scripts/vscripts/input',
     'scripts/vscripts/math',
     'scripts/vscripts/util',
 ]
