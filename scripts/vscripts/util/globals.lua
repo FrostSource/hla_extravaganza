@@ -242,6 +242,18 @@ function devprintn2(...)
 end
 
 ---
+---Prints a warning in the console, along with a vscript print if inside tools mode.
+---
+---@param ... any
+function warn(...)
+    local str = table.concat({...}, " ")
+    Warning(str .. "\n")
+    if IsInToolsMode() then
+        print("Warning - " .. str)
+    end
+end
+
+---
 ---Add a function to the calling entity's script scope with alternate casing.
 ---
 ---Makes a function easier to call from Hammer through I/O.
