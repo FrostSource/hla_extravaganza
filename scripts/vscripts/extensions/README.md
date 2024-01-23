@@ -1,4 +1,4 @@
-> Last Updated 2023-12-01
+> Last Updated 2024-01-23
 
 ## Index
 1. [entities.lua](#entitieslua)
@@ -199,7 +199,7 @@ require "extensions.string"
 
 # vector.lua
 
-> v1.2.0
+> v1.2.1
 
 Provides Vector class extension methods. 
 
@@ -228,7 +228,7 @@ require "extensions.vector"
 
 `meta:AngleDiff(vector)`</td><td> Calculates the angle difference between the calling vector and the given vector. This is always the smallest angle. </td></tr><tr><td>
 
-`meta:SignedAngleDiff()`</td><td> Calculates the signed angle difference between the calling vector and the given vector around the specified axis.   @param vector Vector # The vector to calculate the angle difference with.  @param axis? Vector # The axis of rotation around which the angle difference is calculated.  @return number # The signed angle difference in degrees.</td></tr><tr><td>
+`meta:SignedAngleDiff(vector, axis)`</td><td> Calculates the signed angle difference between the calling vector and the given vector around the specified axis. </td></tr><tr><td>
 
 `meta:Unpack()`</td><td> Unpacks the x, y, z components as 3 return values. </td></tr><tr><td>
 

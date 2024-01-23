@@ -1,4 +1,4 @@
-> Last Updated 2023-12-01
+> Last Updated 2024-01-23
 
 ## Index
 1. [common.lua](#commonlua)
@@ -66,7 +66,7 @@ require "util.util"
 
 # globals.lua
 
-> v2.0.0
+> v2.1.0
 
 Provides common global functions used throughout extravaganza libraries. 
 
@@ -113,6 +113,8 @@ require "util.globals"
 
 `devprintn2(...)`</td><td> Prints all arguments with spaces between instead of tabs if convar "developer" is greater than 1. </td></tr><tr><td>
 
+`warn(...)`</td><td> Prints a warning in the console, along with a vscript print if inside tools mode. </td></tr><tr><td>
+
 `Expose(func, name, scope)`</td><td> Add a function to the calling entity's script scope with alternate casing.  Makes a function easier to call from Hammer through I/O.  E.g.      local function TriggerRelay(io)         DoEntFire("my_relay", "Trigger", "", 0, io.activator, io.caller)     end     Expose(TriggerRelay)     -- Or with alternate name     Expose(TriggerRelay, "RelayInput") </td></tr><tr><td>
 
 `IsVector(value)`</td><td> Get if a value is a `Vector` </td></tr><tr><td>
@@ -143,7 +145,9 @@ require "util.globals"
 
 `truthy(value)`</td><td> Check if a value is truthy or falsy.   **falsy == `nil`|`false`|`0`|`""`|`{}`** </td></tr><tr><td>
 
-`SearchEntity(entity, searchPattern)`</td><td> Search an entity for a key using a search pattern. E.g. "getclass" will find "GetClassname"  Works with `class.lua` EntityClass entities. </td></tr></table>
+`SearchEntity(entity, searchPattern)`</td><td> Search an entity for a key using a search pattern. E.g. "getclass" will find "GetClassname"  Works with `class.lua` EntityClass entities. </td></tr><tr><td>
+
+`LerpAngle(t, angle_start, angle_end)`</td><td> Linearly interpolates between two angles. </td></tr></table>
 
 
 

@@ -1,4 +1,4 @@
-> Last Updated 2023-12-01
+> Last Updated 2024-01-23
 
 ## Index
 1. [common.lua](#commonlua)
@@ -7,7 +7,7 @@
 
 # common.lua
 
-> v1.7.0
+> v1.8.0
 
 Debug utility functions. 
 
@@ -27,6 +27,8 @@ require "debug.core"
 `Debug.PrintEntityList(list, properties)`</td><td> Prints a formated indexed list of entities with custom property information. Also links children with their parents by displaying the index alongside the parent for easy look-up.      Debug.PrintEntityList(ents, {"getclassname", "getname", "getname"})  If no properties are supplied the default properties are used: GetClassname, GetName, GetModelName If an empty property table is supplied only the base values are shown: Index, Handle, Parent Property patterns do not need to be functions. </td></tr><tr><td>
 
 `Debug.PrintAllEntities(properties)`</td><td> Prints information about all existing entities. </td></tr><tr><td>
+
+`Debug.PrintDiffEntities(properties)`</td><td> Prints information about any new entities since the last time `Debug.PrintAllEntities` was called. </td></tr><tr><td>
 
 `Debug.PrintEntities(search, exact, dont_include_parents, properties)`</td><td> Print entities matching a search string.  Searches name, classname and model name. </td></tr><tr><td>
 
@@ -52,7 +54,9 @@ require "debug.core"
 
 `Debug.SimpleVector(vector)`</td><td> Returns a simplified vector string with decimal places truncated. </td></tr><tr><td>
 
-`Debug.Sphere(x, y, z, radius)`</td><td> Draw a simple sphere without worrying about all the properties. </td></tr></table>
+`Debug.Sphere(x, y, z, radius)`</td><td> Draw a simple sphere without worrying about all the properties. </td></tr><tr><td>
+
+`Debug.EntStr(ent)`</td><td> Returns a string made up of an entity's class and name in the format "[class, name]" for debugging purposes. </td></tr></table>
 
 
 
