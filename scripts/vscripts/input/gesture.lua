@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Provides a system for tracking simple hand poses and gestures.
@@ -83,7 +83,7 @@
 
 Gesture = {}
 Gesture.__index = Gesture
-Gesture.version = "v1.1.0"
+Gesture.version = "v1.1.1"
 
 ---
 ---If the gesture system should start automatically on player spawn.
@@ -485,7 +485,7 @@ listenFunc(listenFor, function(params)
         local player = Entities:GetLocalPlayer()
         player:SetContextThink("GestureInit", function()
             if not player:GetHMDAvatar() then
-                Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...")
+                Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...\n")
                 return nil
             end
             Gesture:Start(player)

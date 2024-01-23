@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     Provides Vector class extension methods.
@@ -12,7 +12,7 @@
 ]]
 require "math.common"
 
-local version = "v1.2.0"
+local version = "v1.2.1"
 
 ---@class Vector
 local meta = getmetatable(Vector())
@@ -118,9 +118,9 @@ end
 ---
 ---Calculates the signed angle difference between the calling vector and the given vector around the specified axis.
 ---
---- @param vector Vector # The vector to calculate the angle difference with.
---- @param axis? Vector # The axis of rotation around which the angle difference is calculated.
---- @return number # The signed angle difference in degrees.
+---@param vector Vector # The vector to calculate the angle difference with.
+---@param axis? Vector # The axis of rotation around which the angle difference is calculated.
+---@return number # The signed angle difference in degrees.
 function meta:SignedAngleDiff(vector, axis)
     axis = axis or Vector(0, 0, 1)
     local unsignedAngle = self:AngleDiff(vector)

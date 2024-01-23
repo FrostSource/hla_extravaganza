@@ -1,5 +1,5 @@
 --[[
-    v3.0.1
+    v3.2.0
     https://github.com/FrostSource/hla_extravaganza
 
     Helps with saving/loading values for persistency between game sessions.
@@ -171,7 +171,7 @@ end
 local separator = "::"
 
 Storage = {}
-Storage.version = "v3.0.1"
+Storage.version = "v3.2.0"
 ---Collection of type names associated with a class table.
 ---The table should have both __save() and __load() functions.
 ---@type table<string,table>
@@ -227,7 +227,7 @@ end
 ---
 ---@param handle EntityHandle # Entity to save on.
 ---@param name string # Name to save as.
----@param value string # String to save.
+---@param value string|nil # String to save.
 ---@return boolean # If the save was successful.
 function Storage.SaveString(handle, name, value)
     handle = resolveHandle(handle)
@@ -235,7 +235,14 @@ function Storage.SaveString(handle, name, value)
         Warn("Invalid save handle ("..tostring(handle)..")!")
         return false
     end
-    if #value > 62 then
+
+    -- Handle clearing with nil first
+    if value == nil then
+        handle:SetContext(name, nil, 0)
+        handle:SetContext(name..separator.."type", nil, 0)
+        handle:SetContext(name..separator.."splits", nil, 0)
+    -- Then handle saving
+    elseif #value > 62 then
         local index = 0
         while #value > 0 do
             index = index + 1
@@ -393,26 +400,37 @@ end
 ---
 ---@param handle EntityHandle # Entity to save on.
 ---@param name string # Name to save as.
----@param entity EntityHandle # Entity to save.
+---@param entity EntityHandle|nil # Entity to save.
+---@param useClassname? boolean # If true the entity will be saved/loaded using its classname instead of targetname. Only use this if your entity is not allowed to have a name.
 ---@return boolean # If the save was successful.
-function Storage.SaveEntity(handle, name, entity)
+function Storage.SaveEntity(handle, name, entity, useClassname)
     handle = resolveHandle(handle)
-    if not entity or not IsValidEntity(entity) then
+    if entity == nil then
         Storage.SaveString(handle, name..separator.."targetname", "")
+        Storage.SaveString(handle, name..separator.."classname", "")
         handle:SetContext(name..separator.."unique", "", 0)
         handle:SetContext(name..separator.."type", "entity", 0)
+        return true
+    elseif not entity or not IsValidEntity(entity) then
         return false
     end
-    local ent_name = entity:GetName()
+
+    -- Setting attribute on saved entity, used to find correct entity on load
     local uniqueKey = DoUniqueString("saved_entity")
-    if ent_name == "" then
-        ent_name = uniqueKey
-        entity:SetEntityName(ent_name)
-    end
-    -- Setting attribute on saved entity
     entity:Attribute_SetIntValue(uniqueKey, 1)
-    -- Setting contexts for saving handle
-    Storage.SaveString(handle, name..separator.."targetname", ent_name)
+
+    if useClassname then
+        Storage.SaveString(handle, name..separator.."classname", entity:GetClassname())
+        Storage.SaveString(handle, name..separator.."targetname", "")
+    else
+        local ent_name = entity:GetName()
+        if ent_name == "" then
+            ent_name = uniqueKey
+            entity:SetEntityName(ent_name)
+        end
+        Storage.SaveString(handle, name..separator.."targetname", ent_name)
+        Storage.SaveString(handle, name..separator.."classname", "")
+    end
     handle:SetContext(name, uniqueKey, 0)
     handle:SetContext(name..separator.."type", "entity", 0)
     return true
@@ -626,15 +644,27 @@ function Storage.LoadEntity(handle, name, default)
     local t = handle:GetContext(name..separator.."type")
     local uniqueKey = handle:GetContext(name) ---@cast uniqueKey string
     local ent_name = Storage.LoadString(handle, name..separator.."targetname")
-    if t ~= "entity" or not ent_name then
+    local ent_class = Storage.LoadString(handle, name..separator.."classname")
+    if t ~= "entity" or (not ent_name and not ent_class) then
         Warn("Entity '" .. name .. "' could not be loaded! ("..type(ent_name)..", "..tostring(ent_name)..")")
         return default
     end
-    local ents = Entities:FindAllByName(ent_name)
-    if not ents then
-        Warn("No entities of '" .. name .. "' found with saved name '" .. ent_name .. "', returning default.")
-        return default
+
+    local ents
+    if ent_name == nil or ent_name == "" then
+        ents = Entities:FindAllByClassname(ent_class)
+        if #ents == 0 then
+            Warn("No entities of '" .. name .. "' found with saved class '" .. ent_class .. "', returning default.")
+            return default
+        end
+    else
+        ents = Entities:FindAllByName(ent_name)
+        if #ents == 0 then
+            Warn("No entities of '" .. name .. "' found with saved name '" .. ent_name .. "', returning default.")
+            return default
+        end
     end
+
     for _, ent in ipairs(ents) do
         if ent:Attribute_GetIntValue(uniqueKey, 0) == 1 then
             return ent

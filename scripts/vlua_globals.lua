@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global, deprecated, undefined-doc-name
 
 --[[
-    Version 2.1.1
+    Version 2.1.2
 
     This file helps intellisense in editors like Visual Studio Code by
     introducing definitions of all known VLua functions into the global scope.
@@ -551,7 +551,7 @@ thisEntity = nil
 ---@class GAME_EVENT_TRIPMINE_HACK_STARTED : GAME_EVENT_BASE
 ---@class GAME_EVENT_TRIPMINE_HACKED : GAME_EVENT_BASE
 ---@class GAME_EVENT_PRIMARY_HAND_CHANGED : GAME_EVENT_BASE
-    ---@field is_primary_left boolean
+    ---@field is_primary_left number # 0 = right handed, 1 = left handed
 ---@class GAME_EVENT_CLOSE_TO_BLINDZOMBIE : GAME_EVENT_BASE
 ---@class GAME_EVENT_PLAYER_GRABBED_BY_BARNACLE : GAME_EVENT_BASE
 ---@class GAME_EVENT_PLAYER_RELEASED_BY_BARNACLE : GAME_EVENT_BASE
@@ -1829,7 +1829,7 @@ function CBaseEntity:SetAngularVelocity(pitch, yaw, roll) end
 function CBaseEntity:SetConstraint(pos) end
 ---Store any key/value pair in this entity's dialog contexts. Value must be a string. Will last for duration (set 0 to mean 'forever').
 ---@param name string
----@param value string
+---@param value? string
 ---@param duration number
 function CBaseEntity:SetContext(name, value, duration) end
 ---Store any key/value pair in this entity's dialog contexts. Value must be a number (int or float). Will last for duration (set 0 to mean 'forever').

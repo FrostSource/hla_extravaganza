@@ -1,5 +1,5 @@
 --[[
-    v1.0.1
+    v2.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     If not using `vscripts/core.lua`, load this file at game start using the following line:
@@ -74,7 +74,7 @@
     end
     ```
 ]]
-local version = "v1.0.1"
+local version = "v2.0.0"
 
 require "storage"
 require "util.globals"
@@ -90,6 +90,11 @@ local function search(k, plist)
         if v ~= nil then return v end
     end
 end
+
+READY_NORMAL = 0
+READY_GAME_LOAD = 2
+READY_TRANSITION = 3
+---@alias OnReadyType `READY_NORMAL`|`READY_GAME_LOAD`|`READY_TRANSITION`
 
 ---Private inherit funcion which is used in both `inherit` and `entity` functions.
 ---@param base any
@@ -198,14 +203,14 @@ local function _inherit(base, self, fenv)
             end
         end
 
-        if activateType == 2 then
+        if activateType ~= 0 then
             -- Load all saved entity data
             Storage.LoadAll(self, true)
         end
 
         -- Fire custom ready function
         if type(self.OnReady) == "function" then
-            self:OnReady(activateType == 2)
+            self:OnReady(activateType)
         end
 
         if self.IsThinking then
@@ -214,6 +219,7 @@ local function _inherit(base, self, fenv)
 
         self.Initiated = true
         self:Save()
+        self:Attribute_SetIntValue("InstanceActivated", 1)
 
     end
 
@@ -258,8 +264,13 @@ local function _inherit(base, self, fenv)
         private[k] = function(...) v(self, ...) end
     end
 
-    self.Initiated = false
-    self.IsThinking = false
+    if self:Attribute_GetIntValue("InstanceActivated", 0) == 1 then
+        fenv.Activate(3)
+    else
+
+        self.Initiated = false
+        self.IsThinking = false
+    end
 end
 
 ---Inherit an existing entity class which was defined using `entity` function.

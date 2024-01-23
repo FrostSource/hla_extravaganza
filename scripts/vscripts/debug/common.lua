@@ -1,5 +1,5 @@
 --[[
-    v1.7.0
+    v1.8.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -16,7 +16,24 @@ require "extensions.entity"
 require "math.common"
 
 Debug = {}
-Debug.version = "v1.7.0"
+Debug.version = "v1.8.0"
+
+---Try to find an entity using a target string.
+---@param target string
+---@return EntityHandle
+local function getEntityFromTarget(target)
+    if target == "!player" then
+        return Entities:GetLocalPlayer()
+    end
+    local ent = Entities:FindByName(nil, target)
+    if not ent then
+        ent = Entities:FindByClassname(nil, target)
+        if not ent then
+            ent = Entities:FindByName(nil, "*"..target.."*")
+        end
+    end
+    return ent
+end
 
 ---
 ---Prints all entities in the map, along with any supplied property patterns.
@@ -30,6 +47,20 @@ Convars:RegisterCommand("print_all_ents", function (_, ...)
     properties = {...}
     if #properties == 0 then properties = nil end
     Debug.PrintAllEntities(properties)
+end, "", 0)
+
+---
+---Prints all new entities in the map since `print_all_ents` was called, along with any supplied property patterns.
+---
+---E.g. print_diff_ents getname mass health
+---
+---If no arguments are supplied then the default properties are used: GetClassname, GetName, GetModelName
+---
+Convars:RegisterCommand("print_diff_ents", function (_, ...)
+    local properties = nil
+    properties = {...}
+    if #properties == 0 then properties = nil end
+    Debug.PrintDiffEntities(properties)
 end, "", 0)
 
 ---
@@ -96,6 +127,15 @@ Convars:RegisterCommand("sphere", function (_, x, y, z, r)
 
     DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, r, false, 10)
 
+end, "", 0)
+
+Convars:RegisterCommand("print_ent_criteria", function (_, entity)
+    local ent = getEntityFromTarget(entity)
+    if ent then
+        ent:PrintCriteria()
+    else
+        print("Couldn't find entity using search string '"..entity.."'")
+    end
 end, "", 0)
 
 if IsInToolsMode() then
@@ -222,6 +262,7 @@ function Debug.PrintEntityList(list, properties)
     print()
 end
 
+local cachedEntities = {}
 ---
 ---Prints information about all existing entities.
 ---
@@ -232,6 +273,24 @@ function Debug.PrintAllEntities(properties)
     local e = Entities:First()
     while e ~= nil do
         list[#list+1] = e
+        e = Entities:Next(e)
+    end
+    cachedEntities = list
+    Debug.PrintEntityList(list, properties)
+end
+
+---
+---Prints information about any new entities since the last time `Debug.PrintAllEntities` was called.
+---
+---@param properties? string[] # List of property patterns to search for when displaying entity information.
+function Debug.PrintDiffEntities(properties)
+    properties = properties or {"GetClassname", "GetName", "GetModelName"}
+    local list = {}
+    local e = Entities:First()
+    while e ~= nil do
+        if not vlua.find(cachedEntities, e) then
+            list[#list+1] = e
+        end
         e = Entities:Next(e)
     end
     Debug.PrintEntityList(list, properties)
@@ -700,4 +759,13 @@ function Debug.Sphere(x, y, z, radius)
     radius = radius or 8
 
     DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, radius, false, 10)
+end
+
+---
+---Returns a string made up of an entity's class and name in the format "[class, name]" for debugging purposes.
+---
+---@param ent EntityHandle
+---@return string
+function Debug.EntStr(ent)
+    return "[" .. ent:GetClassname() .. ", " .. ent:GetName() .. "]"
 end
