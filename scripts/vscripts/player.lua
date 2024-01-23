@@ -673,10 +673,15 @@ function CBasePlayer:UpdateWeapons(removes, set)
         if not removes or not (vlua.find(removes, attachment) or vlua.find(removes, attachment:GetClassname())) then
             if attachment == set or attachment:GetClassname() == set then
                 setFound = attachment
-            elseif vlua.find(specialAttachmentsOrder, attachment:GetClassname()) then
-                specialAttachmentsFound[attachment:GetClassname()] = attachment
-            else
-                table.insert(attachments, 1, attachment)
+            end
+
+            -- Do not track multiple versions of the same entity
+            if not vlua.find(attachments, attachment) and not vlua.find(specialAttachmentsFound, attachment) then
+                if vlua.find(specialAttachmentsOrder, attachment:GetClassname()) then
+                    specialAttachmentsFound[attachment:GetClassname()] = attachment
+                else
+                    table.insert(attachments, 1, attachment)
+                end
             end
         end
         hand:RemoveHandAttachmentByHandle(attachment)
@@ -686,15 +691,17 @@ function CBasePlayer:UpdateWeapons(removes, set)
 
     -- Add special attachments back first to avoid crash
     for _, specialName in ipairs(specialAttachmentsOrder) do
-        if specialAttachmentsFound[specialName] then
-            hand:AddHandAttachment(specialAttachmentsFound[specialName])
+        local specialAttachment = specialAttachmentsFound[specialName]
+        if specialAttachment then
+            hand:AddHandAttachment(specialAttachment)
         end
     end
 
     -- Add back attachments that weren't removed
     for _, removedAttachment in ipairs(attachments) do
-        print("Adding attachment", removedAttachment:GetClassname())
-        hand:AddHandAttachment(removedAttachment)
+        if removedAttachment ~= setFound then
+            hand:AddHandAttachment(removedAttachment)
+        end
     end
 
     -- Add back the attachment to be set last
