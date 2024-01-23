@@ -1088,10 +1088,14 @@ end
 ListenToGameEvent("item_released", listenEventItemReleased, nil)
 
 ---@class PLAYER_EVENT_PRIMARY_HAND_CHANGED : GAME_EVENT_PRIMARY_HAND_CHANGED
+---@field is_primary_left boolean
 
 ---Tracking handedness.
 ---@param data GAME_EVENT_PRIMARY_HAND_CHANGED
 local function listenEventPrimaryHandChanged(data)
+    ---@cast data PLAYER_EVENT_PRIMARY_HAND_CHANGED
+    data.is_primary_left = (data.is_primary_left == 1) and true or false
+
     if data.is_primary_left then
         Player.PrimaryHand = Player.LeftHand
         Player.SecondaryHand = Player.RightHand
