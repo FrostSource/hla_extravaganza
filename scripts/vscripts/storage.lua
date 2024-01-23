@@ -227,7 +227,7 @@ end
 ---
 ---@param handle EntityHandle # Entity to save on.
 ---@param name string # Name to save as.
----@param value string # String to save.
+---@param value string|nil # String to save.
 ---@return boolean # If the save was successful.
 function Storage.SaveString(handle, name, value)
     handle = resolveHandle(handle)
@@ -235,7 +235,14 @@ function Storage.SaveString(handle, name, value)
         Warn("Invalid save handle ("..tostring(handle)..")!")
         return false
     end
-    if #value > 62 then
+
+    -- Handle clearing with nil first
+    if value == nil then
+        handle:SetContext(name, nil, 0)
+        handle:SetContext(name..separator.."type", nil, 0)
+        handle:SetContext(name..separator.."splits", nil, 0)
+    -- Then handle saving
+    elseif #value > 62 then
         local index = 0
         while #value > 0 do
             index = index + 1
