@@ -740,6 +740,15 @@ function CBasePlayer:SetWeapon(weapon)
     return self:UpdateWeapons(nil, weapon)
 end
 
+---
+---Get the invisible player backpack.
+---This is will return the backpack even if it has been disabled with a `info_hlvr_equip_player`.
+---
+---@return EntityHandle?
+function CBasePlayer:GetBackpack()
+    return Entities:FindByClassname(nil, "player_backpack")
+end
+
 ---@class __PlayerRegisteredEventData
 ---@field callback function
 ---@field context any
