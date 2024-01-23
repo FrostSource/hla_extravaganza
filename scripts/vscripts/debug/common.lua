@@ -760,3 +760,12 @@ function Debug.Sphere(x, y, z, radius)
 
     DebugDrawSphere(Vector(x, y, z), Vector(255, 255, 255), 255, radius, false, 10)
 end
+
+---
+---Returns a string made up of an entity's class and name in the format "[class, name]" for debugging purposes.
+---
+---@param ent EntityHandle
+---@return string
+function Debug.EntStr(ent)
+    return "[" .. ent:GetClassname() .. ", " .. ent:GetName() .. "]"
+end
