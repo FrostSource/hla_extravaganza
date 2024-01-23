@@ -623,7 +623,7 @@ end
 
 ---Get the entity handle of the currently equipped weapon/item.
 ---If nothing is equipped this will return the primary hand entity.
----@return EntityHandle
+---@return EntityHandle|nil
 function CBasePlayer:GetWeapon()
     -- print('getting gun')
     if self.CurrentlyEquipped == PLAYER_WEAPON_ENERGYGUN then
@@ -637,7 +637,7 @@ function CBasePlayer:GetWeapon()
     elseif self.CurrentlyEquipped == PLAYER_WEAPON_MULTITOOL then
         return Entities:FindByClassnameNearest("hlvr_multitool", self.PrimaryHand:GetOrigin(), 128)--[[@as EntityHandle]]
     else
-        return self.PrimaryHand
+        return nil
     end
 end
 
