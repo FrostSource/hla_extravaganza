@@ -44,10 +44,14 @@ ifrequire "data.color"
 
 -- Useful extravaganza libraries
 
-ifrequire "input"
-ifrequire "gesture"
 ifrequire "player"
 ifrequire "class"
+
+ifrequire "input.input"
+ifrequire "input.gesture"
+ifrequire "input.haptics"
+
+ifrequire "helpers.easyconvars"
 
 ifrequire "gameplay.smooth_speed"
 
