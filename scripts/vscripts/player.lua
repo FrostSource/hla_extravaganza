@@ -1372,6 +1372,9 @@ ListenToGameEvent("player_removed_item_from_itemholder", listenEventPlayerRemove
 
 -- No known way to track resin being taken out reliably.
 
+---@class PLAYER_EVENT_PLAYER_DROP_RESIN_IN_BACKPACK : GAME_EVENT_PLAYER_DROP_RESIN_IN_BACKPACK
+---@field resin_ent EntityHandle? # The resin entity being dropped into the backpack.
+
 ---Track resin
 ---@param data GAME_EVENT_PLAYER_DROP_RESIN_IN_BACKPACK
 local function listenEventPlayerDropResinInBackpack(data)
@@ -1390,6 +1393,9 @@ local function listenEventPlayerDropResinInBackpack(data)
         Player.Items.resin_found = Player.Items.resin_found + resin_added
     end
     last_resin_dropped = nil
+
+    ---@cast data PLAYER_EVENT_PLAYER_DROP_RESIN_IN_BACKPACK
+    data.resin_ent = last_resin_dropped
 
     for id, event_data in pairs(registered_event_callbacks[data.game_event_name]) do
         if event_data.context ~= nil then
