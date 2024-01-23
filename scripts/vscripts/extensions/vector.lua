@@ -1,5 +1,5 @@
 --[[
-    v1.2.0
+    v1.2.1
     https://github.com/FrostSource/hla_extravaganza
 
     Provides Vector class extension methods.
@@ -12,7 +12,7 @@
 ]]
 require "math.common"
 
-local version = "v1.2.0"
+local version = "v1.2.1"
 
 ---@class Vector
 local meta = getmetatable(Vector())

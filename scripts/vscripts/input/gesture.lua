@@ -1,5 +1,5 @@
 --[[
-    v1.1.0
+    v1.1.1
     https://github.com/FrostSource/hla_extravaganza
 
     Provides a system for tracking simple hand poses and gestures.
@@ -83,7 +83,7 @@
 
 Gesture = {}
 Gesture.__index = Gesture
-Gesture.version = "v1.1.0"
+Gesture.version = "v1.1.1"
 
 ---
 ---If the gesture system should start automatically on player spawn.

@@ -1,5 +1,5 @@
 --[[
-    v1.7.0
+    v1.8.0
     https://github.com/FrostSource/hla_extravaganza
 
     Debug utility functions.
@@ -16,7 +16,7 @@ require "extensions.entity"
 require "math.common"
 
 Debug = {}
-Debug.version = "v1.7.0"
+Debug.version = "v1.8.0"
 
 ---Try to find an entity using a target string.
 ---@param target string

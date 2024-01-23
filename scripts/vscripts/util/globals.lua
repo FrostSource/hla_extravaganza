@@ -1,5 +1,5 @@
 --[[
-    v2.0.0
+    v2.1.0
     https://github.com/FrostSource/hla_extravaganza
 
     Provides common global functions used throughout extravaganza libraries.
@@ -14,7 +14,7 @@
 -- These are expected by globals
 require 'util.common'
 
-local version = "v2.0.0"
+local version = "v2.1.0"
 
 ---
 ---Get the file name of the current script without folders or extension. E.g. `util.util`

@@ -1,5 +1,5 @@
 --[[
-    v1.0.1
+    v2.0.0
     https://github.com/FrostSource/hla_extravaganza
 
     If not using `vscripts/core.lua`, load this file at game start using the following line:
@@ -74,7 +74,7 @@
     end
     ```
 ]]
-local version = "v1.0.1"
+local version = "v2.0.0"
 
 require "storage"
 require "util.globals"
