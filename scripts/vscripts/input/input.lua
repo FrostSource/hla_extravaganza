@@ -353,7 +353,7 @@ end
 ---| `3`  # Secondary Hand.
 ---@param button ENUM_DIGITAL_INPUT_ACTIONS # The button to check.
 ---@param presses integer|nil # Number of times the button must be pressed in quick succession. E.g. 2 for double click. Only applicable for `kind` press.
----@param callback function # The function that will be called when conditions are met.
+---@param callback fun(params:INPUT_PRESS_CALLBACK|INPUT_RELEASE_CALLBACK) # The function that will be called when conditions are met.
 function Input:RegisterCallback(kind, hand, button, presses, callback)
 
     if type(hand) ~= "number" then
@@ -568,7 +568,7 @@ ListenToGameEvent("player_activate", function()
         local player = Entities:GetLocalPlayer()
         player:SetContextThink("InputInit", function()
             if not player:GetHMDAvatar() then
-                Warning("Input could not find HMD, make sure VR mode is enabled. Disabling Input...")
+                Warning("Input could not find HMD, make sure VR mode is enabled. Disabling Input...\n")
                 return nil
             end
             SetPrimaryHand(Convars:GetBool("hlvr_left_hand_primary") and 0 or 1)

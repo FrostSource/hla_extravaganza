@@ -485,7 +485,7 @@ listenFunc(listenFor, function(params)
         local player = Entities:GetLocalPlayer()
         player:SetContextThink("GestureInit", function()
             if not player:GetHMDAvatar() then
-                Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...")
+                Warning("Gesture engine could not find HMD, make sure VR mode is enabled. Disabling Gestures...\n")
                 return nil
             end
             Gesture:Start(player)
